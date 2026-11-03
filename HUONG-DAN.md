@@ -72,3 +72,7 @@ Dùng Vercel hoặc GitHub Pages cũng được, vì đây chỉ là các tệp 
 - **Mô hình 3D:** dùng tệp `.glb`. Khi xuất từ Blender, hãy tắt nén *Draco*.
 - **Tạm dừng:** dự án Supabase miễn phí tự tạm dừng sau 7 ngày không có ai truy cập. Vào trang Supabase bấm *Restore* là chạy lại, dữ liệu vẫn còn.
 - **Chế độ dùng thử:** để trống `config.js` thì trang chạy ở chế độ dùng thử. Không cần đăng nhập, nhưng ảnh chỉ tồn tại trong tab đang mở.
+
+## Nguồn tài nguyên
+
+Vân tường, sàn (White Plaster 02, Marble 01, Concrete Floor 02, Herringbone Parquet) và ảnh HDRI *Museum of Ethnography* lấy từ [Poly Haven](https://polyhaven.com), giấy phép CC0 (dùng tự do). Các tệp nằm trong `assets/polyhaven/`.

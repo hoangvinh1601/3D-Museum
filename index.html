@@ -307,6 +307,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 /* ================================================================ constants & state */
 const W = 16, L = 32, H = 7, HW = W / 2, HL = L / 2, EYE = 1.65, PI = Math.PI, TAU = PI * 2;
@@ -610,6 +611,41 @@ function themeTextures(key, th) {
   });
 }
 
+/* ================================================================ Poly Haven PBR surfaces + HDRI (CC0, polyhaven.com) */
+// Real scanned textures for walls and floors, plus an HDRI of a real museum hall for reflections.
+// Until they load (or if they fail) the procedural textures above are used.
+const PH_DIR = 'assets/polyhaven/', PH = {};
+const PH_SETS = { plaster: ['white_plaster_02', 2], marble: ['marble_01', 2], concrete: ['concrete_floor_02', 1.5], parquet: ['herringbone_parquet', 2.4] };
+const lin = v => Math.pow(v, 2.2);
+function imgAvg(img) {
+  const [c, g] = canvas(16, 16); g.drawImage(img, 0, 0, 16, 16); const d = g.getImageData(0, 0, 16, 16).data, s = [0, 0, 0];
+  for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; }
+  return s.map(v => v / (d.length / 4) / 255);
+}
+const phReady = (async () => {
+  const tl = new THREE.TextureLoader();
+  await Promise.all(Object.entries(PH_SETS).map(async ([k, [id, rep]]) => {
+    try {
+      const [map, normalMap, roughnessMap] = await Promise.all(['diff', 'nor_gl', 'rough'].map(m => tl.loadAsync(`${PH_DIR}${id}_${m}_1k.jpg`)));
+      map.colorSpace = THREE.SRGBColorSpace;
+      [map, normalMap, roughnessMap].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = maxAniso; t.repeat.set(rep, rep); });
+      PH[k] = { map, normalMap, roughnessMap, avg: imgAvg(map.image), ravg: imgAvg(roughnessMap.image)[1] };
+    } catch (e) { console.warn('Poly Haven texture failed:', id, e); }
+  }));
+  try {
+    const hdr = await new RGBELoader().loadAsync(PH_DIR + 'museum_of_ethnography_1k.hdr');
+    hdr.mapping = THREE.EquirectangularReflectionMapping; PH.env = pmrem.fromEquirectangular(hdr).texture; hdr.dispose();
+  } catch (e) { console.warn('Poly Haven HDRI failed', e); }
+})();
+// tint a scanned texture toward a theme colour (target is sRGB 0..1), keeping its real detail
+function phTint(mat, set, target) { mat.color.setRGB(...target.map((t, i) => lin(t) / Math.max(.02, lin(set.avg[i])))); }
+function phApply(mat, set, { tint, rough, normal = 1, keepMap = false } = {}) {
+  if (!keepMap) { mat.map = set.map; if (tint) phTint(mat, set, tint); }
+  mat.normalMap = set.normalMap; mat.normalScale.set(normal, normal);
+  mat.roughnessMap = set.roughnessMap; if (rough !== undefined) mat.roughness = Math.min(4, rough / Math.max(.05, set.ravg));
+  mat.needsUpdate = true;
+}
+
 /* ================================================================ global: starry sky */
 const NOISE_GLSL = `float h3(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
 float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}
@@ -686,22 +722,33 @@ function spawn(x, y, z, vx, vy, vz, r, g, b, life, size, drag, grav, kind = 0) {
   fP[j] = x; fP[j + 1] = y; fP[j + 2] = z; fV[j] = vx; fV[j + 1] = vy; fV[j + 2] = vz; fB[j] = r; fB[j + 1] = g; fB[j + 2] = b;
   fL[i] = life; fM[i] = life; fS0[i] = size; fD[i] = drag; fG[i] = grav; fK[i] = kind;
 }
-const flashes = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffffff, 0, 14, 2); scene.add(l); return l; });
+const flashes = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffffff, 0, 40, 1); scene.add(l); return l; });
 let flashI = 0; const rockets = [];
 const hsl = (h, s, l) => { const c = new THREE.Color().setHSL(h, s, l); return [c.r, c.g, c.b]; };
-function launch(delay = 0) {
-  const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), d = rand(4, 9);
-  const x = THREE.MathUtils.clamp(camera.position.x + fwd.x * d + rand(-2.5, 2.5), -HW + 1.2, HW - 1.2);
-  const z = THREE.MathUtils.clamp(camera.position.z + fwd.z * d + rand(-2.5, 2.5), -HL + 1.2, HL - 1.2);
-  const pats = ['peony', 'ring', 'willow', 'dual', 'crackle', 'peony', 'heart'];
-  rockets.push({ x, y: .15, z, vx: rand(-.25, .25), vy: rand(8.8, 10), vz: rand(-.25, .25), top: rand(4.4, 6.2), delay, hue: Math.random(), pattern: pats[(Math.random() * pats.length) | 0], whistled: false });
+// Fireworks go off outdoors, high above the roof; the glass roof opens so you watch them through it.
+const FWS = 5, FWZ = 8; // outdoor scale: bursts travel ~5x farther (FWS) and sparks look ~8x bigger (FWZ) than the old indoor ones
+let fwRoof = 0; // seconds the glass roof stays open after the last firework
+const roofOpen = () => !!(room && (room.stars || fwRoof > 0));
+function openRoofForShow() {
+  const was = roofOpen(); fwRoof = 6;
+  if (!was) { applyStars(true); toast('Mái kính đã mở — ngẩng lên ngắm pháo hoa ✦'); }
 }
-function volley() { const n = 3 + (Math.random() * 3 | 0); for (let i = 0; i < n; i++) launch(i * rand(.18, .48)); }
+function launch(delay = 0) {
+  const a = yaw + rand(-.6, .6), d = rand(24, 42);
+  const x = camera.position.x - Math.sin(a) * d, z = camera.position.z - Math.cos(a) * d;
+  const pats = ['peony', 'ring', 'willow', 'dual', 'crackle', 'peony', 'heart'];
+  rockets.push({ x, y: H + .5, z, vx: rand(-.8, .8), vy: rand(24, 28), vz: rand(-.8, .8), top: rand(24, 36), delay, hue: Math.random(), pattern: pats[(Math.random() * pats.length) | 0], whistled: false });
+  openRoofForShow();
+}
+function volley(look = false) {
+  const n = 3 + (Math.random() * 3 | 0); for (let i = 0; i < n; i++) launch(i * rand(.18, .48));
+  if (look && !focus && pitchT < .4) pitchT = .55; // tilt the view up toward the roof
+}
 function explode(rk) {
   const { x, y, z, hue } = rk, base = hsl(hue, 1, .6), alt = hsl((hue + .45) % 1, 1, .62), gold = [1, .72, .32];
-  let n = 260, speed = 3.4, life = 1.9, drag = 1.3, grav = 1.6, size = .085, kind = 0, cols = [base];
-  if (rk.pattern === 'ring') { n = 160; speed = 3.9; }
-  if (rk.pattern === 'willow') { n = 220; speed = 2.8; life = 3.4; drag = 2.1; grav = 1.15; size = .065; cols = [gold]; }
+  let n = 260, speed = 3.4 * FWS, life = 1.9, drag = 1.3, grav = 1.6 * FWS * .8, size = .085 * FWZ, kind = 0, cols = [base];
+  if (rk.pattern === 'ring') { n = 160; speed = 3.9 * FWS; }
+  if (rk.pattern === 'willow') { n = 220; speed = 2.8 * FWS; life = 3.4; drag = 2.1; grav = 1.15 * FWS * .8; size = .065 * FWZ; cols = [gold]; }
   if (rk.pattern === 'dual') cols = [base, alt];
   if (rk.pattern === 'crackle') { cols = [[1, .95, .85]]; kind = 2; n = 200; }
   if (rk.pattern === 'heart') { n = 180; cols = [hsl(.95, 1, .62)]; }
@@ -713,36 +760,42 @@ function explode(rk) {
     else if (rk.pattern === 'heart') { const a = i / n * TAU; v.set(16 * Math.pow(Math.sin(a), 3) / 16, (13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)) / 16, rand(-.05, .05)).applyQuaternion(face); sp = speed * .95; }
     else { const u = Math.random() * 2 - 1, a = Math.random() * TAU, s = Math.sqrt(1 - u * u); v.set(s * Math.cos(a), u, s * Math.sin(a)); }
     const c = cols[i % cols.length], m = 3.2;
-    spawn(x, y, z, v.x * sp, v.y * sp, v.z * sp, c[0] * m, c[1] * m, c[2] * m, life * rand(.75, 1.25), size * rand(.8, 1.3), rk.pattern === 'heart' ? 1.8 : drag, rk.pattern === 'heart' ? .5 : grav, kind || (Math.random() < .3 ? 1 : 0));
+    spawn(x, y, z, v.x * sp, v.y * sp, v.z * sp, c[0] * m, c[1] * m, c[2] * m, life * rand(.75, 1.25), size * rand(.8, 1.3), rk.pattern === 'heart' ? 1.8 : drag, rk.pattern === 'heart' ? .5 * FWS : grav, kind || (Math.random() < .3 ? 1 : 0));
   }
-  for (let i = 0; i < 30; i++) { const u = Math.random() * 2 - 1, a = Math.random() * TAU, s = Math.sqrt(1 - u * u), sp = Math.random() * 1.2; spawn(x, y, z, s * Math.cos(a) * sp, u * sp, s * Math.sin(a) * sp, 4, 3.6, 3, .35, .16, 2, 0); }
-  const fl = flashes[flashI++ % 3]; fl.position.set(x, y, z); fl.color.setRGB(Math.min(1, cols[0][0] + .2), Math.min(1, cols[0][1] + .2), Math.min(1, cols[0][2] + .2)); fl.intensity = 90;
+  for (let i = 0; i < 30; i++) { const u = Math.random() * 2 - 1, a = Math.random() * TAU, s = Math.sqrt(1 - u * u), sp = Math.random() * 1.2 * FWS; spawn(x, y, z, s * Math.cos(a) * sp, u * sp, s * Math.sin(a) * sp, 4, 3.6, 3, .35, .16 * FWZ, 2, 0); }
+  // the burst lights the room from above, through the glass roof
+  const fl = flashes[flashI++ % 3]; fl.position.set(camera.position.x, H + 4, camera.position.z); fl.color.setRGB(Math.min(1, cols[0][0] + .2), Math.min(1, cols[0][1] + .2), Math.min(1, cols[0][2] + .2)); fl.intensity = 40;
   sfxBoom(camera.position.distanceTo(new THREE.Vector3(x, y, z)), rk.pattern === 'crackle');
 }
 function updateFireworks(dt, t) {
   for (let r = rockets.length - 1; r >= 0; r--) {
     const rk = rockets[r]; if (rk.delay > 0) { rk.delay -= dt; continue; }
     if (!rk.whistled) { rk.whistled = true; sfxWhistle(); }
-    rk.x += rk.vx * dt; rk.y += rk.vy * dt; rk.z += rk.vz * dt; rk.vy -= 5 * dt;
-    for (let k = 0; k < 3; k++) spawn(rk.x + rand(-.015, .015), rk.y - k * .04, rk.z + rand(-.015, .015), rand(-.15, .15), -.6 - Math.random() * .5, rand(-.15, .15), 3, 1.9, .8, rand(.35, .65), .06, 1, 2);
-    if (rk.y >= rk.top || rk.vy < 1.2) { explode(rk); rockets.splice(r, 1); }
+    rk.x += rk.vx * dt; rk.y += rk.vy * dt; rk.z += rk.vz * dt; rk.vy -= 9 * dt;
+    for (let k = 0; k < 3; k++) spawn(rk.x + rand(-.08, .08), rk.y - k * .25, rk.z + rand(-.08, .08), rand(-.6, .6), -2.5 - Math.random() * 2, rand(-.6, .6), 3, 1.9, .8, rand(.35, .65), .3, 1, 8);
+    if (rk.y >= rk.top || rk.vy < 4) { explode(rk); rockets.splice(r, 1); }
   }
+  let alive = 0;
   for (let i = 0; i < FW; i++) {
     if (fL[i] <= 0) { if (fA[i] !== 0) fA[i] = 0; continue; }
-    const j = i * 3; fL[i] -= dt;
+    const j = i * 3; fL[i] -= dt; alive++;
     const dr = Math.max(0, 1 - fD[i] * dt);
     fV[j] *= dr; fV[j + 1] = fV[j + 1] * dr - fG[i] * dt; fV[j + 2] *= dr;
     fP[j] += fV[j] * dt; fP[j + 1] += fV[j + 1] * dt; fP[j + 2] += fV[j + 2] * dt;
-    if (fP[j + 1] > H - .08 && !(room && room.stars)) { fP[j + 1] = H - .08; fV[j + 1] *= -.25; }
-    if (fP[j + 1] < .02) { fL[i] = 0; fA[i] = 0; continue; }
-    if (Math.abs(fP[j]) > HW - .05) fV[j] *= -.3; if (Math.abs(fP[j + 2]) > HL - .05) fV[j + 2] *= -.3;
+    // sparks burn out before they reach the roof
+    if (fP[j + 1] < H + .6) { fL[i] = 0; fA[i] = 0; continue; }
     const life = Math.max(0, fL[i] / fM[i]); let a = Math.pow(life, 1.4);
     if (fK[i] === 1 && life < .55) a *= (Math.sin(t * 40 + i) > 0 ? 1 : .15);
-    if (fK[i] === 2 && life < .45 && life > .05 && fM[i] > 1) { fK[i] = 3; for (let k = 0; k < 3; k++) spawn(fP[j], fP[j + 1], fP[j + 2], rand(-.7, .7), rand(-.7, .7), rand(-.7, .7), 5, 4.8, 4.2, rand(.18, .3), .05, 3, .5, 0); if (Math.random() < .05) sfxCrackle(); }
+    if (fK[i] === 2 && life < .45 && life > .05 && fM[i] > 1) { fK[i] = 3; for (let k = 0; k < 3; k++) spawn(fP[j], fP[j + 1], fP[j + 2], rand(-3, 3), rand(-3, 3), rand(-3, 3), 5, 4.8, 4.2, rand(.18, .3), .25, 3, 2, 0); if (Math.random() < .05) sfxCrackle(); }
     fA[i] = a; fS[i] = fS0[i] * (.6 + .4 * life); fC[j] = fB[j]; fC[j + 1] = fB[j + 1]; fC[j + 2] = fB[j + 2];
   }
   const at = fwGeo.attributes; at.position.needsUpdate = at.color.needsUpdate = at.size.needsUpdate = at.alpha.needsUpdate = true;
   flashes.forEach(l => { if (l.intensity > 0) l.intensity = Math.max(0, l.intensity - l.intensity * 6 * dt - dt * 4); });
+  // close the roof again a few seconds after the show ends
+  if (fwRoof > 0) {
+    if (rockets.length || alive || showOn) fwRoof = 6;
+    else { fwRoof -= dt; if (fwRoof <= 0) { fwRoof = 0; applyStars(true); } }
+  }
 }
 
 /* ================================================================ global: confetti */
@@ -1284,6 +1337,8 @@ function buildRoom() {
   scene.add(R.group);
   const tx = themeTextures(key, th), M = R.mats;
   M.wall = std({ map: tx.wall.map, roughness: .92, emissiveMap: tx.wall.emi || null, emissive: tx.wall.emi ? 0xffffff : 0x000000, emissiveIntensity: tx.wall.emi ? 1.5 : 0 });
+  if (PH.plaster && th.wall.kind === 'plaster') phApply(M.wall, PH.plaster, { keepMap: true, rough: .9, normal: .45 });
+  if (PH.plaster && th.wall.kind === 'panel') phApply(M.wall, PH.plaster, { keepMap: true, rough: .85, normal: .6 });
   M.trim = std({ color: th.trim, roughness: .5, metalness: .2 });
   M.stone = std({ color: th.stone, roughness: .35 });
   M.wood = std({ color: th.wood, roughness: .45 });
@@ -1313,6 +1368,16 @@ function buildRoom() {
 
   /* floor */
   M.floor = std({ map: tx.floor.map, roughness: th.floor.rough, transparent: true, opacity: th.floor.op, emissiveMap: tx.floor.emi || null, emissive: tx.floor.emi ? 0xffffff : 0, emissiveIntensity: tx.floor.emi ? 1.3 : 0 });
+  {
+    const f = th.floor;
+    if (f.kind === 'marble' && PH.marble) {
+      // light marbles use the real scan; dark/coloured theme marbles keep their colours but gain its surface relief
+      const light = (f.base[0] + f.base[1] + f.base[2]) / 3 > .6;
+      phApply(M.floor, PH.marble, { keepMap: !light, tint: light ? f.base : undefined, rough: f.rough, normal: .35 });
+    }
+    if (f.kind === 'wood' && PH.parquet) phApply(M.floor, PH.parquet, { tint: f.col, rough: f.rough + .1, normal: .8 });
+    if (f.kind === 'concrete' && PH.concrete) phApply(M.floor, PH.concrete, { keepMap: true, rough: f.rough + .1, normal: .5 });
+  }
   const floor = add(new THREE.Mesh(uvPlane(W, L), M.floor)); floor.rotation.x = -PI / 2; floor.position.y = .002; floor.layers.set(1);
   if (tx.floor.emi) R.updaters.push((dt, t) => { M.floor.emissiveIntensity = fxOn ? 1.15 + Math.sin(t * .9) * .35 + Math.sin(t * 2.3) * .1 : .5; M.wall.emissiveIntensity = fxOn ? 1.4 + Math.sin(t * 1.3 + 1) * .4 : .6; });
 
@@ -1340,6 +1405,9 @@ function buildRoom() {
   // roof beams for the starry ceiling
   const roofM = std({ color: 0x1a1816, roughness: .5, metalness: .4 });
   for (let z = -HL; z <= HL; z += 4) { const b = add(new THREE.Mesh(new THREE.BoxGeometry(W, .16, .12), roofM)); b.position.set(0, H + .05, z); R.roofParts.push(b); }
+  // glass panes between the roof beams: you see the sky and fireworks through them
+  { const gl = add(new THREE.Mesh(new THREE.PlaneGeometry(W, L), std({ color: 0xbcd4e6, transparent: true, opacity: .07, roughness: .04, metalness: .1, depthWrite: false, side: THREE.DoubleSide, envMapIntensity: .6 })));
+    gl.rotation.x = PI / 2; gl.position.y = H + .13; gl.userData.noShadow = true; R.roofParts.push(gl); }
   [-HW / 2, 0, HW / 2].forEach(x => { const b = add(new THREE.Mesh(new THREE.BoxGeometry(.12, .16, L), roofM)); b.position.set(x, H + .05, 0); R.roofParts.push(b); });
   // track rails
   [-6, -2.3, 2.3, 6].forEach(x => { const m = add(new THREE.Mesh(new THREE.BoxGeometry(.05, .04, L - 3), M.rail)); m.position.set(x, H - .03, 0); });
@@ -1547,8 +1615,8 @@ function buildRoom() {
 
   /* ---------- global hooks */
   reflector.material.uniforms.color.value.setHex(th.floor.kind === 'wood' ? 0x6a6a6a : 0x8c8c8c);
-  sky.visible = !!room.stars;
-  R.ceilParts.forEach(o => o.visible = !room.stars); R.roofParts.forEach(o => o.visible = !!room.stars);
+  sky.visible = roofOpen();
+  R.ceilParts.forEach(o => o.visible = !roofOpen()); R.roofParts.forEach(o => o.visible = roofOpen());
   applyLighting(); updateDoorSign(); refreshPick(); applyQuality(true);
 }
 function regSlot(s) { s.info = s.info || { title: '', artist: '', year: '', description: '' }; R.slots.push(s); R.map[s.id] = s; }
@@ -1650,17 +1718,17 @@ const artGlow = () => R ? R.th.art * .28 * (spotsOn ? 1 : .3) : .1;
 function applyLighting() {
   if (!R) return; const th = R.th, p = PRESETS[presetIdx], M = R.mats;
   hemi.color.setHex(th.hemi[0]).lerp(new THREE.Color(p.tint), .3); hemi.groundColor.setHex(th.hemi[1]);
-  hemi.intensity = th.hemi[2] * p.hemiMul * .85 * (room.stars ? .55 : 1);
-  sun.intensity = p.sun * (SUNF[R.key] ?? 1) * (room.stars ? .5 : 1);
-  sun.color.setHex(room.stars ? 0x9fb4ff : p.sunCol);
-  R.rects.forEach(l => l.intensity = l.userData.base * p.rect * (room.stars ? 0 : 1));
+  hemi.intensity = th.hemi[2] * p.hemiMul * .85 * (roofOpen() ? .55 : 1);
+  sun.intensity = p.sun * (SUNF[R.key] ?? 1) * (roofOpen() ? .5 : 1);
+  sun.color.setHex(roofOpen() ? 0x9fb4ff : p.sunCol);
+  R.rects.forEach(l => l.intensity = l.userData.base * p.rect * (roofOpen() ? 0 : 1));
   scene.environmentIntensity = th.env * p.envMul * .85; renderer.toneMappingExposure = p.exp;
   if (M.ceilGlow && th.ceil.kind === 'coffer') M.ceilGlow.emissiveIntensity = th.ceil.gi * p.ceilMul * .7;
   M.wash.opacity = th.wash * p.washMul * .55; M.cone.uniforms.uOpacity.value = th.beam * p.washMul * .75;
   M.lens.emissiveIntensity = spotsOn ? 1.6 : 0;
   R.slots.forEach(s => { if (s.type === 'wall') { if (s.wash) s.wash.visible = spotsOn; if (s.media?.kind !== 'video' && s.artMesh?.material.emissiveIntensity !== undefined) s.artMesh.material.emissiveIntensity = artGlow(); } });
   scene.fog = th.fog ? new THREE.FogExp2(th.fog[0], th.fog[1] * (presetIdx === 2 ? .8 : 1)) : null;
-  scene.background.setHex(room.stars ? 0x000000 : 0x0b0a09);
+  scene.background.setHex(roofOpen() ? 0x000000 : 0x0b0a09);
   $('#lightLabel').textContent = p.name;
   document.querySelectorAll('#presetSeg button').forEach(b => b.classList.toggle('on', +b.dataset.p === presetIdx));
 }
@@ -1683,8 +1751,8 @@ function updateDoorSign() {
   R.mats.portal.uniforms.uColor.value.setHex(next ? THEMES[next.theme]?.glow || 0xffffff : R.th.glow);
 }
 function applyStars(silent) {
-  sky.visible = !!room.stars;
-  if (R) { R.ceilParts.forEach(o => o.visible = !room.stars); R.roofParts.forEach(o => o.visible = !!room.stars); }
+  sky.visible = roofOpen();
+  if (R) { R.ceilParts.forEach(o => o.visible = !roofOpen()); R.roofParts.forEach(o => o.visible = roofOpen()); }
   $('#tStars').classList.toggle('on', !!room.stars); applyLighting();
   if (room.stars && !silent) toast('Trần nhà đã mở ra bầu trời sao ✦');
 }
@@ -1734,7 +1802,7 @@ function clickAt(x, y) { const s = pick(x, y); if (!s) return; stopTour(); if (s
 addEventListener('keydown', e => {
   if (e.target.matches('input,textarea,[contenteditable="true"]')) return; keys[e.code] = true;
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { focus = null; stopTour(); e.preventDefault(); }
-  if (e.code === 'Space' && started) { e.preventDefault(); volley(); }
+  if (e.code === 'Space' && started) { e.preventDefault(); volley(true); }
   if (arrangeOn && selDecor) { if (e.code === 'KeyQ') rotSel(PI / 12); if (e.code === 'KeyE') rotSel(-PI / 12); if (e.code === 'Delete' || e.code === 'Backspace') { e.preventDefault(); delSel(); } }
   if (e.code === 'Escape') { if (arrangeOn) setArrange(false); closePanel(); closePops(); closeModal(); $('#rooms').classList.remove('open'); focus = null; }
 });
@@ -1855,7 +1923,7 @@ $('#tUpload').onclick = e => { if (!canEdit()) return; if (selected) { pickFiles
 document.querySelectorAll('#uploadPop .opt').forEach(b => b.onclick = () => { closePops(); pickFiles(b.dataset.t, null); });
 $('#tArrange').onclick = () => setArrange(!arrangeOn);
 let showOn = false, showTimer = 0;
-$('#tFire').onclick = () => { showOn = !showOn; $('#tFire').classList.toggle('on', showOn); if (showOn) { volley(); showTimer = 1.2; } };
+$('#tFire').onclick = () => { showOn = !showOn; $('#tFire').classList.toggle('on', showOn); if (showOn) { volley(true); showTimer = 1.2; } };
 $('#tConfetti').onclick = () => confetti();
 $('#tQuality').onclick = () => { quality = quality ? 0 : 1; applyQuality(); };
 $('#tFull').onclick = async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch (e) { toast('Trình duyệt không cho phép toàn màn hình ở đây.'); } };
@@ -2408,6 +2476,11 @@ addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; cam
 /* ================================================================ start */
 async function boot() {
   rooms = [{ id: 'none', name: 'Gian 1', theme: 'classic', stars: false }]; room = rooms[0];
+  // wait briefly for the Poly Haven textures; on a slow connection, start anyway and swap them in later
+  let phDone = false; phReady.then(() => phDone = true);
+  await Promise.race([phReady, wait(4000)]);
+  const usePH = () => { if (PH.env) scene.environment = PH.env; };
+  usePH(); if (!phDone) phReady.then(() => { usePH(); if (R && room) { buildRoom(); applyRoomItems(); } });
   buildRoom(); clock.start(); tick();
   $('#loading').classList.add('hide');
   document.fonts?.ready.then(() => { R?.slots.forEach(s => s.label()); updateDoorSign(); });
