@@ -175,6 +175,17 @@ body.can-edit span.member-only{display:block}
 @media (pointer:coarse){#joy{display:block}}
 .keys-touch{display:none}
 @media (pointer:coarse){.keys-desk{display:none}.keys-touch{display:flex}}
+#pLight{border-top:1px solid var(--line);margin-top:12px;padding-top:4px}
+#pLight .lb{display:flex;justify-content:space-between}
+.range{width:100%;accent-color:var(--gold);margin:2px 0 4px}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:6px}
+.shop .it{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04);overflow:hidden;display:flex;flex-direction:column}
+.shop .pic{height:96px;display:grid;place-items:center;font-size:44px;background:radial-gradient(circle at 50% 40%,rgba(217,181,108,.18),transparent 70%)}
+.shop .pic img{width:100%;height:100%;object-fit:cover}
+.shop .bd{padding:9px 10px 10px;display:flex;flex-direction:column;gap:6px;flex:1}
+.shop .bd b{font-size:13.5px;font-weight:600}.shop .bd small{font-size:11px;color:var(--muted);flex:1}
+.shop .btn{flex:0 0 auto;padding:7px 8px;font-size:12px}
+.wallet{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:var(--gold-soft);color:var(--gold);font-weight:600;font-size:13px}
 /* toolbar: fade the edge that has more buttons to scroll to */
 #toolbar.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 #toolbar.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
@@ -240,6 +251,7 @@ body.can-edit span.member-only{display:block}
 <nav id="toolbar" class="glass">
   <button class="tb accent member-only" id="tUpload" title="Tải ảnh, video, mô hình 3D"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải lên</button>
   <button class="tb member-only" id="tArrange" title="Di chuyển, thêm, xoá cây cảnh và đồ trưng bày"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3"/></svg>Sắp xếp</button>
+  <button class="tb member-only" id="tShop" title="Mua đồ trưng bày, cây cảnh, nội thất"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Cửa hàng</button>
   <span class="sep member-only"></span>
   <button class="tb" id="tRooms" title="Các gian trưng bày"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="8" height="7" rx="1"/><rect x="13" y="4" width="8" height="7" rx="1"/><rect x="3" y="13" width="8" height="7" rx="1"/><path d="M17 14v6M14 17h6"/></svg>Các gian</button>
   <button class="tb" id="tTheme" title="Đổi giao diện gian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.5-.8 1.2-1.6-.4-1 .2-2.4 1.6-2.4H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="11" cy="7.5" r="1.2"/><circle cx="15.5" cy="8.5" r="1.2"/></svg>Giao diện</button>
@@ -280,6 +292,15 @@ body.can-edit span.member-only{display:block}
     <div id="fSaved"></div>
   </div>
   <div id="pMeta"></div>
+  <div id="pLight">
+    <div class="tg" id="plOn">Đèn chiếu tác phẩm<span class="sw2"></span></div>
+    <label class="lb" for="plLv"><span>Độ sáng</span><span id="plLvT"></span></label>
+    <input type="range" class="range" id="plLv" min="10" max="100" step="5">
+    <label class="lb">Màu ánh sáng</label>
+    <div class="seg" id="plK" style="margin-top:0"><button data-k="2700">Ấm 2700K</button><button data-k="3000">3000K</button><button data-k="4000">4000K</button><button data-k="5000">Ánh ngày</button></div>
+    <div class="note" id="plNote" style="margin:8px 0 10px"></div>
+  </div>
+  <button class="btn full" id="pAnim" style="display:none;margin-bottom:8px">Dừng chuyển động</button>
   <div class="row"><button class="btn sq" id="pPrev">‹</button><button class="btn" id="pFocus">Xem cận cảnh</button><button class="btn sq" id="pNext">›</button></div>
   <button class="btn full" id="pSound" style="display:none;margin-bottom:8px">Bật tiếng video</button>
   <div id="pEdit"><div class="row"><button class="btn gold" id="pUpload">Tải lên vị trí này</button></div><button class="btn full danger" id="pRemove">Gỡ khỏi vị trí này</button></div>
@@ -337,6 +358,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 /* ================================================================ constants & state */
 const W = 16, L = 32, H = 7, HW = W / 2, HL = L / 2, EYE = 1.65, PI = Math.PI, TAU = PI * 2;
@@ -375,6 +398,9 @@ Object.assign(sun.shadow.camera, { left: -19, right: 19, top: 19, bottom: -19, n
 sun.shadow.bias = -.0004; sun.shadow.normalBias = .03; sun.shadow.radius = 4;
 scene.add(sun, sun.target);
 const gltfLoader = new GLTFLoader();
+// compressed models (Draco / Meshopt), common on Pixabay and Sketchfab
+gltfLoader.setDRACOLoader(new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/libs/draco/gltf/'));
+gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
 /* ================================================================ global: floor mirror, post */
 const reflector = new Reflector(new THREE.PlaneGeometry(W, L), { clipBias: .003, color: 0x8c8c8c, textureWidth: innerWidth * dpr() * .5, textureHeight: innerHeight * dpr() * .5 });
@@ -1215,7 +1241,27 @@ function makeVitrine(e) {
     regSlot(s);
   } else { s.group = g; s.holder = holder; }
   [pl, glass, cap].forEach(m => m.userData.slot = s);
+  s.lamp = lamp; applySlotLight(s);
   renderCase(s);
+  return g;
+}
+/* 3D models from the shop (assets/shop/*.glb). One download per file, shared by every copy in the room. */
+const glbCache = {};
+function loadShopModel(src) {
+  return glbCache[src] ||= gltfLoader.loadAsync(src).then(gltf => {
+    gltf.scene.traverse(o => { if (o.isMesh) { o.geometry.userData.keep = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.userData.keep = true); } });
+    return gltf;
+  });
+}
+function makeGlbDecor(e) {
+  const g = new THREE.Group();
+  const ph = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), std({ color: 0xd9b56c, transparent: true, opacity: .25 })); ph.position.y = .25; g.add(ph);
+  loadShopModel(e.src).then(gltf => {
+    const sc = gltf.scene.clone(true), box = new THREE.Box3().setFromObject(sc), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    const k = (e.h || 1) / Math.max(size.y, 1e-6); sc.scale.setScalar(k); sc.position.set(-c.x * k, -box.min.y * k, -c.z * k);
+    sc.traverse(o => { if (o.isMesh) { o.userData.decor = e.id; o.castShadow = o.receiveShadow = true; } });
+    g.remove(ph); ph.geometry.dispose(); ph.material.dispose(); g.add(sc); refreshPick();
+  }).catch(err => { console.warn('Không tải được mô hình cửa hàng', e.src, err); ph.material.color.setHex(0xc0392b); });
   return g;
 }
 const DECOR = {
@@ -1230,7 +1276,8 @@ const DECOR = {
   lamp: { name: 'Đèn cây', icon: '💡', r: .22, make: makeLamp },
   sculpture: { name: 'Tượng điêu khắc', icon: '🗿', r: .42, make: makeSculpture },
   rug: { name: 'Thảm trải sàn', icon: '🟫', flat: [1.1, 1.65], make: makeRug },
-  vitrine: { name: 'Tủ kính trưng bày', icon: '🧸', r: .42, fixed: true, make: makeVitrine }
+  vitrine: { name: 'Tủ kính trưng bày', icon: '🧸', r: .42, fixed: true, make: makeVitrine },
+  glb: { name: 'Vật phẩm', icon: '📦', r: .45, make: makeGlbDecor }
 };
 const ADDABLE = ['ficus', 'palm', 'snake', 'mai', 'dao', 'bouquet', 'bench', 'beanbag', 'lamp', 'sculpture', 'rug'];
 function defaultLayout(key, th) {
@@ -1307,7 +1354,7 @@ function renderArrange() {
   const box = $('#aAdds');
   if (!box.childElementCount) ADDABLE.forEach(t => { const b = document.createElement('button'); b.innerHTML = `<span>${DECOR[t].icon}</span>${DECOR[t].name}`; b.onclick = () => addDecor(t); box.appendChild(b); });
   $('#aSel').style.display = selDecor ? '' : 'none';
-  if (selDecor) { $('#aName').textContent = DECOR[selDecor.type].name; $('#aDel').style.display = $('#aDup').style.display = DECOR[selDecor.type].fixed ? 'none' : ''; }
+  if (selDecor) { $('#aName').textContent = selDecor.name || DECOR[selDecor.type].name; $('#aDel').style.display = $('#aDup').style.display = DECOR[selDecor.type].fixed ? 'none' : ''; }
 }
 let layoutTimer = null, lastLayoutLocal = 0;
 function scheduleLayoutSave() {
@@ -1316,9 +1363,9 @@ function scheduleLayoutSave() {
   clearTimeout(layoutTimer); layoutTimer = setTimeout(() => saveRoom({ layout: room.layout }), 700);
 }
 const newId = () => 'd' + Date.now().toString(36) + ((Math.random() * 1e4) | 0);
-function addDecor(type) {
+function addDecor(type, extra = {}) {
   const f = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-  const e = { id: newId(), type, x: THREE.MathUtils.clamp(camera.position.x + f.x * 2.6, -HW + .8, HW - .8), z: THREE.MathUtils.clamp(camera.position.z + f.z * 2.6, -HL + .8, HL - .8), rot: 0, s: 1, seed: (Math.random() * 1e6) | 0 };
+  const e = { id: newId(), type, x: THREE.MathUtils.clamp(camera.position.x + f.x * 2.6, -HW + .8, HW - .8), z: THREE.MathUtils.clamp(camera.position.z + f.z * 2.6, -HL + .8, HL - .8), rot: 0, s: 1, seed: (Math.random() * 1e6) | 0, ...extra };
   syncDecor([...R.layout, e]); selectDecor(R.decor[e.id].e); scheduleLayoutSave(); sfxPop();
 }
 function mutateSel(fn) {
@@ -1467,12 +1514,24 @@ function buildRoom() {
     s.plaque = new THREE.Mesh(new THREE.PlaneGeometry(.36, .14), std({ map: s.plaqueTex, roughness: .55 })); s.plaqueBack = new THREE.Mesh(new THREE.BoxGeometry(.38, .16, .012), M.plaqueBack);
     group.add(s.plaque, s.plaqueBack);
     s.cone = add(new THREE.Mesh(G.cone, M.cone)); s.cone.renderOrder = 5; R.cones.push(s.cone);
-    s.fixture = add(new THREE.Group()); s.fixture.add(new THREE.Mesh(G.fixture, M.rail)); const lens = new THREE.Mesh(G.lens, M.lens); lens.position.z = .121; s.fixture.add(lens);
+    s.fixture = add(new THREE.Group()); s.fixture.add(new THREE.Mesh(G.fixture, M.rail)); s.lensMat = M.lens.clone(); const lens = new THREE.Mesh(G.lens, s.lensMat); lens.position.z = .121; s.fixture.add(lens);
     s.stem = add(new THREE.Mesh(G.stem, M.rail));
     s.render = () => buildFrame(s); s.label = () => drawPlaque(s);
     s.focusInfo = () => ({ center: s.center, normal: s.normal, w: s.outer.w, h: s.outer.h });
     regSlot(s); buildFrame(s);
   });
+
+  /* ---------- light switch for the artwork spots, on the left wall by the entrance */
+  {
+    const sw = add(new THREE.Group()); sw.position.set(-HW + .012, 1.3, 14.9); sw.rotation.y = PI / 2;
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(.13, .2, .012), std({ color: 0xf3efe7, roughness: .35 }));
+    const rocker = new THREE.Mesh(new THREE.BoxGeometry(.07, .11, .02), std({ color: 0xffffff, roughness: .3 })); rocker.position.z = .012;
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(.008, 12), std({ color: 0, emissive: 0x48e07a, emissiveIntensity: 2.5 })); dot.position.set(0, .075, .0065);
+    const [lc] = canvas(256, 64); { const g = lc.getContext('2d'); g.fillStyle = '#f4ede1'; g.font = '600 30px "Be Vietnam Pro", Arial'; g.textAlign = 'center'; g.fillText('ĐÈN TRANH', 128, 42); }
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(.22, .055), new THREE.MeshBasicMaterial({ map: tex(lc, true, true), transparent: true })); label.position.set(0, .15, .002);
+    [plate, rocker, dot].forEach(m => { m.userData.lightSwitch = true; sw.add(m); }); sw.add(label);
+    R.lightSwitch = { rocker, dot };
+  }
 
   /* ---------- glowing counter with flowers */
   const glowMat = std({ color: 0x000000, emissive: th.glow, emissiveIntensity: .22, roughness: .3 });
@@ -1649,7 +1708,7 @@ function buildRoom() {
   applyLighting(); updateDoorSign(); refreshPick(); applyQuality(true);
 }
 function regSlot(s) { s.info = s.info || { title: '', artist: '', year: '', description: '' }; R.slots.push(s); R.map[s.id] = s; }
-function refreshPick() { if (!R) return; R.pick = []; R.decorPick = []; R.group.traverse(o => { if (!o.isMesh) return; if (o.userData.slot || o.userData.door) R.pick.push(o); if (o.userData.decor) R.decorPick.push(o); }); }
+function refreshPick() { if (!R) return; R.pick = []; R.decorPick = []; R.group.traverse(o => { if (!o.isMesh) return; if (o.userData.slot || o.userData.door || o.userData.lightSwitch) R.pick.push(o); if (o.userData.decor) R.decorPick.push(o); }); }
 
 /* ---------- wall frame */
 function rectPath(path, w, h, cw) { const x = w / 2, y = h / 2; if (cw) { path.moveTo(-x, -y); path.lineTo(-x, y); path.lineTo(x, y); path.lineTo(x, -y); path.lineTo(-x, -y); } else { path.moveTo(-x, -y); path.lineTo(x, -y); path.lineTo(x, y); path.lineTo(-x, y); path.lineTo(-x, -y); } }
@@ -1665,7 +1724,7 @@ function buildFrame(f) {
   const shape = new THREE.Shape(); rectPath(shape, ow, oh, false); const hole = new THREE.Path(); rectPath(hole, iw, ih, true); shape.holes.push(hole);
   const mm = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: .045, bevelEnabled: true, bevelThickness: .022, bevelSize: .016, bevelSegments: 3, curveSegments: 1 }), isVideo ? M.black : M.mould[f.n % M.mould.length]); mm.position.z = .01;
   const sh = new THREE.Mesh(new THREE.PlaneGeometry(ow * 1.28, oh * 1.28), M.frameShadow); sh.position.set(0, -.07, .004);
-  const wash = new THREE.Mesh(new THREE.PlaneGeometry(ow * 1.9 + .4, oh * 1.6 + .9), M.wash); wash.position.set(0, .3, .003); f.wash = wash;
+  const wash = new THREE.Mesh(new THREE.PlaneGeometry(ow * 1.9 + .4, oh * 1.6 + .9), M.wash.clone()); wash.position.set(0, .3, .003); wash.userData.ownMat = true; f.wash = wash;
   const board = new THREE.Mesh(new THREE.PlaneGeometry(iw + .02, ih + .02), isVideo ? M.black : M.matBoard); board.position.z = .026;
   const artMat = isVideo ? new THREE.MeshBasicMaterial({ map: tx, color: 0xdddddd }) : std({ map: tx, roughness: .6, emissiveMap: tx, emissive: 0xffffff, emissiveIntensity: artGlow() });
   const art = new THREE.Mesh(new THREE.PlaneGeometry(aw, ah), artMat); art.position.z = .03; art.userData.ownMat = true; f.artMesh = art;
@@ -1678,7 +1737,7 @@ function buildFrame(f) {
   const dir = f.center.clone().sub(fx).normalize();
   f.cone.position.copy(fx); f.cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir); const len = dist * .96, r = Math.tan(ang) * len * .8; f.cone.scale.set(r, len, r);
   f.fixture.position.copy(fx); f.fixture.lookAt(f.center); f.stem.position.set(fx.x, H - .1, fx.z);
-  wash.visible = spotsOn;
+  applySlotLight(f);
 }
 function drawPlaque(f) {
   const c = f.plaqueCanvas, g = c.getContext('2d'), inf = f.info || {};
@@ -1744,6 +1803,33 @@ const PRESETS = [
 ];
 const SUNF = { lava: .25, galaxy: .3, museum: .5, ocean: .8 };
 const artGlow = () => R ? R.th.art * .28 * (spotsOn ? 1 : .3) : .1;
+/* Per-artwork lights. Like a real gallery: each work has its own ceiling track spot (about 30° from vertical),
+   warm white by default (3000K), dimmable; vitrines have a built-in top light. Saved per room in rooms.lights. */
+const LIGHT_K = { 2700: 0xffcf9a, 3000: 0xffdcb2, 4000: 0xfff1df, 5000: 0xfffaf4 };
+const slotLight = s => ({ on: true, lv: .8, k: 3000, ...(room?.lights?.[s.id] || {}) });
+const hasLight = s => s.type === 'wall' || (s.type === 'case' && s.sub === 'vitrine');
+const _lc = new THREE.Color();
+function applySlotLight(s) {
+  if (!R || !s) return;
+  const L = slotLight(s), on = spotsOn && L.on, k = on ? L.lv / .8 : 0;
+  _lc.setHex(LIGHT_K[L.k] || LIGHT_K[3000]);
+  if (s.type === 'wall') {
+    if (s.wash) { s.wash.visible = on; s.wash.material.opacity = (R.washBase ?? .25) * k; s.wash.material.color.copy(_lc).lerp(hexC(R.th.washCol), .3); }
+    if (s.cone) s.cone.userData.lit = on;
+    if (s.lensMat) { s.lensMat.emissive.copy(_lc); s.lensMat.emissiveIntensity = on ? 1.6 * Math.max(.45, k) : 0; }
+    if (s.media?.kind !== 'video' && s.artMesh?.material.emissiveIntensity !== undefined) s.artMesh.material.emissiveIntensity = R.th.art * .28 * (on ? .3 + .7 * k : .3);
+  } else if (s.lamp) { s.lamp.material.emissive.copy(_lc); s.lamp.material.emissiveIntensity = on ? 1.4 * k : .04; }
+}
+let lightSaveT = null;
+function setSlotLight(s, patch) {
+  room.lights = { ...(room.lights || {}), [s.id]: { ...slotLight(s), ...patch } };
+  applySlotLight(s); renderLightPanel();
+  if (canEdit()) { clearTimeout(lightSaveT); lightSaveT = setTimeout(() => saveRoom({ lights: room.lights }), 600); }
+}
+function setAllLights(on) {
+  spotsOn = on; document.querySelector('#lightPop .tg[data-k="spots"]')?.classList.toggle('on', on);
+  applyLighting(); renderLightPanel();
+}
 function applyLighting() {
   if (!R) return; const th = R.th, p = PRESETS[presetIdx], M = R.mats;
   hemi.color.setHex(th.hemi[0]).lerp(new THREE.Color(p.tint), .3); hemi.groundColor.setHex(th.hemi[1]);
@@ -1753,9 +1839,10 @@ function applyLighting() {
   R.rects.forEach(l => l.intensity = l.userData.base * p.rect * (roofOpen() ? 0 : 1));
   scene.environmentIntensity = th.env * p.envMul * .85; renderer.toneMappingExposure = p.exp;
   if (M.ceilGlow && th.ceil.kind === 'coffer') M.ceilGlow.emissiveIntensity = th.ceil.gi * p.ceilMul * .7;
-  M.wash.opacity = th.wash * p.washMul * .55; M.cone.uniforms.uOpacity.value = th.beam * p.washMul * .75;
+  R.washBase = M.wash.opacity = th.wash * p.washMul * .55; M.cone.uniforms.uOpacity.value = th.beam * p.washMul * .75;
   M.lens.emissiveIntensity = spotsOn ? 1.6 : 0;
-  R.slots.forEach(s => { if (s.type === 'wall') { if (s.wash) s.wash.visible = spotsOn; if (s.media?.kind !== 'video' && s.artMesh?.material.emissiveIntensity !== undefined) s.artMesh.material.emissiveIntensity = artGlow(); } });
+  R.slots.forEach(applySlotLight);
+  if (R.lightSwitch) { R.lightSwitch.rocker.rotation.x = spotsOn ? -.28 : .28; R.lightSwitch.dot.material.emissive.setHex(spotsOn ? 0x48e07a : 0xff5a3c); }
   scene.fog = th.fog ? new THREE.FogExp2(th.fog[0], th.fog[1] * (presetIdx === 2 ? .8 : 1)) : null;
   scene.background.setHex(roofOpen() ? 0x000000 : 0x0b0a09);
   $('#lightLabel').textContent = p.name;
@@ -1796,7 +1883,7 @@ function floorPoint(x, y) { setRay(x, y); return ray.ray.intersectPlane(floorPla
 function pickDecor(x, y) { if (!R) return null; setRay(x, y); const h = ray.intersectObjects(R.decorPick, false)[0]; return h && h.distance < 40 ? R.decor[h.object.userData.decor] : null; }
 function pick(x, y) {
   if (!R) return null; setRay(x, y);
-  for (const h of ray.intersectObjects(R.pick, false)) { if (h.distance > 30) break; if (h.object.userData.door) return { door: true }; if (h.object.userData.slot) return h.object.userData.slot; }
+  for (const h of ray.intersectObjects(R.pick, false)) { if (h.distance > 30) break; if (h.object.userData.door) return { door: true }; if (h.object.userData.lightSwitch) return { lightSwitch: true }; if (h.object.userData.slot) return h.object.userData.slot; }
   return null;
 }
 cvs.addEventListener('pointerdown', e => {
@@ -1815,6 +1902,7 @@ cvs.addEventListener('pointermove', e => {
   }
   if (dragging === e.pointerId) {
     const dx = e.movementX ?? 0, dy = e.movementY ?? 0; moved += Math.abs(dx) + Math.abs(dy);
+    if (moved > 6 && inspecting()) { selected.holder.rotation.y += dx * (e.pointerType === 'touch' ? .014 : .01); return; }
     if (moved > 6) { const k = e.pointerType === 'touch' ? .006 : .0035; yawT += dx * k; pitchT = THREE.MathUtils.clamp(pitchT + dy * k, -1.25, 1.25); if (focus) focus.lock = false; stopTour(); }
   } else if (dragging === null && e.pointerType === 'mouse') hoverCheck(e);
 });
@@ -1824,10 +1912,12 @@ cvs.addEventListener('pointerup', e => {
   if (moved <= 6 && started) { if (arrangeOn) selectDecor(null); clickAt(e.clientX, e.clientY); }
 });
 cvs.addEventListener('pointercancel', e => { if (dragging === e.pointerId) dragging = null; if (dragDecor?.id === e.pointerId) dragDecor = null; });
-cvs.addEventListener('wheel', e => { e.preventDefault(); vel.addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -Math.sign(e.deltaY) * 1.6); focus = null; stopTour(); }, { passive: false });
+const inspecting = () => !!(focus?.lock && selected?.type === 'case' && selected.alive);
+cvs.addEventListener('wheel', e => { e.preventDefault();
+  if (inspecting()) { const c = selected.focusInfo().center, d = focus.pos.clone().sub(c), len = THREE.MathUtils.clamp((d.length() || 1.2) * (e.deltaY > 0 ? 1.12 : .89), .75, 3.2); focus.pos.copy(c).addScaledVector(d.normalize(), len); return; } vel.addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -Math.sign(e.deltaY) * 1.6); focus = null; stopTour(); }, { passive: false });
 let hoverT = 0;
 function hoverCheck(e) { const now = performance.now(); if (now - hoverT < 70) return; hoverT = now; if (!started) return; cvs.style.cursor = (arrangeOn && pickDecor(e.clientX, e.clientY)) ? 'move' : pick(e.clientX, e.clientY) ? 'pointer' : 'grab'; }
-function clickAt(x, y) { const s = pick(x, y); if (!s) return; stopTour(); if (s.door) useDoor(); else if (!arrangeOn) selectSlot(s, true); }
+function clickAt(x, y) { const s = pick(x, y); if (!s) return; stopTour(); if (s.lightSwitch) { setAllLights(!spotsOn); sfxPop(); toast(spotsOn ? 'Đã bật đèn chiếu tranh' : 'Đã tắt đèn chiếu tranh'); } else if (s.door) useDoor(); else if (!arrangeOn) selectSlot(s, true); }
 addEventListener('keydown', e => {
   if (e.target.matches('input,textarea,[contenteditable="true"]')) return; keys[e.code] = true;
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { focus = null; stopTour(); e.preventDefault(); }
@@ -1908,13 +1998,30 @@ function renderPanel(fill) {
     $('#vSub').textContent = [inf.artist, inf.year].filter(Boolean).join(' · ');
     $('#vDesc').textContent = inf.description || '';
   }
+  renderLightPanel();
+  $('#pAnim').style.display = s.mixer ? '' : 'none'; if (s.mixer) $('#pAnim').textContent = s.mixer.timeScale ? 'Dừng chuyển động' : 'Phát chuyển động';
   const hint = { wall: 'ảnh hoặc video', case: 'ảnh chụp figure/LEGO hoặc mô hình 3D .glb', book: 'ảnh bìa sách' }[s.type];
-  $('#pMeta').textContent = has ? `${kindName[s.media.kind]}${s.media.w ? ' · ' + s.media.w + '×' + s.media.h : ''}${s.media.pending ? ' · đang lưu…' : ''}`
+  const tip = s.type === 'case' ? ' · Khi xem cận cảnh: kéo để xoay, cuộn chuột để lại gần' : '';
+  $('#pMeta').textContent = has ? `${kindName[s.media.kind]}${s.media.w ? ' · ' + s.media.w + '×' + s.media.h : ''}${s.media.pending ? ' · đang lưu… đừng đóng trang' : ''}${tip}`
+    : s.loadError ? `Không tải được tệp đã lưu (${s.loadError}). Thử tải lại trang; nếu vẫn lỗi, hãy tải tệp lên lại.`
     : (ed ? `Vị trí còn trống. Bạn có thể tải ${hint} lên đây, rồi điền tên và câu chuyện cho tác phẩm.` : 'Vật trưng bày minh hoạ, chủ phòng chưa đặt tác phẩm ở đây.');
   $('#pEdit').style.display = ed ? '' : 'none'; $('#pRemove').style.display = has ? '' : 'none';
   $('#pUpload').textContent = has ? 'Thay bằng tệp khác' : 'Tải lên vị trí này';
   const v = s.media?.kind === 'video'; $('#pSound').style.display = v ? '' : 'none'; if (v) $('#pSound').textContent = s.media.el.muted ? 'Bật tiếng video' : 'Tắt tiếng video';
 }
+function renderLightPanel() {
+  const s = selected, box = $('#pLight'); if (!s || !hasLight(s)) { box.style.display = 'none'; return; }
+  box.style.display = ''; const L = slotLight(s);
+  $('#plOn').classList.toggle('on', L.on); $('#plLv').value = Math.round(L.lv * 100); $('#plLvT').textContent = Math.round(L.lv * 100) + '%';
+  document.querySelectorAll('#plK button').forEach(b => b.classList.toggle('on', +b.dataset.k === L.k));
+  $('#plNote').textContent = !spotsOn ? 'Đèn chiếu đang tắt cho cả gian (công tắc “Đèn tranh” cạnh cửa vào, hoặc menu Ánh sáng).'
+    : canEdit() ? 'Đèn ray trên trần rọi xuống tác phẩm. Ảnh, tranh giấy nên để 30–50% và 2700–3000K; tượng, mô hình có thể sáng hơn. Mọi người xem đều thấy.'
+    : 'Bạn đang chỉnh thử, chỉ đổi trên máy của bạn.';
+}
+$('#plOn').onclick = () => selected && setSlotLight(selected, { on: !slotLight(selected).on });
+$('#plLv').oninput = e => selected && setSlotLight(selected, { lv: +e.target.value / 100, on: true });
+document.querySelectorAll('#plK button').forEach(b => b.onclick = () => selected && setSlotLight(selected, { k: +b.dataset.k, on: true }));
+$('#pAnim').onclick = () => { const m = selected?.mixer; if (!m) return; m.timeScale = m.timeScale ? 0 : 1; renderPanel(); };
 function closePanel() { $('#panel').classList.remove('open'); selected = null; }
 $('#pClose').onclick = () => { closePanel(); focus = null; };
 $('#pFocus').onclick = () => selected && focusOn(selected);
@@ -1945,12 +2052,54 @@ $('#tStars').onclick = () => { room.stars = !room.stars; saveRoom({ stars: !!roo
 $('#tLight').onclick = e => openPop('#lightPop', e.currentTarget);
 document.querySelectorAll('#lightPop .tg').forEach(el => el.onclick = () => {
   const k = el.dataset.k; el.classList.toggle('on'); const on = el.classList.contains('on');
-  if (k === 'chand') chandOn = on; if (k === 'spots') { spotsOn = on; applyLighting(); } if (k === 'beams') beamsOn = on; if (k === 'fx') fxOn = on;
+  if (k === 'chand') chandOn = on; if (k === 'spots') setAllLights(on); if (k === 'beams') beamsOn = on; if (k === 'fx') fxOn = on;
 });
 document.querySelectorAll('#presetSeg button').forEach(b => b.onclick = () => { presetIdx = +b.dataset.p; applyLighting(); });
 $('#tUpload').onclick = e => { if (!canEdit()) return; if (selected) { pickFiles(selected.type, selected); return; } openPop('#uploadPop', e.currentTarget); };
 document.querySelectorAll('#uploadPop .opt').forEach(b => b.onclick = () => { closePops(); pickFiles(b.dataset.t, null); });
 $('#tArrange').onclick = () => setArrange(!arrangeOn);
+/* ---------- shop: buy decor with virtual coins ("xu"). Real payment can replace the wallet later. */
+const SHOP_BUILTIN = [
+  ['sculpture', 400, 'Tượng trắng trên bệ đá'], ['mai', 350, 'Mai vàng ngày Tết'], ['dao', 350, 'Đào hồng thắm'], ['ficus', 120, 'Cây xanh trong chậu sứ'],
+  ['palm', 120, 'Cau cảnh lá dài'], ['snake', 80, 'Lưỡi hổ dễ chăm'], ['bouquet', 90, 'Bình hoa tươi trên bệ'], ['lamp', 140, 'Đèn cây ánh vàng'],
+  ['bench', 150, 'Ghế băng gỗ cho khách ngồi'], ['beanbag', 180, 'Ghế lười êm ái'], ['rug', 100, 'Thảm hoa văn']
+];
+const WALLET_START = 2000;
+const walletKey = () => 'xu:' + (me?.id || 'khach');
+function walletGet() { try { const v = localStorage.getItem(walletKey()); return v === null ? WALLET_START : +v || 0; } catch { return WALLET_START; } }
+function walletSet(v) { try { localStorage.setItem(walletKey(), String(v)); } catch { } }
+let shopCatalog = null;
+async function loadShopCatalog() {
+  if (shopCatalog) return shopCatalog;
+  try { const r = await fetch('assets/shop/catalog.json', { cache: 'no-cache' }); shopCatalog = r.ok ? (await r.json()).filter(x => x && x.file) : []; }
+  catch { shopCatalog = []; }
+  return shopCatalog;
+}
+async function openShop() {
+  if (!canEdit()) return;
+  const extra = await loadShopCatalog();
+  const items = [
+    ...extra.map(x => ({ id: 'glb:' + x.file, name: x.name || x.file, desc: x.desc || 'Mô hình 3D', price: +x.price || 0, icon: '📦', thumb: x.thumb ? 'assets/shop/' + x.thumb : null,
+      add: { type: 'glb', extra: { src: 'assets/shop/' + x.file, name: x.name || 'Vật phẩm', h: +x.height || 1 } } })),
+    ...SHOP_BUILTIN.map(([t, price, desc]) => ({ id: t, name: DECOR[t].name, desc, price, icon: DECOR[t].icon, add: { type: t, extra: {} } }))
+  ];
+  const card = (it, i) => `<div class="it"><div class="pic">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy">` : it.icon}</div><div class="bd"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small><button class="btn gold" data-buy="${i}">Mua · ${it.price ? it.price.toLocaleString('vi-VN') + ' xu' : 'Miễn phí'}</button></div></div>`;
+  modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Cửa hàng trưng bày</h2><span class="wallet" id="shopXu"></span></div>
+    <p style="margin-top:6px">Mua đồ rồi kéo đặt vào gian đang xem. Xu là tiền ảo để dùng thử, chưa thanh toán thật.</p>
+    <div class="shop">${items.map(card).join('')}</div>
+    <div class="row" style="margin-top:14px"><button class="btn" data-x>Đóng</button></div>`, box => {
+    const showXu = () => box.querySelector('#shopXu').textContent = '🪙 ' + walletGet().toLocaleString('vi-VN') + ' xu';
+    showXu();
+    box.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
+      const it = items[+b.dataset.buy], xu = walletGet();
+      if (xu < it.price) { toast(`Chưa đủ xu: cần ${it.price} xu, bạn còn ${xu} xu.`); return; }
+      walletSet(xu - it.price); closeModal(); if (!arrangeOn) setArrange(true);
+      addDecor(it.add.type, it.add.extra); sfxChime();
+      toast(`Đã mua “${it.name}”. Kéo trên sàn để đặt chỗ, Q/E để xoay. Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000);
+    });
+  });
+}
+$('#tShop').onclick = openShop;
 let showOn = false, showTimer = 0;
 $('#tFire').onclick = () => { showOn = !showOn; $('#tFire').classList.toggle('on', showOn); if (showOn) { volley(true); showTimer = 1.2; } };
 $('#tConfetti').onclick = () => confetti();
@@ -2280,7 +2429,7 @@ async function createMedia(src) {
   const base = { kind: src.kind, url: src.url, blobUrl: src.blobUrl || null, path: src.path || null };
   if (src.kind === 'model') {
     let buf = src.buf; if (!buf && src.file) buf = await src.file.arrayBuffer();
-    if (!buf) { const r = await fetch(src.url); if (!r.ok) throw new Error('Không tải được mô hình'); buf = await r.arrayBuffer(); }
+    if (!buf) { const r = await fetch(src.url); if (!r.ok) throw new Error(`máy chủ trả về lỗi ${r.status}`); buf = await r.arrayBuffer(); }
     const gltf = await new Promise((res, rej) => gltfLoader.parse(buf.slice(0), '', res, rej));
     return { ...base, scene: gltf.scene, clips: gltf.animations, buf };
   }
@@ -2311,7 +2460,12 @@ function applyItem(slotId, row) {
   const focusedHere = selected === s && $('#pForm').contains(document.activeElement);
   if (!focusedHere) setInfoFromRow(s, row);
   if (s.media?.path === row.path || s.loadingId === row.path) { if (selected === s) renderPanel(); return; }
-  loadSlotMedia(s, { kind: row.kind, url: api.url(row.path), path: row.path }).catch(() => { });
+  s.loadError = null;
+  loadSlotMedia(s, { kind: row.kind, url: api.url(row.path), path: row.path }).catch(e => {
+    console.warn('Không mở được tác phẩm đã lưu', row.slot, row.path, e);
+    s.loadError = e.message || 'lỗi không rõ'; if (selected === s) renderPanel();
+    toast(`Không mở được “${row.title || kindName[row.kind] || 'tác phẩm'}” đã lưu: ${s.loadError}`, 7000);
+  });
 }
 function applyRoomItems() { const m = itemsByRoom[room.id] || {}; Object.values(m).forEach(row => applyItem(row.slot, row)); }
 function classify(f) { if (/\.glb$/i.test(f.name)) return 'model'; if (f.type.startsWith('video/')) return 'video'; if (f.type.startsWith('image/')) return 'image'; return null; }
@@ -2342,14 +2496,17 @@ async function handleFiles(files, type, target) {
   }
 }
 const MAX_MB = 50;
+let pendingUploads = 0;
+addEventListener('beforeunload', e => { if (pendingUploads > 0) { e.preventDefault(); e.returnValue = ''; } });
 async function putFile(s, file, kind, prog) {
   if (file.size > MAX_MB * 1024 * 1024) { toast(`“${file.name}” lớn hơn ${MAX_MB} MB, hãy nén nhỏ lại rồi tải lên.`); return false; }
   const blobUrl = kind === 'model' ? null : URL.createObjectURL(file), rid = room.id, oldPath = s.media?.path;
   try { await loadSlotMedia(s, { kind, url: blobUrl, blobUrl, file }); }
-  catch (e) { toast(`${file.name}: ${e.message || 'không mở được tệp (mô hình nén Draco chưa được hỗ trợ)'}`); if (blobUrl) URL.revokeObjectURL(blobUrl); return false; }
+  catch (e) { toast(`${file.name}: ${e.message || 'không mở được tệp'}`, 6000); if (blobUrl) URL.revokeObjectURL(blobUrl); return false; }
   s.info = { ...blankInfo(), title: file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80) }; s.label();
   const media = s.media; media.pending = true; if (selected === s) renderPanel();
-  toast(`Đang tải lên ${prog}…`, 60000);
+  toast(`Đang tải lên ${prog}… đừng đóng trang cho tới khi xong`, 600000);
+  pendingUploads++;
   try {
     const path = await api.upload(gallery.id, file);
     media.path = path; media.pending = false;
@@ -2357,7 +2514,12 @@ async function putFile(s, file, kind, prog) {
     (itemsByRoom[rid] ||= {})[s.id] = row;
     await api.upsertItem(row);
     if (oldPath && oldPath !== path) api.removeFiles([oldPath]).catch(() => { });
-  } catch (e) { media.pending = false; toast(`Không lưu được “${file.name}”: ${e.message || 'lỗi'}`); if (selected === s) renderPanel(); return false; }
+    if (api.mode === 'supabase') { // make sure visitors (and you, next time) can read the file back
+      const r = await fetch(api.url(path), { method: 'HEAD', cache: 'no-store' }).catch(() => null);
+      if (!r?.ok) toast(`Đã lưu “${file.name}” nhưng không đọc lại được (lỗi ${r?.status || 'mạng'}). Kiểm tra kho “media” trên Supabase đang bật Public.`, 9000);
+    }
+  } catch (e) { media.pending = false; toast(`Không lưu được “${file.name}”: ${e.message || 'lỗi'}`, 8000); if (selected === s) renderPanel(); return false; }
+  finally { pendingUploads--; }
   if (selected === s) renderPanel(); renderRooms(); return true;
 }
 async function removeMedia(s, persist) {
@@ -2380,7 +2542,7 @@ async function saveInfo(s) {
 const sortRooms = () => rooms.sort((a, b) => (a.sort || 0) - (b.sort || 0) || String(a.created_at).localeCompare(String(b.created_at)));
 function saveRoom(patch) {
   if (!canEdit() || !room || room.id === 'none') return;
-  api.updateRoom(room.id, patch).catch(e => toast('Không lưu được gian: ' + e.message));
+  api.updateRoom(room.id, patch).catch(e => toast(/lights/.test(e.message) ? 'Chưa lưu được cài đặt đèn: hãy chạy lại tệp supabase/schema.sql trong Supabase (SQL Editor) để cập nhật cơ sở dữ liệu.' : 'Không lưu được gian: ' + e.message, 8000));
 }
 async function createRoom(theme, name) {
   const row = await api.createRoom({ gallery_id: gallery.id, name: name.slice(0, 40), theme, stars: !!THEMES[theme].starsDefault, sort: Math.max(0, ...rooms.map(x => x.sort || 0)) + 1 });
@@ -2449,11 +2611,11 @@ function onRealtime(table, p) {
   const ex = rooms.find(r => r.id === n.id);
   if (!ex) { rooms.push({ ...n }); sortRooms(); }
   else {
-    const themeCh = ex.theme !== n.theme, starCh = !!ex.stars !== !!n.stars, layoutCh = JSON.stringify(ex.layout ?? null) !== JSON.stringify(n.layout ?? null);
+    const lightCh = JSON.stringify(ex.lights ?? null) !== JSON.stringify(n.lights ?? null), themeCh = ex.theme !== n.theme, starCh = !!ex.stars !== !!n.stars, layoutCh = JSON.stringify(ex.layout ?? null) !== JSON.stringify(n.layout ?? null);
     Object.assign(ex, n);
     if (ex === room) {
       if (themeCh) rebuildCurrent();
-      else { if (starCh) applyStars(true); if (layoutCh && !dragDecor && Date.now() - lastLayoutLocal > 2500) syncDecor(layoutList()); }
+      else { if (lightCh) { R.slots.forEach(applySlotLight); renderLightPanel(); } if (starCh) applyStars(true); if (layoutCh && !dragDecor && Date.now() - lastLayoutLocal > 2500) syncDecor(layoutList()); }
     }
   }
   renderRooms(); updateDoorSign();
@@ -2510,10 +2672,10 @@ function tick() {
 
   if (R) {
     R.chands.forEach(c => { c.inner.rotation.z = Math.sin(t * .55 + c.phase) * .012; c.inner.rotation.x = Math.cos(t * .43 + c.phase) * .01; const fl = 1 + Math.sin(t * 13 + c.phase) * .012; c.light.intensity += ((chandOn ? c.base * fl * .8 : 0) - c.light.intensity) * (1 - Math.exp(-dt * 6)); c.bulb.emissiveIntensity += ((chandOn ? c.bulbOn * .55 : .1) - c.bulb.emissiveIntensity) * (1 - Math.exp(-dt * 6)); });
-    R.cones.forEach(c => c.visible = beamsOn && spotsOn);
+    R.cones.forEach(c => c.visible = beamsOn && spotsOn && c.userData.lit !== false);
     R.parts.forEach(pp => { const vis = pp.userData.cfg.beams ? beamsOn : fxOn; pp.visible = vis; if (vis) pp.userData.update(dt, t); });
     R.updaters.forEach(fn => fn(dt, t));
-    R.slots.forEach(sl => { if (sl.spin) sl.holder.rotation.y += dt * .35; });
+    const insp = inspecting() ? selected : null; R.slots.forEach(sl => { if (sl.spin && sl !== insp) sl.holder.rotation.y += dt * .35; });
     R.mixers.forEach(m => m.update(dt));
     if (selRing.visible) selRing.material.opacity = .65 + Math.sin(t * 4) * .3;
   }

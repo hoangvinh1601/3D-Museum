@@ -57,6 +57,9 @@ create table if not exists public.items (
   primary key (room_id, slot)
 );
 
+-- Cập nhật cho bản có đèn riêng từng tác phẩm (chạy lại cả file là đủ)
+alter table public.rooms add column if not exists lights jsonb not null default '{}'::jsonb;
+
 create index if not exists items_gallery_idx on public.items (gallery_id);
 create index if not exists rooms_gallery_idx on public.rooms (gallery_id);
 create index if not exists members_user_idx on public.gallery_members (user_id);
