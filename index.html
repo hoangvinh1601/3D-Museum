@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phòng Trưng Bày 3D</title>
+<meta name="description" content="Bảo tàng 3D trực tuyến: dạo bước giữa các gian trưng bày, ngắm tranh, mô hình và kể câu chuyện của bạn ngay trên trình duyệt.">
+<meta name="theme-color" content="#0b0a09">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Phòng Trưng Bày 3D">
+<meta property="og:description" content="Dạo bước giữa các gian trưng bày 3D, ngắm tranh, mô hình và câu chuyện ngay trên trình duyệt.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0a09'/%3E%3Cpath d='M12 26 32 13l20 13M16 28v20M26 28v20M38 28v20M48 28v20M11 51h42' stroke='%23d9b56c' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -167,6 +173,25 @@ body.can-edit span.member-only{display:block}
 #joy{position:fixed;left:22px;bottom:110px;z-index:11;width:118px;height:118px;border-radius:50%;display:none;background:rgba(16,14,12,.35);border:1px solid var(--line);backdrop-filter:blur(8px);touch-action:none}
 #joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(217,181,108,.55);box-shadow:0 0 18px rgba(217,181,108,.4)}
 @media (pointer:coarse){#joy{display:block}}
+.keys-touch{display:none}
+@media (pointer:coarse){.keys-desk{display:none}.keys-touch{display:flex}}
+/* toolbar: fade the edge that has more buttons to scroll to */
+#toolbar.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
+#toolbar.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
+#toolbar.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
+/* phones: HUD under the top buttons, compact buttons */
+@media (max-width:620px){
+  #topRight{top:10px;right:10px;gap:6px}
+  .iconbtn{height:38px;min-width:38px;padding:0 10px}
+  .iconbtn .lbl,#acctBtn .avatar+span{display:none}
+  #hud{top:58px;left:10px;padding:8px 12px;max-width:calc(100vw - 20px)}
+  #galleryName{font-size:19px}
+  #toolbar{bottom:10px}
+  .tb{min-width:58px;padding:8px 5px 6px}
+  #joy{bottom:100px}
+  #toast{bottom:auto;top:140px}
+  .card h1{font-size:clamp(34px,10vw,52px)}
+}
 #loading{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0b0a09;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--muted);transition:opacity .6s}
 #loading.hide{opacity:0;pointer-events:none}
 #err{display:none;max-width:420px;text-align:center;font-family:'Be Vietnam Pro';font-size:14px;line-height:1.6}
@@ -185,9 +210,13 @@ body.can-edit span.member-only{display:block}
   <div class="eyebrow" id="introEyebrow">Phòng trưng bày 3D</div>
   <h1 id="introTitle">Phòng Trưng Bày</h1>
   <p id="introSub"></p>
-  <div class="keys">
+  <div class="keys keys-desk">
     <span><b>Kéo chuột</b>nhìn quanh</span><span><b>W A S D</b>/<b>↑↓</b>đi lại</span><span><b>Shift</b>đi nhanh</span>
     <span><b>Nhấn tác phẩm</b>xem thông tin</span><span><b>Cửa cuối gian</b>sang gian khác</span><span><b>Space</b>pháo hoa</span>
+  </div>
+  <div class="keys keys-touch">
+    <span><b>Vuốt màn hình</b>nhìn quanh</span><span><b>Cần điều khiển</b>đi lại</span>
+    <span><b>Chạm tác phẩm</b>xem thông tin</span><span><b>Cửa cuối gian</b>sang gian khác</span>
   </div>
   <button class="primary pulse" id="enter">Bước vào</button>
 </div></div>
@@ -201,7 +230,7 @@ body.can-edit span.member-only{display:block}
 </div>
 <div id="topRight">
   <button class="iconbtn" id="soundBtn" title="Âm thanh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="soundWave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
-  <button class="iconbtn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Chia sẻ</button>
+  <button class="iconbtn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span class="lbl">Chia sẻ</span></button>
   <div style="position:relative">
     <button class="iconbtn" id="acctBtn"></button>
     <div id="acctMenu" class="glass"></div>
@@ -318,7 +347,7 @@ let api = null, me = null, gallery = null, ownerInfo = null, role = 'viewer';
 let rooms = [], room = null, R = null;
 const itemsByRoom = {};
 let spotsOn = true, beamsOn = true, chandOn = true, fxOn = true, presetIdx = 1;
-let selected = null, started = false, quality = isTouch ? 0 : 1;
+let selected = null, started = false, quality = isTouch ? 0 : 1, qualityManual = false;
 let yaw = 0, pitch = -.03, yawT = 0, pitchT = -.03, focus = null;
 let arrangeOn = false, selDecor = null, dragDecor = null;
 const canEdit = () => role === 'owner' || role === 'editor';
@@ -1925,7 +1954,17 @@ $('#tArrange').onclick = () => setArrange(!arrangeOn);
 let showOn = false, showTimer = 0;
 $('#tFire').onclick = () => { showOn = !showOn; $('#tFire').classList.toggle('on', showOn); if (showOn) { volley(true); showTimer = 1.2; } };
 $('#tConfetti').onclick = () => confetti();
-$('#tQuality').onclick = () => { quality = quality ? 0 : 1; applyQuality(); };
+$('#tQuality').onclick = () => { quality = quality ? 0 : 1; qualityManual = true; applyQuality(); };
+// toolbar: show which side has more buttons, and let the mouse wheel scroll it sideways
+{
+  const tb = $('#toolbar');
+  const edges = () => { tb.classList.toggle('more-l', tb.scrollLeft > 2); tb.classList.toggle('more-r', tb.scrollLeft + tb.clientWidth < tb.scrollWidth - 2); };
+  tb.addEventListener('scroll', edges, { passive: true });
+  tb.addEventListener('wheel', e => { if (tb.scrollWidth > tb.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) { tb.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+  addEventListener('resize', edges); new ResizeObserver(edges).observe(tb);
+  new MutationObserver(edges).observe(document.body, { attributes: true, attributeFilter: ['class'] }); // member buttons appear/disappear
+  document.fonts?.ready.then(edges); edges();
+}
 $('#tFull').onclick = async () => { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); } catch (e) { toast('Trình duyệt không cho phép toàn màn hình ở đây.'); } };
 let tourOn = false, tourT = 0, tourI = -1;
 function stopTour() { if (!tourOn) return; tourOn = false; $('#tTour').classList.remove('on'); }
@@ -2434,8 +2473,19 @@ addEventListener('drop', e => {
 
 /* ================================================================ loop */
 const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), want = new THREE.Vector3();
+// If the visitor's device can't keep up on "Cao", switch to "Nhẹ" once, automatically.
+const perf = { time: 0, frames: 0, slow: 0 };
+function watchFps(raw) {
+  if (!started || !quality || qualityManual || raw > 1.5) return; // ignore pauses (hidden tab, alerts)
+  perf.time += raw; perf.frames++;
+  if (perf.time < 2) return;
+  const fps = perf.frames / perf.time; perf.time = perf.frames = 0;
+  perf.slow = fps < 30 ? perf.slow + 1 : 0;
+  if (perf.slow >= 2) { quality = 0; applyQuality(); toast('Máy hơi chậm nên đã chuyển sang chất lượng Nhẹ cho mượt hơn. Bấm "Nhẹ" để đổi lại.', 5000); }
+}
 function tick() {
-  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
+  watchFps(raw);
   let f = 0, s = 0;
   if (keys.KeyW || keys.ArrowUp) f += 1; if (keys.KeyS || keys.ArrowDown) f -= 1; if (keys.KeyD) s += 1; if (keys.KeyA) s -= 1;
   if (keys.ArrowLeft) yawT += 1.8 * dt; if (keys.ArrowRight) yawT -= 1.8 * dt;
@@ -2491,7 +2541,7 @@ async function boot() {
   if (api.mode === 'demo') {
     const slug = await api.createGallery('Phòng trưng bày dùng thử');
     await openGallery(slug);
-    toast('Bản dùng thử: chưa kết nối Supabase nên ảnh chỉ hiện trong tab này.', 5000);
+    $('#introSub').textContent += ' · Bản dùng thử: ảnh chỉ lưu trong tab này';
   } else if (pendingSlug) await openGallery(pendingSlug);
   else if (me) showDash();
   else showGate('auth', { tab: 'in' });
