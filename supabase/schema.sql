@@ -473,3 +473,58 @@ language sql stable security definer set search_path = public as $$
   ) t;
 $$;
 grant execute on function public.list_public_galleries(text, int) to anon, authenticated;
+
+-- =====================================================================
+--  Kho đồ: vật phẩm đã mua nhưng chưa trưng bày (chạy lại cả file vẫn an toàn)
+-- =====================================================================
+create table if not exists public.inventory (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  kind text not null check (kind in ('decor', 'model')),   -- decor = đồ đặt sàn có sẵn, model = mô hình .glb của cửa hàng
+  item text not null,                                      -- loại đồ (ficus, lamp…) hoặc đường dẫn mô hình
+  name text not null default '',
+  thumb text,
+  h real,
+  created_at timestamptz not null default now()
+);
+create index if not exists inventory_user_idx on public.inventory (user_id);
+alter table public.inventory enable row level security;
+drop policy if exists "inventory self read" on public.inventory;
+create policy "inventory self read" on public.inventory for select to authenticated using (user_id = auth.uid());
+
+create or replace function public.inv_add(p_kind text, p_item text, p_name text, p_thumb text, p_h real, p_price int) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare b int; r inventory;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  if p_kind not in ('decor', 'model') or length(coalesce(p_item, '')) = 0 or length(p_item) > 300 then raise exception 'bad item'; end if;
+  if coalesce(p_price, 0) > 0 then b := public.spend_xu(p_price); else b := public.my_wallet(); end if;
+  insert into inventory (user_id, kind, item, name, thumb, h) values (auth.uid(), p_kind, p_item, left(coalesce(p_name, ''), 80), left(p_thumb, 300), p_h) returning * into r;
+  return jsonb_build_object('item', to_jsonb(r), 'balance', b);
+end $$;
+
+-- lấy một món ra khỏi kho (để đặt vào phòng)
+create or replace function public.inv_take(p_id uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare r inventory;
+begin
+  delete from inventory where id = p_id and user_id = auth.uid() returning * into r;
+  if r.id is null then raise exception 'not in your inventory'; end if;
+  return to_jsonb(r);
+end $$;
+
+create or replace function public.inv_gift(p_id uuid, p_username text) returns text
+language plpgsql security definer set search_path = public as $$
+declare to_id uuid; nm text;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  select id, coalesce(display_name, username) into to_id, nm from profiles where username = lower(trim(p_username));
+  if to_id is null then raise exception 'user not found'; end if;
+  if to_id = auth.uid() then raise exception 'cannot gift yourself'; end if;
+  update inventory set user_id = to_id, created_at = now() where id = p_id and user_id = auth.uid();
+  if not found then raise exception 'not in your inventory'; end if;
+  return nm;
+end $$;
+grant execute on function public.inv_add(text, text, text, text, real, int) to authenticated;
+grant execute on function public.inv_take(uuid) to authenticated;
+grant execute on function public.inv_gift(uuid, text) to authenticated;
