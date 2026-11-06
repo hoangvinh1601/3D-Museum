@@ -1636,8 +1636,12 @@ function layoutList() {
   list = list.filter(e => e && DECOR[e.type]).map(e => ({ ...e }));
   const defs = defaultLayout(R.key, R.th);
   if (!(room.layout?.v >= 2)) for (let k = 0; k < 4; k++) if (!list.some(e => e.type === 'vitrine' && e.slot === 'c' + k)) list.push(defs.find(e => e.slot === 'c' + k));
+  const bigTV = { id: 'tv0', type: 'tv', x: 4.05 - .19 * 1.8, z: 9, rot: -PI / 2, s: 1.8, y: 1.95, slot: 'w14', seed: 1 };
+  if (!(room.layout?.v >= 4)) { // v4: the TV moved to the entrance partition and got bigger
+    const old = list.findIndex(e => e.id === 'tv0'); if (old >= 0) list[old] = { ...list[old], ...bigTV };
+  }
   if (!(room.layout?.v >= 3)) { // v3 added the TV and the radio
-    if (!list.some(e => e.type === 'tv')) list.push({ id: 'tv0', type: 'tv', x: HW - .2, z: 2.1, rot: -PI / 2, s: 1, seed: 1 });
+    if (!list.some(e => e.type === 'tv')) list.push({ ...bigTV });
     if (!list.some(e => e.type === 'radio')) list.push({ id: 'rd0', type: 'radio', x: 0, z: 1.5, rot: 0, s: 1.2, seed: 2 });
   }
   return list;
@@ -1725,7 +1729,7 @@ function renderArrange() {
 let layoutTimer = null, lastLayoutLocal = 0;
 function scheduleLayoutSave() {
   lastLayoutLocal = Date.now();
-  room.layout = { v: 3, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
+  room.layout = { v: 4, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
   clearTimeout(layoutTimer); layoutTimer = setTimeout(() => saveRoom({ layout: room.layout }), 700);
 }
 const newId = () => 'd' + Date.now().toString(36) + ((Math.random() * 1e4) | 0);
@@ -1745,7 +1749,7 @@ function mutateSel(fn) {
   recomputeDecorCol(); updateSelRing(); scheduleLayoutSave();
 }
 const rotSel = d => { if (selDecor && DECOR[selDecor.type].wall) { toast('Tivi luôn treo sát tường: kéo để đổi chỗ trên tường.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
-const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, DECOR[e.type].wall ? 1.6 : 2.2).toFixed(2));
+const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, 2.2).toFixed(2));
 function dupSel() {
   if (!selDecor) return;
   if (selDecor.inv) { toast('Đồ từ cửa hàng không nhân bản được. Hãy mua thêm trong Cửa hàng.'); return; }
@@ -2452,7 +2456,7 @@ function floorPoint(x, y) { setRay(x, y); return ray.ray.intersectPlane(floorPla
 function pickDecor(x, y) { if (!R) return null; setRay(x, y); const h = ray.intersectObjects(R.decorPick, false)[0]; return h && h.distance < 40 ? R.decor[h.object.userData.decor] : null; }
 function pick(x, y) {
   if (!R) return null; setRay(x, y);
-  for (const h of ray.intersectObjects(R.pick, false)) { if (h.distance > 30) break; if (h.object.userData.door) return { door: true }; if (h.object.userData.lightSwitch) return { lightSwitch: true }; if (h.object.userData.slot) return h.object.userData.slot; }
+  for (const h of ray.intersectObjects(R.pick, false)) { if (h.distance > 30) break; if (h.object.userData.slot?.group && !h.object.userData.slot.group.visible) continue; if (h.object.userData.door) return { door: true }; if (h.object.userData.lightSwitch) return { lightSwitch: true }; if (h.object.userData.slot) return h.object.userData.slot; }
   return null;
 }
 cvs.addEventListener('pointerdown', e => {
@@ -4369,7 +4373,8 @@ function idleScreenTex(kind) {
   });
 }
 function makeTV(e) {
-  const g = new THREE.Group();
+  const g = new THREE.Group(), inner = new THREE.Group(); g.add(inner); g.userData.inner = inner;
+  inner.position.y = ((e.y ?? TV_Y) - TV_Y) / (e.s || 1); // parts below are built around TV_Y; this moves the screen to e.y at any size
   const frame = std({ color: 0x0b0b0c, roughness: .3, metalness: .6 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(TV_W + .05, TV_H + .05, .045), frame); body.position.set(0, TV_Y, .03);
   const mount = new THREE.Mesh(new THREE.BoxGeometry(.22, .16, .2), std({ color: 0x1b1b1d, roughness: .5, metalness: .5 })); mount.position.set(0, TV_Y, -.09);
@@ -4377,7 +4382,7 @@ function makeTV(e) {
   scr.position.set(0, TV_Y, .0535);
   const led = new THREE.Mesh(new THREE.SphereGeometry(.008, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3a2a })); led.position.set(TV_W / 2 - .06, TV_Y - TV_H / 2 - .012, .055);
   const logo = new THREE.Mesh(new THREE.PlaneGeometry(.08, .012), new THREE.MeshBasicMaterial({ color: 0x8a8a8a })); logo.position.set(0, TV_Y - TV_H / 2 - .013, .0535);
-  g.add(mount, body, scr, led, logo); g.userData.screen = scr; g.userData.led = led;
+  inner.add(mount, body, scr, led, logo); g.userData.screen = scr; g.userData.led = led;
   [mount, body, scr, led, logo].forEach(m => m.userData.noCast = true);
   return g;
 }
@@ -4401,6 +4406,7 @@ function makeRadio(e) {
 // a TV hangs on a side wall, on an arm in front of a wall column, between two paintings (every 4.2 m), facing into the room.
 // The entrance and door walls are full (niches, bookshelves, the door), so a TV never goes there.
 function snapWall(e) {
+  delete e.slot; delete e.y; // moved by hand: off the partition, onto a side wall
   const right = e.x >= 0;
   e.x = right ? HW - .2 : -HW + .2; e.rot = right ? -PI / 2 : PI / 2; // 20 cm out, on an arm in front of the wall column
   e.z = +THREE.MathUtils.clamp(Math.round((e.z - 2.1) / 4.2) * 4.2 + 2.1, -14.7, 14.7).toFixed(2);
@@ -4503,6 +4509,10 @@ function mediaTick(dt) {
     else { const k = (st.e.path || '') + '|' + (st.e.mode || 'radio'); if (k !== st.key) { radioStop(st); if (st.key?.split('|')[0] !== (st.e.path || '')) st.resumeAt = 0; radioStart(st); } if (st.el) st.el.loop = st.e.loop !== false; }
   }
   mediaT -= dt; occT -= dt; const slow = mediaT <= 0, occ = occT <= 0; if (slow) mediaT = .2; if (occ) occT = .25;
+  if (slow) { // paintings behind a partition TV are hidden (their art stays saved, and shows again if the TV moves)
+    const claimed = new Set(); for (const id in R.decor) { const e = R.decor[id].e; if (e.type === 'tv' && e.slot) claimed.add(e.slot); }
+    R.slots.forEach(sl => { if (sl.type !== 'wall') return; const v = !claimed.has(sl.id); if (sl.group.visible !== v) { sl.group.visible = v; if (sl.cone) sl.cone.userData.lit = v; } });
+  }
   let anyCss = false;
   MEDIA.forEach(st => {
     if (st.kind === 'radio') {
@@ -4512,6 +4522,7 @@ function mediaTick(dt) {
       if (on) st.g.userData.grille.scale.setScalar(1 + Math.sin(performance.now() / 90) * .015);
       return;
     }
+    const inner = st.g.userData.inner; if (inner) { const sc = st.g.scale.x || 1, y = (st.e.y ?? TV_Y) / sc - TV_Y; if (Math.abs(inner.position.y - y) > 1e-4) inner.position.y = y; }
     const scr = st.g.userData.screen; scr.updateWorldMatrix(true, false); scr.getWorldPosition(st.pos);
     if (slow) tvVolume(st);
     if (!st.obj) return;
@@ -4599,6 +4610,19 @@ async function uploadRadio(e, file) {
 }
 
 /* ================================================================ loop */
+// While the "Nhân vật" panel is open, shift the picture into the free part of the screen
+// (left of the panel on computers, above it on phones) so the minifig stays in view.
+const VO = { x: 0, y: 0 }, avEl = $('#avPanel');
+function viewShift() {
+  let x = 0, y = 0;
+  if (avEl.classList.contains('open')) {
+    const r = avEl.getBoundingClientRect();
+    if (innerWidth <= 620) y = Math.max(0, Math.round((innerHeight - r.top) / 2 - 40)); else x = Math.round((innerWidth - r.left) / 2);
+  }
+  if (x === VO.x && y === VO.y) return; VO.x = x; VO.y = y;
+  if (x || y) camera.setViewOffset(innerWidth, innerHeight, x, y, innerWidth, innerHeight); else camera.clearViewOffset();
+}
+
 const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), want = new THREE.Vector3();
 // If the visitor's device can't keep up on "Cao", switch to "Nhẹ" once, automatically.
 const perf = { time: 0, frames: 0, slow: 0 };
@@ -4658,11 +4682,12 @@ function tick() {
     camera.position.z = THREE.MathUtils.clamp(camera.position.z + Math.cos(yaw) * 2.6, -HL + .3, HL - .3); camera.position.y += .55;
   }
   shadowT -= raw; if (shadowT <= 0) { renderer.shadowMap.needsUpdate = true; shadowT = .1; }
+  viewShift();
   if (quality) composer.render(dt); else renderer.render(scene, camera);
   mediaTick(dt);
   requestAnimationFrame(tick);
 }
-addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); applyQuality(); });
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); VO.x = VO.y = -1; applyQuality(); });
 
 /* ================================================================ start */
 async function boot() {
@@ -4695,7 +4720,7 @@ $('#enter').onclick = () => {
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.5';
+const BUILD = '2026-11-06.6';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();

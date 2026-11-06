@@ -118,7 +118,7 @@ Mô hình cây cảnh, sofa, ghế bành, tượng, bình gốm, đèn chùm… 
 ## Tính năng mới (06/11/2026)
 
 - **Thanh menu:** luôn hiện đủ nút (máy tính: xuống hàng khi chật; điện thoại: dạng lưới). Bấm nút đầu tiên (hoặc phím **H**) để thu gọn thành một nút nhỏ. Điện thoại mặc định thu gọn.
-- **Tivi và radio có sẵn trong mỗi gian:** tivi trên tường bên phải giữa hai bức tranh, radio trên quầy hoa. Chủ phòng di chuyển hoặc cất vào kho trong *Sắp xếp*.
+- **Tivi và radio có sẵn trong mỗi gian:** tivi lớn (khoảng 2,3 m) trên vách ngăn gần lối vào, thay chỗ bức tranh ở đó (ảnh đã lưu vẫn còn, hiện lại nếu dời tivi đi), radio trên quầy hoa. Chủ phòng di chuyển hoặc cất vào kho trong *Sắp xếp*.
 - **Điện thoại:** Cài đặt → *Điện thoại* thay cho phím tắt: đổi bên đặt cần điều khiển, tốc độ vuốt nhìn.
 - **Cài đặt (nút bánh răng ⚙ góc trên):** thẻ *Hướng dẫn* giải thích mọi thao tác và nút; thẻ *Phím tắt* cho đổi phím (lưu trên từng trình duyệt); thẻ *Tài khoản & bảo mật* để đổi mật khẩu, gắn email, đăng xuất các thiết bị khác.
 - **Một tài khoản, một nhân vật:** khi cùng tài khoản vào phòng từ nơi khác, nhân vật ở thiết bị cũ rời phòng và hiện thông báo.
