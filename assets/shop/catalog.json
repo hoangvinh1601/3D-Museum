@@ -1,9 +1,8 @@
 [
-  {
-    "file": "binh-gom-lam.glb",
-    "name": "Bình gốm hoa lam",
-    "desc": "Bình gốm men trắng vẽ hoa sen xanh lam (mô hình mẫu)",
-    "price": 250,
-    "height": 0.9
-  }
+  { "file": "thap-phu-thuy.glb", "thumb": "thap-phu-thuy.jpg", "name": "Tháp phù thủy", "desc": "Tháp lâu đài cổ tích phủ rêu · Pixabay, tác giả pixellabs", "price": 600, "height": 1.6 },
+  { "file": "su-tu-con.glb", "thumb": "su-tu-con.jpg", "name": "Sư tử con", "desc": "Chú sư tử hoạt hình đáng yêu · Pixabay, tác giả tiny_planet_friends", "price": 450, "height": 0.8 },
+  { "file": "khi-dot-con.glb", "thumb": "khi-dot-con.jpg", "name": "Khỉ đột con", "desc": "Bé khỉ đột lông xù · Pixabay, tác giả tiny_planet_friends", "price": 450, "height": 0.85 },
+  { "file": "can-dia-co.glb", "thumb": "can-dia-co.jpg", "name": "Cân đĩa cổ", "desc": "Cân đồng thau treo móc · Pixabay, tác giả gal-b", "price": 220, "height": 1.0 },
+  { "file": "den-long-sat.glb", "thumb": "den-long-sat.jpg", "name": "Đèn lồng sắt", "desc": "Đèn lồng sắt kiểu cổ, đặt sàn · Pixabay, tác giả gal-b", "price": 160, "height": 0.6 },
+  { "file": "binh-gom-lam.glb", "name": "Bình gốm hoa lam", "desc": "Bình gốm men trắng vẽ hoa sen xanh lam", "price": 250, "height": 0.9 }
 ]
