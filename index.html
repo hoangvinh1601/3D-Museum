@@ -215,6 +215,7 @@ body.in-gallery #chat{display:flex}
 #chatForm{display:none;padding:6px;border-radius:14px;pointer-events:auto;gap:6px;align-items:center}#chat.typing #chatForm{display:flex}
 #chatForm{flex-wrap:wrap}#chatForm .field{flex:1 1 100%;padding:8px 10px;order:3}#chatForm .emo{display:flex;gap:2px}#chatForm .emo button{background:none;border:0;font-size:18px;padding:4px}
 #avPanel{position:fixed;right:16px;top:70px;bottom:96px;z-index:13;width:320px;max-width:calc(100vw - 32px);overflow:auto;padding:16px;transform:translateX(calc(100% + 30px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}#avPanel.open{transform:none}
+.lxrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:9px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,.04)}.lxrow b{display:block;font-size:13.5px}.lxrow small{font-size:11.5px;color:var(--muted)}
 #avPanel .emo-row{display:flex;flex-wrap:wrap;gap:4px}#avPanel .emo-row button{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;font-size:18px;padding:5px 7px}
 #mirrorBtn.on{background:var(--gold-soft)!important;border-radius:8px}
 @media (max-width:620px){#avPanel{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:84px;max-height:52dvh}}
@@ -3184,7 +3185,9 @@ async function makeSupabaseAPI(cfg) {
       return path;
     },
     url(path) { return path.startsWith('shop:') ? path.slice(5) : sb.storage.from('media').getPublicUrl(path).data.publicUrl; },
-    async lixiCreate(roomId, total, count, msg) { return chk(await sb.rpc('lixi_create', { p_room: roomId, p_total: total, p_count: count, p_message: msg })); },
+    async lixiCreate(roomId, total, count, msg, minutes) { return chk(await sb.rpc('lixi_create', { p_room: roomId, p_total: total, p_count: count, p_message: msg, p_minutes: minutes })); },
+    async lixiRevoke(id) { return chk(await sb.rpc('lixi_revoke', { p_drop: id })); },
+    async lixiSweep(gid) { return chk(await sb.rpc('lixi_sweep', { p_gallery: gid })); },
     async lixiClaim(dropId, idx) { return chk(await sb.rpc('lixi_claim', { p_drop: dropId, p_idx: idx })); },
     async lixiActive(gid) { return chk(await sb.rpc('lixi_active', { p_gallery: gid })) || []; },
     async inventory() { return chk(await sb.from('inventory').select('*').order('created_at', { ascending: false })) || []; },
@@ -3265,9 +3268,11 @@ function makeDemoAPI() {
     async deleteItem(roomId, slot) { db.items = db.items.filter(i => !(i.room_id === roomId && i.slot === slot)); },
     async upload(gid, file) { const p = `${gid}/${uid()}.${extOf(file)}`; files[p] = URL.createObjectURL(file); return p; },
     url(path) { return files[path] || (path.startsWith('shop:') ? path.slice(5) : ''); },
-    async lixiCreate(roomId, total, count, msg) { await walletSpend(total); const d = { id: uid(), room_id: roomId, count, left_count: count, left_xu: total, message: msg, expires_at: new Date(Date.now() + 18e5).toISOString(), owner_name: user.display, taken: [] }; (db.lx ||= []).push(d); return { drop: d, balance: walletLocal() }; },
+    async lixiRevoke(id) { const d = (db.lx || []).find(x => x.id === id); if (!d) throw new Error('not your drop'); const n = d.left_xu; try { localStorage.setItem(walletKey(), String(walletLocal() + n)); } catch { } d.left_xu = d.left_count = 0; return n; },
+    async lixiSweep() { let n = 0; (db.lx || []).forEach(d => { if (new Date(d.expires_at) < new Date() && d.left_xu > 0) { try { localStorage.setItem(walletKey(), String(walletLocal() + d.left_xu)); } catch { } d.left_xu = d.left_count = 0; n++; } }); return n; },
+    async lixiCreate(roomId, total, count, msg, minutes = 30) { await walletSpend(total); const d = { id: uid(), room_id: roomId, count, left_count: count, left_xu: total, total, is_mine: true, message: msg, expires_at: new Date(Date.now() + minutes * 6e4).toISOString(), owner_name: user.display, taken: [] }; (db.lx ||= []).push(d); return { drop: d, balance: walletLocal() }; },
     async lixiClaim(dropId, idx) { const d = (db.lx || []).find(x => x.id === dropId); if (!d || !d.left_count) throw new Error('gone'); if (d.taken.includes(idx)) throw new Error('taken'); const amt = d.left_count === 1 ? d.left_xu : Math.max(1, Math.min(d.left_xu - d.left_count + 1, 1 + Math.floor(Math.random() * (2 * d.left_xu / d.left_count)))); d.taken.push(idx); d.left_count--; d.left_xu -= amt; try { localStorage.setItem(walletKey(), String(walletLocal() + amt)); } catch { } return amt; },
-    async lixiActive() { return (db.lx || []).filter(d => d.left_count > 0).map(d => ({ ...d, mine: false })); },
+    async lixiActive() { return (db.lx || []).filter(d => d.left_count > 0 && new Date(d.expires_at) > new Date()).map(d => ({ ...d, mine: false })); },
     async inventory() { try { return JSON.parse(localStorage.getItem('inv:demo') || '[]'); } catch { return []; } },
     async invAdd(kind, item, name, thumb, h, price) { if (price) await walletSpend(price); const r = { id: uid(), kind, item, name, thumb, h, created_at: new Date().toISOString() }; const l = await this.inventory(); l.unshift(r); try { localStorage.setItem('inv:demo', JSON.stringify(l)); } catch { } return { item: r, balance: walletLocal() }; },
     async invTake(id) { const l = await this.inventory(), r = l.find(x => x.id === id); if (!r) throw new Error('not in your inventory'); try { localStorage.setItem('inv:demo', JSON.stringify(l.filter(x => x.id !== id))); } catch { } return r; },
@@ -3652,6 +3657,35 @@ function figGeo() {
   FIG_GEO.fringe = keepGeo(new THREE.SphereGeometry(.179, 20, 6, PI * .28, PI * .44, PI * .2, PI * .13));
   return FIG_GEO;
 }
+// one-piece minifig hair: a shell over the top, sides and back, with the face cut out and a scalloped fringe
+function hairGeo(style) {
+  return cached('hair4-' + style, () => {
+    const long = style === 'long', Rr = .19;
+    // profile hugging the cylindrical minifig head (radius .157, top at .15), bottom to top
+    const prof = (long ? [[.19, -.17], [.19, -.12]] : [[.178, -.085]]).concat([[.186, -.05], [.188, .02], [.186, .09], [.178, .135], [.16, .168], [.13, .188], [.08, .2], [.0, .205]]).map(([r, y]) => new THREE.Vector2(r, y));
+    const g = new THREE.LatheGeometry(prof, 56), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(x, z), below = Math.max(0, -y) / Rr;
+      let k = (1 + .016 * Math.sin(a * 26) + .009 * Math.sin(a * 61)) * (1 + below * (long ? .12 : .06));
+      if (long && z < 0) k *= 1 + below * .12; // back hair falls fuller
+      p.setXYZ(i, x * k, y, z * k);
+    }
+    const ix = g.index.array, keep = [];
+    for (let t = 0; t < ix.length; t += 3) {
+      const a = ix[t], b = ix[t + 1], c = ix[t + 2];
+      const cx = (p.getX(a) + p.getX(b) + p.getX(c)) / 3, cy = (p.getY(a) + p.getY(b) + p.getY(c)) / 3, cz = (p.getZ(a) + p.getZ(b) + p.getZ(c)) / 3;
+      const fringe = .088 + .012 * Math.cos(cx * 70) - Math.abs(cx) * .12; // wavy hairline, a little lower at the temples
+      if (cz > .035 && cy < fringe && Math.abs(cx) < .138) continue; // face window
+      keep.push(a, b, c);
+    }
+    g.setIndex(keep); g.computeVertexNormals(); return keepGeo(g);
+  });
+}
+function hairTex() {
+  return cached('hairTex', () => { const [c, g] = canvas(512, 64); const r = mulberry32(17); g.fillStyle = '#d8d8d8'; g.fillRect(0, 0, 512, 64);
+    for (let i = 0; i < 420; i++) { const x = r() * 512, v = 150 + r() * 105 | 0; g.strokeStyle = `rgb(${v},${v},${v})`; g.lineWidth = .6 + r() * 1.6; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + (r() - .5) * 6, 64); g.stroke(); }
+    const t = tex(c, true); t.wrapS = THREE.RepeatWrapping; return t; });
+}
 function makeMinifig(cfg, name) {
   const G = figGeo(), root = new THREE.Group(), skin = std({ color: SKIN, roughness: .3 }), shirt = std({ color: cfg.shirt, roughness: .35 }), pants = std({ color: cfg.pants, roughness: .38 }), hairM = std({ color: cfg.hairCol, roughness: .4 });
   const P = {};
@@ -3679,20 +3713,22 @@ function makeMinifig(cfg, name) {
   const [fc, fg] = canvas(256, 128), ftex = tex(fc, true, true);
   head.add(new THREE.Mesh(G.face, new THREE.MeshStandardMaterial({ map: ftex, transparent: true, roughness: .3, polygonOffset: true, polygonOffsetFactor: -2 })));
   const stud = new THREE.Mesh(G.stud, skin); stud.position.y = .18; head.add(stud);
-  const hs = cfg.hair;
+  const hs = cfg.hair, hairMat = col => std({ color: col, map: hairTex(), roughness: .42, metalness: 0, side: THREE.DoubleSide });
+  const addHair = (style, col) => { const h = new THREE.Mesh(hairGeo(style), hairMat(col)); h.position.y = .012; head.add(h); return h; };
   if (hs === 'short' || hs === 'long') {
-    const top = new THREE.Mesh(G.hairTop, hairM); top.position.y = .035; head.add(top);
-    const back = new THREE.Mesh(G.hairBack, hairM); back.position.y = .02; back.scale.y = 1.05; head.add(back);
-    const fr = new THREE.Mesh(G.fringe, hairM); fr.position.y = .03; head.add(fr);
-    stud.visible = false;
-    if (hs === 'long') { const bk = new THREE.Mesh(new THREE.CylinderGeometry(.168, .2, .34, 24, 1, false, PI * .42, PI * 1.16), hairM); bk.position.y = -.13; head.add(bk); }
+    addHair(hs, cfg.hairCol); stud.visible = false;
+    if (hs === 'long') { const bk = new THREE.Mesh(new THREE.CylinderGeometry(.17, .205, .3, 32, 1, true, PI * .45, PI * 1.1), hairMat(cfg.hairCol)); bk.material.side = THREE.DoubleSide; bk.position.y = -.2; head.add(bk); }
   } else if (hs === 'cap') {
-    const cp = new THREE.Mesh(new THREE.SphereGeometry(.172, 24, 12, 0, TAU, 0, PI * .45), hairM); cp.position.y = .05; head.add(cp);
-    const br = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .02, 24, 1, false, -PI * .45, PI * .9), hairM); br.position.set(0, .085, .1); br.scale.z = 1.3; head.add(br); stud.visible = false;
+    addHair('short', 0x3b2a1e).scale.set(.99, .97, .99); // hair showing under the cap
+    const cp = new THREE.Mesh(new THREE.SphereGeometry(.19, 32, 14, 0, TAU, 0, PI * .44), std({ color: cfg.hairCol, roughness: .55 })); cp.position.y = .045; head.add(cp);
+    const btn = new THREE.Mesh(new THREE.SphereGeometry(.022, 10, 6), cp.material); btn.position.y = .235; head.add(btn);
+    const br = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .018, 28, 1, false, -PI * .45, PI * .9), cp.material); br.position.set(0, .095, .11); br.scale.z = 1.35; br.rotation.x = .12; head.add(br); stud.visible = false;
   } else if (hs === 'tophat') {
-    const br = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .025, 28), hairM); br.position.y = .17; head.add(br);
-    const tp2 = new THREE.Mesh(new THREE.CylinderGeometry(.13, .14, .3, 24), hairM); tp2.position.y = .33; head.add(tp2);
-    const band = new THREE.Mesh(new THREE.CylinderGeometry(.142, .142, .05, 24), std({ color: 0xc91a09 })); band.position.y = .21; head.add(band);
+    addHair('short', 0x3b2a1e).scale.set(.99, .97, .99);
+    const hm = std({ color: cfg.hairCol, roughness: .45 });
+    const br = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, .025, 32), hm); br.position.y = .175; head.add(br);
+    const tp2 = new THREE.Mesh(new THREE.CylinderGeometry(.135, .145, .3, 28), hm); tp2.position.y = .34; head.add(tp2);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(.147, .147, .05, 28), std({ color: 0xc91a09 })); band.position.y = .215; head.add(band); stud.visible = false;
   }
   const flower = makeFlower(); flower.position.set(.31, .8, .14); flower.rotation.x = .3; flower.visible = false; root.add(flower); P.flower = flower;
   root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -3760,6 +3796,7 @@ function onNet(m) {
     else chatLine(null, `${String(m.from || 'Ai đó').slice(0, 24)} đã ủng hộ ${(+m.amt || 0).toLocaleString('vi-VN')} xu cho “${String(m.what || '').slice(0, 60)}” 🪙`);
     return;
   }
+  if (m.t === 'lxr') { lixiRemove(m.drop, null, true); LX.drops.delete(m.drop); chatLine(null, 'Chủ phòng đã thu hồi một đợt lì xì.'); return; }
   if (m.t === 'lxc') { lixiRemove(m.drop, m.idx, true); chatLine(null, `${String(m.n || 'Ai đó').slice(0, 24)} bắt được lì xì ${+m.amt || 0} xu 🧧`); return; }
   if (m.t === 'gi') { if (me && m.toUser === me.username) { toast(`${String(m.from || 'Ai đó').slice(0, 24)} vừa tặng bạn “${String(m.name || 'một món đồ').slice(0, 60)}” 🎁 Xem trong Kho đồ.`, 7000); sfxChime(); setExpr?.('love', 4000); INV = null; } return; }
   if (m.t === 'bye') { const pr = NET.peers.get(m.id); if (pr) { disposeFig(pr.fig); NET.peers.delete(m.id); chatLine(null, `${pr.n} đã rời phòng`); updateOnline(); } return; }
@@ -3881,7 +3918,7 @@ function netTick(dt, t) {
 }
 
 /* ================================================================ lì xì: red envelopes floating in the room */
-const LX = { drops: new Map(), envs: [], picks: [] };
+const LX = { drops: new Map(), all: new Map(), envs: [], picks: [], nextCheck: 0 };
 function lixiTex() {
   return cached('lixi', () => {
     const [c, g] = canvas(256, 384); const gr = g.createLinearGradient(0, 0, 0, 384); gr.addColorStop(0, '#e3141c'); gr.addColorStop(1, '#a50d12'); g.fillStyle = gr; g.fillRect(0, 0, 256, 384);
@@ -3910,8 +3947,12 @@ function lixiRemove(dropId, idx, fly) {
   LX.envs = LX.envs.filter(e => { if (e.drop !== dropId || (idx != null && e.idx !== idx)) return true; if (fly) e.fly = 1; else { scene.remove(e.g); e.g.traverse(o => { o.geometry?.dispose(); }); } return !!fly; });
   LX.picks = LX.envs.filter(e => !e.fly).flatMap(e => e.g.children.filter(c => c.isMesh));
 }
-function lixiClear() { LX.envs.forEach(e => scene.remove(e.g)); LX.envs = []; LX.picks = []; LX.drops.clear(); }
-async function lixiLoad() { lixiClear(); if (!gallery || !api.lixiActive) return; try { (await api.lixiActive(gallery.id)).forEach(d => { if (!d.mine) lixiSpawn(d); }); } catch (e) { console.warn('lixi', e); } }
+function lixiClear() { LX.envs.forEach(e => scene.remove(e.g)); LX.envs = []; LX.picks = []; LX.drops.clear(); LX.all.clear(); }
+async function lixiLoad() {
+  lixiClear(); if (!gallery || !api.lixiActive) return;
+  try { const n = await api.lixiSweep?.(gallery.id); if (n && role === 'owner') { refreshWallet(); toast('Đã hoàn xu lì xì hết hạn về ví của bạn.'); } } catch (e) { console.warn('lixi sweep', e); }
+  try { (await api.lixiActive(gallery.id)).forEach(d => { LX.all.set(d.id, d); if (!d.mine) lixiSpawn(d); }); } catch (e) { console.warn('lixi', e); }
+}
 function pickLixi(x, y) { if (!LX.picks.length) return null; setRay(x, y); const h = ray.intersectObjects(LX.picks, false)[0]; return h && h.distance < 30 ? h.object.userData.lixi : null; }
 async function catchLixi(e, x, y) {
   if (api.mode === 'supabase' && !me) { toast('Đăng nhập để bắt lì xì nhé 🧧'); return; }
@@ -3933,29 +3974,51 @@ async function catchLixi(e, x, y) {
   }
 }
 function lixiTick(dt, t) {
+  if (t > LX.nextCheck) { // expiry: envelopes vanish for everyone; the owner gets the rest back
+    LX.nextCheck = t + 1; const now = Date.now();
+    for (const [id, d] of LX.drops) if (d.expires_at && new Date(d.expires_at).getTime() < now) { lixiRemove(id, null, true); LX.drops.delete(id); }
+    for (const [id, d] of LX.all) if (d.expires_at && new Date(d.expires_at).getTime() < now) { LX.all.delete(id); if (d.is_mine) api.lixiSweep?.(gallery.id).then(() => { refreshWallet(); updateAcct(); toast(`⏰ Đợt lì xì “${d.message || ''}” đã hết giờ, phần xu còn lại đã về ví của bạn.`, 6000); }).catch(() => { }); }
+  }
   for (const e of LX.envs) {
     if (e.fly) { e.fly += dt * 2.5; e.g.position.y += dt * 3; e.g.scale.setScalar(Math.max(.01, 1 - (e.fly - 1))); if (e.fly > 2) { scene.remove(e.g); e.dead = true; } continue; }
     const a = t * e.sp + e.ph; e.g.position.set(e.base.x + Math.sin(a) * .5, e.base.y + Math.sin(t * 1.3 + e.ph) * .18, e.base.z + Math.cos(a * .8) * .5); e.g.rotation.y = t * 1.2 + e.ph; e.g.rotation.z = Math.sin(t * 2 + e.ph) * .15;
   }
   if (LX.envs.some(e => e.dead)) LX.envs = LX.envs.filter(e => !e.dead);
 }
-function openLixi() {
+const fmtLeft = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 6e4), sec = Math.floor(ms / 1e3) % 60; return m >= 60 ? `${Math.floor(m / 60)} giờ ${m % 60} phút` : `${m}:${String(sec).padStart(2, '0')}`; };
+async function openLixi() {
   if (role !== 'owner') { toast('Chỉ chủ phòng mới phát lì xì được.'); return; }
   if (api.mode === 'supabase' && !me) return;
-  modal(`<h2>🧧 Phát lì xì</h2><p>Bao lì xì sẽ bay lơ lửng trong gian “${esc(room.name)}”. Khách đăng nhập bấm vào để bắt, mỗi người nhận một bao với số xu ngẫu nhiên. Sau 30 phút, xu chưa ai bắt được trả lại ví của bạn.</p>
+  let mine = []; try { mine = (await api.lixiActive(gallery.id)).filter(d => d.is_mine); } catch { }
+  mine.forEach(d => LX.all.set(d.id, d));
+  const roomName = id => rooms.find(r => r.id === id)?.name || 'gian khác';
+  modal(`<h2>🧧 Phát lì xì</h2>
+    ${mine.length ? `<h3 style="margin:4px 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Đang phát</h3>
+      <div id="lxList">${mine.map(d => `<div class="lxrow" data-id="${d.id}"><div><b>${esc(d.message || 'Lì xì')}</b><small>${esc(roomName(d.room_id))} · còn ${d.left_count}/${d.count} bao · ${(+d.left_xu || 0).toLocaleString('vi-VN')}/${(+d.total || 0).toLocaleString('vi-VN')} xu · hết giờ sau <span data-exp="${esc(d.expires_at)}"></span></small></div><button class="btn fit danger" data-rv="${d.id}">Thu hồi</button></div>`).join('')}</div>` : ''}
+    <p>Bao lì xì bay lơ lửng trong gian “${esc(room.name)}”. Khách đăng nhập bấm vào để bắt, mỗi người một bao với số xu ngẫu nhiên. Hết giờ hoặc khi bạn thu hồi, xu chưa ai bắt sẽ về lại ví của bạn.</p>
     <div class="row2"><div><label class="lb" for="lxTotal">Tổng số xu</label><input class="field" id="lxTotal" type="number" min="1" value="500"></div><div><label class="lb" for="lxCount">Số bao (1–50)</label><input class="field" id="lxCount" type="number" min="1" max="50" value="10"></div></div>
+    <label class="lb">Thời gian nhận</label><div class="seg" id="lxMin" style="flex-wrap:wrap">${[[1, '1 phút'], [5, '5 phút'], [15, '15 phút'], [30, '30 phút'], [60, '1 giờ'], [1440, '1 ngày']].map(([m, n]) => `<button data-m="${m}" class="${m === 15 ? 'on' : ''}">${n}</button>`).join('')}</div>
     <label class="lb" for="lxMsg">Lời chúc</label><input class="field" id="lxMsg" maxlength="120" value="Chúc mừng năm mới, an khang thịnh vượng!">
     <p class="note" style="margin-top:8px">Bạn đang có ${walletGet().toLocaleString('vi-VN')} xu.</p>
-    <div class="row" style="margin-top:12px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="lxGo">Phát lì xì</button></div>`, box => {
+    <div class="row" style="margin-top:12px"><button class="btn" data-x>Đóng</button><button class="btn gold" id="lxGo">Phát lì xì</button></div>`, box => {
+    let minutes = 15; box.querySelectorAll('#lxMin button').forEach(b => b.onclick = () => { minutes = +b.dataset.m; box.querySelectorAll('#lxMin button').forEach(x => x.classList.toggle('on', x === b)); });
+    const tick = () => { if (!box.isConnected || !$('#modal').classList.contains('open')) return clearInterval(iv); box.querySelectorAll('[data-exp]').forEach(el => el.textContent = fmtLeft(new Date(el.dataset.exp) - Date.now())); };
+    const iv = setInterval(tick, 1000); tick();
+    box.querySelectorAll('[data-rv]').forEach(b => b.onclick = async () => {
+      b.disabled = true;
+      try { const back = await api.lixiRevoke(b.dataset.rv); if (api.mode === 'supabase') refreshWallet(); updateAcct(); lixiRemove(b.dataset.rv, null, true); LX.drops.delete(b.dataset.rv); LX.all.delete(b.dataset.rv);
+        NET.ch?.send({ t: 'lxr', id: NET.id, drop: b.dataset.rv }); b.closest('.lxrow').remove(); toast(`Đã thu hồi lì xì, ${(+back || 0).toLocaleString('vi-VN')} xu về lại ví của bạn.`, 5000); }
+      catch (e) { b.disabled = false; toast('Chưa thu hồi được: ' + e.message); }
+    });
     box.querySelector('#lxGo').onclick = async ev => {
       const total = Math.floor(+box.querySelector('#lxTotal').value), count = Math.floor(+box.querySelector('#lxCount').value), msg = box.querySelector('#lxMsg').value.trim();
       if (!(count >= 1 && count <= 50)) { toast('Số bao từ 1 đến 50.'); return; } if (!(total >= count)) { toast('Tổng xu phải ít nhất bằng số bao.'); return; }
       ev.target.disabled = true;
       try {
-        const r = await api.lixiCreate(room.id, total, count, msg); if (api.mode === 'supabase') xuCache = r.balance; updateAcct();
-        const d = { ...r.drop, owner_name: myName(), taken: [] }; closeModal(); lixiSpawn(d); sfxChime(); volley(true);
-        NET.ch?.send({ t: 'lx', id: NET.id, drop: { id: d.id, room_id: d.room_id, count: d.count, left_count: d.count, message: d.message, owner_name: d.owner_name, taken: [] }, r: roomKey() });
-        chatLine(null, `Bạn đã phát ${count} bao lì xì (${total} xu) 🧧`); toast(`Đã phát ${count} bao lì xì! Khách bấm vào bao đỏ để bắt.`, 5000);
+        const r = await api.lixiCreate(room.id, total, count, msg, minutes); if (api.mode === 'supabase') xuCache = r.balance; updateAcct();
+        const d = { ...r.drop, owner_name: myName(), taken: [], is_mine: true }; LX.all.set(d.id, d); closeModal(); lixiSpawn(d); sfxChime(); volley(true);
+        NET.ch?.send({ t: 'lx', id: NET.id, drop: { id: d.id, room_id: d.room_id, count: d.count, left_count: d.count, message: d.message, owner_name: d.owner_name, expires_at: d.expires_at, taken: [] }, r: roomKey() });
+        chatLine(null, `Bạn đã phát ${count} bao lì xì (${total} xu), nhận trong ${box.querySelector('#lxMin .on').textContent} 🧧`); toast(`Đã phát ${count} bao lì xì! Khách có ${box.querySelector('#lxMin .on').textContent} để bắt.`, 5000);
       } catch (e) { ev.target.disabled = false; toast(/not enough/.test(e.message) ? 'Chưa đủ xu để phát lì xì.' : 'Chưa phát được: ' + e.message, 6000); }
     };
   });

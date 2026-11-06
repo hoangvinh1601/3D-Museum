@@ -78,7 +78,7 @@ Dùng Vercel hoặc GitHub Pages cũng được, vì đây chỉ là các tệp 
 
 - **Kho đồ:** đồ mua trong cửa hàng được cất vào *Kho đồ*. Từ kho có thể đặt đồ vào gian, cho mô hình vào tủ kính (hoặc nhấn vào tủ kính rồi chọn *Từ Kho đồ*), hay tặng cho người khác bằng tên đăng nhập. Tủ kính trong kho luôn miễn phí, không giới hạn số lượng.
 - **Sắp xếp:** đồ vật không chồng lên nhau, không lọt vào tường; đồ nhỏ đặt được lên quầy hoa. Bấm vào đồ đã đặt để chỉnh lại; *Cất vào kho* để thu hồi, *Bỏ* để xoá. Tủ kính mặc định cũng di chuyển, thu hồi hoặc bỏ được (đồ bên trong về kho).
-- **Lì xì:** chủ phòng bấm *Lì xì*, chọn tổng xu và số bao (1–50). Bao lì xì đỏ bay khắp gian; khách đăng nhập bấm vào để bắt, mỗi người một bao, số xu ngẫu nhiên. Sau 30 phút, xu chưa ai bắt sẽ tự trả lại chủ phòng (vào lần phát lì xì tiếp theo).
+- **Lì xì:** chủ phòng bấm *Lì xì*, chọn tổng xu, số bao (1–50) và thời gian nhận (1 phút đến 1 ngày). Bao lì xì đỏ bay khắp gian; khách đăng nhập bấm vào để bắt, mỗi người một bao, số xu ngẫu nhiên. Chủ phòng xem các đợt đang phát và bấm *Thu hồi* bất cứ lúc nào; hết giờ, xu chưa ai bắt tự về lại ví chủ phòng.
 
 ## Thêm mô hình vào cửa hàng (ví dụ từ Pixabay)
 

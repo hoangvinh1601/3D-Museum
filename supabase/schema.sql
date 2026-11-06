@@ -615,3 +615,63 @@ grant execute on function public.lixi_create(uuid, int, int, text) to authentica
 grant execute on function public.lixi_claim(uuid, int) to authenticated;
 grant execute on function public.lixi_refund() to authenticated;
 grant execute on function public.lixi_active(uuid) to anon, authenticated;
+
+-- ---------- Lì xì: chọn thời gian nhận, chủ phòng thu hồi, tự hoàn xu khi hết giờ
+drop function if exists public.lixi_create(uuid, int, int, text);
+create or replace function public.lixi_create(p_room uuid, p_total int, p_count int, p_message text, p_minutes int default 30) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare g uuid; b int; r lixi_drops;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  select gallery_id into g from rooms where id = p_room;
+  if g is null or not public.is_owner(g) then raise exception 'only the owner can do this'; end if;
+  if p_count < 1 or p_count > 50 then raise exception 'bad count'; end if;
+  if p_total < p_count or p_total > 10000000 then raise exception 'bad total'; end if;
+  if p_minutes < 1 or p_minutes > 1440 then raise exception 'bad minutes'; end if;
+  perform public.lixi_refund();
+  b := public.spend_xu(p_total);
+  insert into lixi_drops (gallery_id, room_id, owner, total, count, left_xu, left_count, message, expires_at)
+    values (g, p_room, auth.uid(), p_total, p_count, p_total, p_count, left(coalesce(p_message, ''), 120), now() + make_interval(mins => p_minutes)) returning * into r;
+  return jsonb_build_object('drop', to_jsonb(r), 'balance', b);
+end $$;
+grant execute on function public.lixi_create(uuid, int, int, text, int) to authenticated;
+
+-- chủ phòng thu hồi một đợt lì xì: phần chưa ai bắt trả về ví ngay
+create or replace function public.lixi_revoke(p_drop uuid) returns int
+language plpgsql security definer set search_path = public as $$
+declare d lixi_drops;
+begin
+  select * into d from lixi_drops where id = p_drop and owner = auth.uid() for update;
+  if d.id is null then raise exception 'not your drop'; end if;
+  if d.left_xu > 0 then
+    insert into wallets (user_id) values (d.owner) on conflict do nothing;
+    update wallets set balance = balance + d.left_xu, updated_at = now() where user_id = d.owner;
+  end if;
+  update lixi_drops set left_xu = 0, left_count = 0, expires_at = least(expires_at, now()) where id = d.id;
+  return d.left_xu;
+end $$;
+grant execute on function public.lixi_revoke(uuid) to authenticated;
+
+-- hoàn xu cho mọi đợt đã hết giờ trong phòng (ai mở phòng cũng chạy được, xu luôn về đúng chủ)
+create or replace function public.lixi_sweep(p_gallery uuid) returns int
+language plpgsql security definer set search_path = public as $$
+declare d record; n int := 0;
+begin
+  for d in select * from lixi_drops where gallery_id = p_gallery and expires_at < now() and left_xu > 0 for update loop
+    insert into wallets (user_id) values (d.owner) on conflict do nothing;
+    update wallets set balance = balance + d.left_xu, updated_at = now() where user_id = d.owner;
+    update lixi_drops set left_xu = 0, left_count = 0 where id = d.id; n := n + 1;
+  end loop;
+  return n;
+end $$;
+grant execute on function public.lixi_sweep(uuid) to anon, authenticated;
+
+create or replace function public.lixi_active(p_gallery uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', d.id, 'room_id', d.room_id, 'count', d.count, 'left_count', d.left_count, 'message', d.message, 'expires_at', d.expires_at,
+    'owner_name', (select coalesce(display_name, username) from profiles where id = d.owner),
+    'is_mine', d.owner = auth.uid(), 'total', case when d.owner = auth.uid() then d.total end, 'left_xu', case when d.owner = auth.uid() then d.left_xu end,
+    'taken', (select coalesce(jsonb_agg(idx), '[]'::jsonb) from lixi_claims c where c.drop_id = d.id),
+    'mine', exists (select 1 from lixi_claims c where c.drop_id = d.id and c.user_id = auth.uid()))), '[]'::jsonb)
+  from lixi_drops d where d.gallery_id = p_gallery and d.expires_at > now() and d.left_count > 0 and public.can_view(p_gallery);
+$$;
