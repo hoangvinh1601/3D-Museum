@@ -112,3 +112,5 @@ Bản này thêm cột `lights` để lưu cài đặt đèn. Mở Supabase, và
 ## Nguồn tài nguyên
 
 Vân tường, sàn (White Plaster 02, Marble 01, Concrete Floor 02, Herringbone Parquet) và ảnh HDRI *Museum of Ethnography* lấy từ [Poly Haven](https://polyhaven.com), giấy phép CC0 (dùng tự do). Các tệp nằm trong `assets/polyhaven/`.
+
+Mô hình cây cảnh, sofa, ghế bành, tượng, bình gốm, đèn chùm… trong `assets/polyhaven/models/` cũng lấy từ Poly Haven (CC0), đã nén lại bằng gltf-transform. Vân đá cẩm thạch, travertine, gỗ óc chó trong `assets/ambientcg/` lấy từ [ambientCG](https://ambientcg.com) (Marble012, Marble016, Travertine009, Wood066), giấy phép CC0.

@@ -805,6 +805,9 @@ function themeTextures(key, th) {
 // Until they load (or if they fail) the procedural textures above are used.
 const PH_DIR = 'assets/polyhaven/', PH = {};
 const PH_SETS = { plaster: ['white_plaster_02', 2], marble: ['marble_01', 2], concrete: ['concrete_floor_02', 1.5], parquet: ['herringbone_parquet', 2.4] };
+// ambientCG (CC0, ambientcg.com): stone for plinths and cases, travertine for the wall pilasters, walnut for wood, black marble for skirting
+const ACG_DIR = 'assets/ambientcg/', ACG_SETS = { stone: ['Marble012', 1], travertine: ['Travertine009', 1], walnut: ['Wood066', 1], blackMarble: ['Marble016', 1] };
+const PH_MODELS = 'assets/polyhaven/models/';
 const lin = v => Math.pow(v, 2.2);
 function imgAvg(img) {
   const [c, g] = canvas(16, 16); g.drawImage(img, 0, 0, 16, 16); const d = g.getImageData(0, 0, 16, 16).data, s = [0, 0, 0];
@@ -820,6 +823,14 @@ const phReady = (async () => {
       [map, normalMap, roughnessMap].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = maxAniso; t.repeat.set(rep, rep); });
       PH[k] = { map, normalMap, roughnessMap, avg: imgAvg(map.image), ravg: imgAvg(roughnessMap.image)[1] };
     } catch (e) { console.warn('Poly Haven texture failed:', id, e); }
+  }));
+  await Promise.all(Object.entries(ACG_SETS).map(async ([k, [id, rep]]) => {
+    try {
+      const [map, normalMap, roughnessMap] = await Promise.all(['diff', 'nor', 'rough'].map(m => tl.loadAsync(`${ACG_DIR}${id}_${m}.jpg`)));
+      map.colorSpace = THREE.SRGBColorSpace;
+      [map, normalMap, roughnessMap].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = maxAniso; t.repeat.set(rep, rep); });
+      PH[k] = { map, normalMap, roughnessMap, avg: imgAvg(map.image), ravg: imgAvg(roughnessMap.image)[1] };
+    } catch (e) { console.warn('ambientCG texture failed:', id, e); }
   }));
   try {
     const hdr = await new RGBELoader().loadAsync(PH_DIR + 'museum_of_ethnography_1k.hdr');
@@ -1400,6 +1411,14 @@ function loadShopModel(src) {
     return gltf;
   });
 }
+// built-in decor that uses a real Poly Haven model; rot = extra turn so the model lines up with the old footprint
+const realDecor = (file, h, rot = 0) => e => makeGlbDecor({ id: e.id, src: PH_MODELS + file + '.glb', h: e.h || h, innerRot: rot });
+function makeRealSculpture(e) {
+  const g = new THREE.Group(), pl = new THREE.Mesh(new THREE.BoxGeometry(.62, .55, .62), R.mats.stone); pl.position.y = .275; g.add(pl);
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(.68, .05, .68), R.mats.trim); cap.position.y = .575; g.add(cap);
+  const top = makeGlbDecor({ id: e.id, src: PH_MODELS + 'gothic-statue.glb', h: 1.25 }); top.position.y = .6; g.add(top);
+  return g;
+}
 function makeGlbDecor(e) {
   const g = new THREE.Group();
   const ph = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), std({ color: 0xd9b56c, transparent: true, opacity: .25 })); ph.position.y = .25; g.add(ph);
@@ -1408,21 +1427,21 @@ function makeGlbDecor(e) {
     const k = (e.h || 1) / Math.max(size.y, 1e-6); sc.scale.setScalar(k); sc.position.set(-c.x * k, -box.min.y * k, -c.z * k);
     e._r = Math.max(.15, Math.max(size.x, size.z) * k / 2); const d0 = R.decor[e.id]; if (d0) d0.e._r = e._r; recomputeDecorCol(); updateSelRing();
     sc.traverse(o => { if (o.isMesh) { o.userData.decor = e.id; o.castShadow = o.receiveShadow = true; } });
-    g.remove(ph); ph.geometry.dispose(); ph.material.dispose(); g.add(sc); refreshPick();
+    g.remove(ph); ph.geometry.dispose(); ph.material.dispose(); if (e.innerRot) { const w = new THREE.Group(); w.rotation.y = e.innerRot; w.add(sc); g.add(w); } else g.add(sc); refreshPick();
   }).catch(err => { console.warn('Không tải được mô hình cửa hàng', e.src, err); ph.material.color.setHex(0xc0392b); });
   return g;
 }
 const DECOR = {
-  ficus: { name: 'Cây đa búp đỏ', icon: '🌳', r: .38, make: e => addPlant('ficus', e.seed % 97, e.seed % 31) },
-  palm: { name: 'Cây cau cảnh', icon: '🌴', r: .42, make: e => addPlant('palm', e.seed % 97, e.seed % 31) },
-  snake: { name: 'Cây lưỡi hổ', icon: '🪴', r: .3, make: e => addPlant('snake', e.seed % 97, e.seed % 31) },
+  ficus: { name: 'Cây cảnh chậu đất', icon: '🌳', r: .36, make: realDecor('potted-plant-01', 1.55) },
+  palm: { name: 'Cây môn lá to', icon: '🌿', r: .42, make: realDecor('potted-plant-02', 1.05) },
+  snake: { name: 'Chậu lô hội', icon: '🪴', r: .24, make: realDecor('potted-plant-04', .6) },
   mai: { name: 'Cây mai vàng', icon: '🌼', r: .5, make: e => addBlossomTree('mai', e.seed % 97, e.seed % 31) },
   dao: { name: 'Cây đào', icon: '🌸', r: .5, make: e => addBlossomTree('dao', e.seed % 97, e.seed % 31) },
   bouquet: { name: 'Bình hoa trên bệ', icon: '💐', r: .3, make: makeBouquetStand },
-  bench: { name: 'Ghế băng', icon: '🪑', box: [.3, 1.2], make: makeBench },
-  beanbag: { name: 'Ghế lười', icon: '🛋️', r: .45, make: makeBeanbag },
+  bench: { name: 'Sofa da', icon: '🛋️', box: [.42, .95], make: realDecor('sofa-02', .78, PI / 2) },
+  beanbag: { name: 'Ghế bành da', icon: '💺', r: .5, make: realDecor('mid-century-lounge-chair', 1.05) },
   lamp: { name: 'Đèn cây', icon: '💡', r: .22, make: makeLamp },
-  sculpture: { name: 'Tượng điêu khắc', icon: '🗿', r: .42, make: makeSculpture },
+  sculpture: { name: 'Tượng trên bệ đá', icon: '🗿', r: .4, make: makeRealSculpture },
   rug: { name: 'Thảm trải sàn', icon: '🟫', flat: [1.1, 1.65], make: makeRug },
   vitrine: { name: 'Tủ kính trưng bày', icon: '🧸', r: .44, make: makeVitrine },
   glb: { name: 'Vật phẩm', icon: '📦', r: .45, make: makeGlbDecor }
@@ -1611,6 +1630,11 @@ function buildRoom() {
   M.trim = std({ color: th.trim, roughness: .5, metalness: .2 });
   M.stone = std({ color: th.stone, roughness: .35 });
   M.wood = std({ color: th.wood, roughness: .45 });
+  const srgb = h => { const c = hexC(h); return [c.r, c.g, c.b].map(v => Math.pow(v, 1 / 2.2)); };
+  if (PH.stone) phApply(M.stone, PH.stone, { tint: srgb(th.stone), rough: .28, normal: .5 });
+  if (PH.walnut) phApply(M.wood, PH.walnut, { tint: srgb(th.wood), rough: .45, normal: .6 });
+  if (PH.blackMarble) { phApply(M.trim, PH.blackMarble, { tint: srgb(th.trim), rough: .25, normal: .4 }); M.trim.metalness = .05; }
+  M.column = std({ color: th.stone, roughness: .5 }); if (PH.travertine) phApply(M.column, PH.travertine, { tint: srgb(th.stone), rough: .5, normal: .7 });
   M.rail = std({ color: 0x151413, roughness: .35, metalness: .7 });
   M.bark = std({ color: key === 'tet' ? 0x3a2a20 : 0x4a3a2c, roughness: .9 });
   M.glass = std({ color: 0xffffff, transparent: true, opacity: .14, roughness: .02, metalness: .9, depthWrite: false, envMapIntensity: 1.6 });
@@ -1633,6 +1657,16 @@ function buildRoom() {
   /* walls */
   [[L, -HW, 0, PI / 2], [L, HW, 0, -PI / 2], [W, 0, -HL, 0], [W, 0, HL, PI]].forEach(([w, x, z, ry]) => { const m = add(new THREE.Mesh(uvPlane(w, H), M.wall)); m.position.set(x, H / 2, z); m.rotation.y = ry; });
   const trims = (y, h, d, mat) => [[L, -HW + d / 2, 0, PI / 2], [L, HW - d / 2, 0, PI / 2], [W, 0, -HL + d / 2, 0], [W, 0, HL - d / 2, 0]].forEach(([len, x, z, ry]) => { const m = add(new THREE.Mesh(new THREE.BoxGeometry(len, h, d), mat)); m.position.set(x, y, z); m.rotation.y = ry; });
+  // pilasters (flat wall columns) between the frames, like a real hall: base, fluted shaft, capital
+  [-14.7, -10.5, -6.3, -2.1, 2.1, 6.3, 10.5, 14.7].forEach(z => [-1, 1].forEach(sd => {
+    const x = sd * (HW - .06), g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = sd > 0 ? -PI / 2 : PI / 2; add(g);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(.5, .32, .2), M.column); base.position.set(0, .16, .1); g.add(base);
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(.56, .08, .24), M.trim); plinth.position.set(0, .04, .12); g.add(plinth);
+    const shaftH = H - .95, shaft = new THREE.Mesh(new THREE.BoxGeometry(.38, shaftH, .12), M.column); shaft.position.set(0, .32 + shaftH / 2, .06); g.add(shaft);
+    for (let f = -1; f <= 1; f++) { const fl = new THREE.Mesh(new THREE.BoxGeometry(.04, shaftH - .3, .02), M.trim); fl.position.set(f * .1, .32 + shaftH / 2, .125); fl.material = M.column; fl.scale.z = 1; g.add(fl); }
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(.52, .16, .22), M.column); cap.position.set(0, H - .55, .11); g.add(cap);
+    const abacus = new THREE.Mesh(new THREE.BoxGeometry(.6, .06, .26), M.column); abacus.position.set(0, H - .44, .13); g.add(abacus);
+  }));
   trims(.07, .14, .025, M.trim); trims(H - .09, .18, .06, th.ceil.kind === 'coffer' ? std({ color: th.ceil.col, roughness: .8 }) : M.trim);
 
   /* floor */
@@ -2098,6 +2132,7 @@ function fitObject(obj, max) {
   const box = new THREE.Box3().setFromObject(obj), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
   const s = max / Math.max(size.x, size.y, size.z, 1e-6); obj.scale.multiplyScalar(s); obj.position.set(-c.x * s, -box.min.y * s, -c.z * s);
 }
+const CASE_PIECES = ['marble-bust-01', 'antique-ceramic-vase-01', 'horse-statue-01', 'brass-vase-01', 'bronze-whale-statue', 'ceramic-vase-02', 'concrete-cat-statue', 'ceramic-vase-04', 'gothic-statue'];
 function renderCase(s) {
   if (s.mixer) { R.mixers = R.mixers.filter(m => m !== s.mixer); s.mixer = null; }
   while (s.holder.children.length) { const c = s.holder.children.pop(); if (!c.userData.isMedia) disposeTree(c); }
@@ -2111,7 +2146,13 @@ function renderCase(s) {
     const pl = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: s.media.tex, roughness: .5, side: THREE.DoubleSide, emissiveMap: s.media.tex, emissive: 0xffffff, emissiveIntensity: .25 }));
     pl.position.y = h / 2 + .03; pl.userData.slot = s; obj.add(pl);
     const base = new THREE.Mesh(new THREE.BoxGeometry(w * .6, .03, .08), R.mats.glass); base.position.y = .015; obj.add(base);
-  } else { obj = placeholderFigure(s.n); fitObject(obj, s.max * .85); obj.traverse(o => { if (o.isMesh) o.userData.slot = s; }); }
+  } else {
+    obj = new THREE.Group(); const token = s.phToken = Symbol(), file = CASE_PIECES[(s.n + (R.key.length || 0)) % CASE_PIECES.length];
+    loadShopModel(PH_MODELS + file + '.glb').then(gl => {
+      if (s.media || s.phToken !== token || !s.alive || obj.parent !== s.holder) return;
+      const sc = gl.scene.clone(true); fitObject(sc, s.max * .85); sc.traverse(o => { if (o.isMesh) { o.userData.slot = s; o.castShadow = o.receiveShadow = true; } }); obj.add(sc); refreshPick();
+    }).catch(() => { if (s.phToken !== token || obj.parent !== s.holder) return; const f = placeholderFigure(s.n); fitObject(f, s.max * .85); f.traverse(o => { if (o.isMesh) o.userData.slot = s; }); obj.add(f); refreshPick(); });
+  }
   obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   s.holder.add(obj);
 }
