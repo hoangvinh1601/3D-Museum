@@ -94,7 +94,32 @@ label.lb{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 5px}
 .tb svg{width:21px;height:21px}
 .tb.accent{background:var(--gold);color:#17120a;font-weight:600}
 .sep{width:1px;margin:8px 3px;background:var(--line);flex:0 0 auto}
-.member-only{display:none}
+/* collapsible toolbar */
+#tMenu svg{transition:transform .3s}
+body.tb-min #toolbar>*:not(#tMenu){display:none!important}
+body.tb-min #toolbar{padding:4px}
+body.tb-min #tMenu svg{transform:rotate(180deg)}
+/* settings */
+.stabs{display:flex;gap:4px;margin:10px 0 12px;flex-wrap:wrap}
+.stabs button{padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;font-size:12px}
+.stabs button.on{background:var(--gold-soft);color:var(--gold);border-color:transparent}
+.kbrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kbkey{min-width:86px;padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.05);font:600 12px ui-monospace,Consolas,monospace;text-align:center}
+.kbkey.wait{border-color:var(--gold);color:var(--gold);animation:pulse 1.2s infinite}
+.guide{font-size:13px;line-height:1.55}.guide h4{margin:12px 0 4px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500}
+.guide dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}.guide dt{font-weight:600;white-space:nowrap}.guide dd{margin:0;color:var(--muted)}
+.sbox{max-height:min(60vh,520px);overflow:auto;padding-right:4px}
+.guide kbd,.sbox kbd{display:inline-block;min-width:22px;padding:1px 6px;margin:0 1px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;font:600 11px ui-monospace,Consolas,monospace;text-align:center;background:rgba(255,255,255,.05)}
+.sbox h4{margin:16px 0 6px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:500}
+.sbox form{display:flex;flex-direction:column;gap:8px}
+/* TV / radio */
+#css3d{position:fixed;inset:0;z-index:1;pointer-events:none}
+#css3d iframe{border:0;background:#000}
+#mediaP{position:fixed;right:16px;top:70px;z-index:13;width:320px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 170px);overflow:auto;padding:16px;transform:translateX(calc(100% + 30px));transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+#mediaP.open{transform:none}
+#mediaP .lb{display:flex;justify-content:space-between;margin-top:12px}
+#mediaP .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+#mediaP .ph button{border:0;background:transparent;font-size:16px}
 body.can-edit .member-only{display:flex}
 .owner-only{display:none}body.is-owner .owner-only{display:flex}
 body.can-edit span.member-only{display:block}
@@ -242,6 +267,9 @@ body.in-gallery #chat{display:flex}
 #toolbar.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 #toolbar.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
 #toolbar.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,transparent,#000 40px,#000 calc(100% - 40px),transparent)}
+/* medium screens: icon-only top buttons so they do not cover the room name */
+@media (max-width:1100px){#topRight .iconbtn .lbl{display:none}}
+@media (max-width:900px){#acctBtn .avatar+span{display:none}}
 /* phones: HUD under the top buttons, compact buttons */
 @media (max-width:620px){
   #topRight{top:10px;right:10px;gap:6px}
@@ -266,6 +294,7 @@ body.in-gallery #chat{display:flex}
 </head>
 <body>
 <div id="app"></div>
+<div id="css3d"></div>
 <div id="loading"><span id="loadMsg">Đang dựng phòng trưng bày…</span><div id="err"></div></div>
 <div id="fade"></div>
 
@@ -293,6 +322,7 @@ body.in-gallery #chat{display:flex}
   <div id="online"></div>
 </div>
 <div id="topRight">
+  <button class="iconbtn" id="settingsBtn" title="Cài đặt: hướng dẫn, phím tắt, tài khoản"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   <button class="iconbtn" id="soundBtn" title="Âm thanh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="soundWave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
   <button class="iconbtn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span class="lbl" id="shareLbl">Cài đặt phòng</span></button>
   <button class="iconbtn" id="lobbyBtn" title="Về sảnh chính"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6M5 10v9h14v-9M10 19v-5h4v5"/></svg><span class="lbl">Sảnh chính</span></button>
@@ -303,6 +333,8 @@ body.in-gallery #chat{display:flex}
 </div>
 
 <nav id="toolbar" class="glass">
+  <button class="tb" id="tMenu" title="Thu gọn / mở thanh menu (H)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m7 9 5 5 5-5"/></svg><span id="tMenuL">Thu gọn</span></button>
+  <span class="sep"></span>
   <button class="tb accent member-only" id="tUpload" title="Tải ảnh, video, mô hình 3D"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải lên</button>
   <button class="tb member-only" id="tArrange" title="Di chuyển, thêm, xoá cây cảnh và đồ trưng bày"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3"/></svg>Sắp xếp</button>
   <button class="tb owner-only" id="tLixi" title="Phát lì xì cho khách trong gian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 6l7 5 7-5"/><circle cx="12" cy="14" r="2.5"/></svg>Lì xì</button>
@@ -384,6 +416,7 @@ body.in-gallery #chat{display:flex}
     <b id="aName"></b>
     <div class="row"><button class="btn" id="aRotL">⟲ Xoay</button><button class="btn" id="aRotR">Xoay ⟳</button></div>
     <div class="row"><button class="btn" id="aSmall">− Nhỏ hơn</button><button class="btn" id="aBig">＋ To hơn</button></div>
+    <button class="btn full gold" id="aMedia" style="display:none">Bảng điều khiển</button>
     <div class="row"><button class="btn" id="aDup">Nhân bản</button><button class="btn gold" id="aStore">Cất vào kho</button></div>
     <button class="btn full danger" id="aDel">Bỏ đồ vật này</button>
   </div>
@@ -394,6 +427,8 @@ body.in-gallery #chat{display:flex}
 
 <div id="roomFb"><div id="roomFbPop" class="glass"><h3 style="margin:0 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Cảm nhận về gian này</h3><div id="roomFbBox" class="fb"></div></div><button class="iconbtn" id="roomFbBtn" title="Thả tim, đánh giá, ủng hộ gian này"></button></div>
 <aside id="avPanel" class="glass"></aside>
+<aside id="mediaP" class="glass"></aside>
+<input type="file" id="audioInput" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.ogg,.mp4" hidden>
 <div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" id="mirrorBtn" title="Soi gương (M)">🪞</button><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><div class="emo" id="exprBar"></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
 <div id="peerMenu" class="glass"></div>
 <div id="modal"><div class="box glass" id="modalBox"></div></div>
@@ -423,6 +458,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
@@ -443,10 +479,12 @@ const canEdit = () => role === 'owner' || role === 'editor';
 /* ================================================================ renderer */
 RectAreaLightUniformsLib.init();
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-const dpr = () => quality ? Math.min(devicePixelRatio, 2) : Math.min(devicePixelRatio, 1.25);
+const dpr = () => (quality ? Math.min(devicePixelRatio, 1.5) : Math.min(devicePixelRatio, 1)) * resScale;
+let resScale = 1; // lowered step by step when the device can't keep up (see watchFps)
 renderer.setPixelRatio(dpr()); renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
+let shadowT = 0;
 $('#app').appendChild(renderer.domElement);
 const maxAniso = renderer.capabilities.getMaxAnisotropy();
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0b0a09);
@@ -468,7 +506,7 @@ gltfLoader.setDRACOLoader(new DRACOLoader().setDecoderPath('https://cdn.jsdelivr
 gltfLoader.setMeshoptDecoder(MeshoptDecoder);
 
 /* ================================================================ global: floor mirror, post */
-const reflector = new Reflector(new THREE.PlaneGeometry(W, L), { clipBias: .003, color: 0x8c8c8c, textureWidth: innerWidth * dpr() * .5, textureHeight: innerHeight * dpr() * .5 });
+const reflector = new Reflector(new THREE.PlaneGeometry(W, L), { clipBias: .003, color: 0x8c8c8c, textureWidth: innerWidth * dpr() * .35, textureHeight: innerHeight * dpr() * .35 });
 reflector.rotation.x = -PI / 2; scene.add(reflector);
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -923,8 +961,9 @@ const fwMat = new THREE.ShaderMaterial({
 pointMats.add(fwMat);
 const fwPoints = new THREE.Points(fwGeo, fwMat); fwPoints.frustumCulled = false; scene.add(fwPoints);
 let fNext = 0;
+const fO = new Uint8Array(FW); let fwBusy = 0; // fO: spark started above the roof (outdoor firework)
 function spawn(x, y, z, vx, vy, vz, r, g, b, life, size, drag, grav, kind = 0) {
-  const i = fNext; fNext = (fNext + 1) % FW; const j = i * 3;
+  const i = fNext; fNext = (fNext + 1) % FW; const j = i * 3; fO[i] = y > H ? 1 : 0; fwBusy = Math.max(fwBusy, life + .5);
   fP[j] = x; fP[j + 1] = y; fP[j + 2] = z; fV[j] = vx; fV[j + 1] = vy; fV[j + 2] = vz; fB[j] = r; fB[j + 1] = g; fB[j + 2] = b;
   fL[i] = life; fM[i] = life; fS0[i] = size; fD[i] = drag; fG[i] = grav; fK[i] = kind;
 }
@@ -982,20 +1021,22 @@ function updateFireworks(dt, t) {
     if (rk.y >= rk.top || rk.vy < 4) { explode(rk); rockets.splice(r, 1); }
   }
   let alive = 0;
-  for (let i = 0; i < FW; i++) {
+  fwBusy -= dt;
+  if (fwBusy > 0 || rockets.length) for (let i = 0; i < FW; i++) {
     if (fL[i] <= 0) { if (fA[i] !== 0) fA[i] = 0; continue; }
     const j = i * 3; fL[i] -= dt; alive++;
     const dr = Math.max(0, 1 - fD[i] * dt);
     fV[j] *= dr; fV[j + 1] = fV[j + 1] * dr - fG[i] * dt; fV[j + 2] *= dr;
     fP[j] += fV[j] * dt; fP[j + 1] += fV[j + 1] * dt; fP[j + 2] += fV[j + 2] * dt;
     // sparks burn out before they reach the roof
-    if (fP[j + 1] < H + .6) { fL[i] = 0; fA[i] = 0; continue; }
+    if (fO[i] ? fP[j + 1] < H + .6 : fP[j + 1] < .02) { fL[i] = 0; fA[i] = 0; continue; }
     const life = Math.max(0, fL[i] / fM[i]); let a = Math.pow(life, 1.4);
     if (fK[i] === 1 && life < .55) a *= (Math.sin(t * 40 + i) > 0 ? 1 : .15);
     if (fK[i] === 2 && life < .45 && life > .05 && fM[i] > 1) { fK[i] = 3; for (let k = 0; k < 3; k++) spawn(fP[j], fP[j + 1], fP[j + 2], rand(-3, 3), rand(-3, 3), rand(-3, 3), 5, 4.8, 4.2, rand(.18, .3), .25, 3, 2, 0); if (Math.random() < .05) sfxCrackle(); }
     fA[i] = a; fS[i] = fS0[i] * (.6 + .4 * life); fC[j] = fB[j]; fC[j + 1] = fB[j + 1]; fC[j + 2] = fB[j + 2];
   }
-  const at = fwGeo.attributes; at.position.needsUpdate = at.color.needsUpdate = at.size.needsUpdate = at.alpha.needsUpdate = true;
+  if (fwBusy > -.1 || rockets.length) { const at = fwGeo.attributes; at.position.needsUpdate = at.color.needsUpdate = at.size.needsUpdate = at.alpha.needsUpdate = true; } // upload only while sparks fly (+1 frame to clear them)
+  fwPoints.visible = fwBusy > -.1 || rockets.length > 0;
   flashes.forEach(l => { if (l.intensity > 0) l.intensity = Math.max(0, l.intensity - l.intensity * 6 * dt - dt * 4); });
   // close the roof again a few seconds after the show ends
   if (fwRoof > 0) {
@@ -1557,9 +1598,11 @@ const DECOR = {
   sculpture: { name: 'Tượng trên bệ đá', icon: '🗿', r: .4, make: makeRealSculpture },
   rug: { name: 'Thảm trải sàn', icon: '🟫', flat: [1.1, 1.65], make: makeRug },
   vitrine: { name: 'Tủ kính trưng bày', icon: '🧸', r: .44, make: makeVitrine },
-  glb: { name: 'Vật phẩm', icon: '📦', r: .45, make: makeGlbDecor }
+  glb: { name: 'Vật phẩm', icon: '📦', r: .45, make: makeGlbDecor },
+  tv: { name: 'Tivi treo tường', icon: '📺', wall: true, media: true, make: e => makeTV(e) },
+  radio: { name: 'Radio cổ', icon: '📻', r: .3, media: true, make: e => makeRadio(e) }
 };
-const ADDABLE = ['ficus', 'palm', 'snake', 'mai', 'dao', 'bonsai', 'bouquet', 'bench', 'beanbag', 'lamp', 'sculpture', 'rug'];
+const ADDABLE = ['ficus', 'palm', 'snake', 'mai', 'dao', 'bonsai', 'bouquet', 'bench', 'beanbag', 'lamp', 'sculpture', 'rug', 'tv', 'radio'];
 function defaultLayout(key, th) {
   const out = [], r = mulberry32(key.length * 31 + 7); let n = 0;
   const add = (type, x, z, ex = {}) => out.push({ id: ex.id || 'd' + (n++), type, x, z, rot: ex.rot ?? +(r() * TAU).toFixed(2), s: ex.s ?? 1, seed: (r() * 1e6) | 0, ...(ex.slot ? { slot: ex.slot } : {}) });
@@ -1588,11 +1631,12 @@ function layoutList() {
 }
 /* ---------- placement rules: things stand on the floor or on the flower counter, and never overlap */
 const COUNTER = { hx: .52, hz: 3.07, top: .97 };
-const canStack = e => e.type === 'glb' || e.type === 'bouquet';
+const canStack = e => e.type === 'glb' || e.type === 'bouquet' || e.type === 'radio';
 const onCounter = (x, z) => Math.abs(x) < COUNTER.hx - .08 && Math.abs(z) < COUNTER.hz - .08;
 const supportY = e => canStack(e) && onCounter(e.x, e.z) ? COUNTER.top : 0;
 function footR(e) { const d = DECOR[e.type]; if (d.flat) return 0; return (e._r || d.r || (d.box ? Math.max(...d.box) * .75 : .4)) * e.s; }
 function placementOk(e) {
+  if (DECOR[e.type]?.wall) return true; // hangs on the wall: snapWall keeps it there
   const r = footR(e); if (!r) return Math.abs(e.x) < HW - .3 && Math.abs(e.z) < HL - .3;
   if (Math.abs(e.x) > HW - r - .05 || Math.abs(e.z) > HL - r - .05) return false;
   const y = supportY(e);
@@ -1663,7 +1707,7 @@ function renderArrange() {
   const box = $('#aAdds');
   if (!box.childElementCount) ADDABLE.forEach(t => { const b = document.createElement('button'); b.innerHTML = `<span>${DECOR[t].icon}</span>${DECOR[t].name}`; b.onclick = () => addDecor(t); box.appendChild(b); });
   $('#aSel').style.display = selDecor ? '' : 'none';
-  if (selDecor) { $('#aName').textContent = selDecor.name || DECOR[selDecor.type].name; $('#aDup').style.display = selDecor.inv ? 'none' : ''; $('#aStore').textContent = selDecor.type === 'vitrine' ? 'Thu hồi' : 'Cất vào kho'; }
+  if (selDecor) { const md = DECOR[selDecor.type].media; $('#aMedia').style.display = md ? '' : 'none'; if (md) $('#aMedia').textContent = selDecor.type === 'tv' ? '📺 Chọn video, âm lượng, loa' : '📻 Chọn bài nhạc, âm lượng, loa'; $('#aName').textContent = selDecor.name || DECOR[selDecor.type].name; $('#aDup').style.display = selDecor.inv ? 'none' : ''; $('#aStore').textContent = selDecor.type === 'vitrine' ? 'Thu hồi' : 'Cất vào kho'; }
 }
 let layoutTimer = null, lastLayoutLocal = 0;
 function scheduleLayoutSave() {
@@ -1677,7 +1721,8 @@ function addDecor(type, extra = {}) {
   const p0 = NET.tpSaved || camera.position;
   const e = { id: newId(), type, x: THREE.MathUtils.clamp(p0.x + f.x * 2.6, -HW + .8, HW - .8), z: THREE.MathUtils.clamp(p0.z + f.z * 2.6, -HL + .8, HL - .8), rot: 0, s: 1, seed: (Math.random() * 1e6) | 0, ...extra };
   if (type === 'vitrine') e.slot = 'cv' + e.id;
-  if (!freeSpot(e)) toast('Gian này khá chật, hãy kéo đồ vật đến chỗ trống.');
+  if (DECOR[type].wall) { e.x = f.x >= 0 ? 1 : -1; e.z = p0.z + f.z * 2.5; snapWall(e); } // the side wall you are turned toward, a little ahead
+  else if (!freeSpot(e)) toast('Gian này khá chật, hãy kéo đồ vật đến chỗ trống.');
   syncDecor([...R.layout, e]); selectDecor(R.decor[e.id].e); scheduleLayoutSave(); sfxPop();
 }
 function mutateSel(fn) {
@@ -1686,8 +1731,8 @@ function mutateSel(fn) {
   const d = R.decor[selDecor.id]; placeG(d); d.g.rotation.y = selDecor.rot; d.g.scale.setScalar(selDecor.s);
   recomputeDecorCol(); updateSelRing(); scheduleLayoutSave();
 }
-const rotSel = d => mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3));
-const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, 2.2).toFixed(2));
+const rotSel = d => { if (selDecor && DECOR[selDecor.type].wall) { toast('Tivi luôn treo sát tường: kéo để đổi chỗ trên tường.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
+const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, DECOR[e.type].wall ? 1.6 : 2.2).toFixed(2));
 function dupSel() {
   if (!selDecor) return;
   if (selDecor.inv) { toast('Đồ từ cửa hàng không nhân bản được. Hãy mua thêm trong Cửa hàng.'); return; }
@@ -1714,6 +1759,7 @@ $('#aRotL').onclick = () => rotSel(PI / 12); $('#aRotR').onclick = () => rotSel(
 $('#aSmall').onclick = () => scaleSel(-.1); $('#aBig').onclick = () => scaleSel(.1);
 $('#aDup').onclick = dupSel; $('#aDel').onclick = () => delSel(false); $('#aStore').onclick = () => delSel(true);
 $('#aDone').onclick = () => setArrange(false);
+$('#aMedia').onclick = () => { if (selDecor) openMediaPanel(selDecor.id); };
 $('#aReset').onclick = () => modal(`<h2>Khôi phục bố cục mặc định?</h2><p>Các đồ vật bạn đã thêm, xoá hoặc di chuyển trong gian này sẽ trở về như ban đầu. Ảnh và tác phẩm đã trưng bày vẫn giữ nguyên.</p><div class="row"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="mReset">Khôi phục</button></div>`, b => {
   b.querySelector('#mReset').onclick = () => { closeModal(); room.layout = null; selectDecor(null); syncDecor(layoutList()); saveRoom({ layout: null }); lastLayoutLocal = Date.now(); };
 });
@@ -2338,7 +2384,7 @@ function applyQuality() {
   renderer.setPixelRatio(dpr()); renderer.setSize(innerWidth, innerHeight); composer.setPixelRatio(dpr()); composer.setSize(innerWidth, innerHeight);
   reflector.visible = !!quality; bloom.enabled = !!quality; sun.castShadow = !!quality;
   if (R) { R.mats.floor.opacity = quality ? R.th.floor.op : 1; R.mats.floor.transparent = !!quality; R.mats.floor.needsUpdate = true; }
-  reflector.getRenderTarget().setSize(innerWidth * dpr() * .5, innerHeight * dpr() * .5);
+  reflector.getRenderTarget().setSize(innerWidth * dpr() * .35, innerHeight * dpr() * .35);
   $('#qLabel').textContent = quality ? 'Cao' : 'Nhẹ'; $('#tQuality').classList.toggle('on', !!quality);
 }
 function updateDoorSign() {
@@ -2358,6 +2404,30 @@ function applyStars(silent) {
   $('#tStars').classList.toggle('on', !!room.stars); applyLighting();
   if (room.stars && !silent) toast('Trần nhà đã mở ra bầu trời sao ✦');
 }
+
+/* ================================================================ key bindings (changeable in Cài đặt → Phím tắt) */
+// One key per action. Arrow keys always work too (↑/↓ walk, ←/→ turn). Saved per browser.
+const KEY_ACTIONS = [
+  ['fwd', 'Đi tới', 'KeyW'], ['back', 'Đi lùi', 'KeyS'], ['left', 'Bước sang trái', 'KeyA'], ['right', 'Bước sang phải', 'KeyD'],
+  ['run', 'Chạy nhanh (giữ phím)', 'ShiftLeft'], ['fire', 'Bắn pháo hoa', 'Space'], ['chat', 'Mở trò chuyện', 'Enter'],
+  ['view', 'Đổi góc nhìn thứ ba', 'KeyV'], ['mirror', 'Soi gương', 'KeyM'], ['wave', 'Vẫy tay', 'Digit1'], ['jump', 'Nhảy', 'Digit2'], ['dance', 'Nhảy múa', 'Digit3'],
+  ['rotL', 'Xoay đồ vật sang trái (khi sắp xếp)', 'KeyQ'], ['rotR', 'Xoay đồ vật sang phải (khi sắp xếp)', 'KeyE'],
+  ['menu', 'Thu gọn / mở thanh menu', 'KeyH'], ['full', 'Toàn màn hình', 'KeyF']
+];
+const KB_DEFAULT = Object.fromEntries(KEY_ACTIONS.map(([a, , k]) => [a, k]));
+const KB = { ...KB_DEFAULT };
+try { Object.assign(KB, JSON.parse(localStorage.getItem('keymap') || '{}')); } catch { }
+const saveKB = () => { try { localStorage.setItem('keymap', JSON.stringify(KB)); } catch { } };
+// Shift / Ctrl / Alt / Enter count the same on the left and right side of the keyboard
+const keyFamily = c => c.replace(/(Left|Right)$/, '').replace(/^Numpad(Enter)$/, '$1');
+const isAct = (a, code) => !!KB[a] && keyFamily(KB[a]) === keyFamily(code);
+const actOf = code => KEY_ACTIONS.find(([a]) => isAct(a, code))?.[0] || null;
+function keyLabel(c) {
+  if (!c) return '—';
+  const m = { Space: 'Space', Enter: 'Enter', Escape: 'Esc', Backspace: '⌫', Tab: 'Tab', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Minus: '-', Equal: '=', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'", BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`' };
+  const f = keyFamily(c); return m[f] || f.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
+}
+const RESERVED_KEYS = ['Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'Delete', 'Backspace', 'MetaLeft', 'MetaRight'];
 
 /* ================================================================ controls */
 const vel = new THREE.Vector3(), keys = {}, joy = { x: 0, y: 0 };
@@ -2385,6 +2455,7 @@ cvs.addEventListener('pointermove', e => {
     const fp = floorPoint(e.clientX, e.clientY); if (!fp) return;
     const de = dragDecor.e, px = de.x, pz = de.z;
     de.x = +THREE.MathUtils.clamp(fp.x - dragDecor.ox, -HW + .4, HW - .4).toFixed(3); de.z = +THREE.MathUtils.clamp(fp.z - dragDecor.oz, -HL + .4, HL - .4).toFixed(3);
+    if (DECOR[de.type].wall) { snapWall(de); dragDecor.g.rotation.y = de.rot; }
     let ok = placementOk(de);
     if (!ok) { const tx = de.x, tz = de.z; de.z = pz; ok = placementOk(de); if (!ok) { de.x = px; de.z = tz; ok = placementOk(de); } if (!ok) { de.x = px; de.z = pz; } } // slide along obstacles
     selRing.userData.bad = !ok; dragDecor.g.position.set(de.x, supportY(de), de.z); dragDecor.moved = true; updateSelRing(); cvs.style.cursor = ok ? 'grabbing' : 'not-allowed'; return;
@@ -2405,26 +2476,33 @@ const inspecting = () => !!(focus?.lock && selected?.type === 'case' && selected
 cvs.addEventListener('wheel', e => { e.preventDefault();
   if (inspecting()) { const c = selected.focusInfo().center, d = focus.pos.clone().sub(c), len = THREE.MathUtils.clamp((d.length() || 1.2) * (e.deltaY > 0 ? 1.12 : .89), .75, 3.2); focus.pos.copy(c).addScaledVector(d.normalize(), len); return; } vel.addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -Math.sign(e.deltaY) * 1.6); focus = null; stopTour(); }, { passive: false });
 let hoverT = 0;
-function hoverCheck(e) { const now = performance.now(); if (now - hoverT < 70) return; hoverT = now; if (!started) return; cvs.style.cursor = (arrangeOn && pickDecor(e.clientX, e.clientY)) ? 'move' : (pickLixi(e.clientX, e.clientY) || pickPeer(e.clientX, e.clientY) || pick(e.clientX, e.clientY)) ? 'pointer' : 'grab'; }
+function hoverCheck(e) { const now = performance.now(); if (now - hoverT < 70) return; hoverT = now; if (!started) return; cvs.style.cursor = (arrangeOn && pickDecor(e.clientX, e.clientY)) ? 'move' : (DECOR[pickDecor(e.clientX, e.clientY)?.e.type]?.media || pickLixi(e.clientX, e.clientY) || pickPeer(e.clientX, e.clientY) || pick(e.clientX, e.clientY)) ? 'pointer' : 'grab'; }
 function clickAt(x, y) {
   const lx = !arrangeOn && pickLixi(x, y); if (lx) { catchLixi(lx, x, y); return; }
   const pr = !arrangeOn && pickPeer(x, y); if (pr) { openPeerMenu(pr, x, y); return; }
   if (pendingCase) { const sl = pick(x, y); if (sl && sl.type === 'case') { const it = pendingCase; pendingCase = null; putShopModel(sl, it); } else toast('Hãy nhấn vào một tủ kính hoặc hốc trưng bày (Esc để huỷ).'); return; }
+  if (!arrangeOn) { const dm = pickDecor(x, y); if (dm && DECOR[dm.e.type]?.media) { stopTour(); openMediaPanel(dm.e.id); return; } }
   if (!arrangeOn && canEdit()) { const d = pickDecor(x, y), sl0 = pick(x, y); if (d && !(sl0 && !sl0.door && !sl0.lightSwitch)) { setArrange(true); selectDecor(d.e); return; } }
   const s = pick(x, y); if (!s) return; stopTour(); if (s.lightSwitch) { setAllLights(!spotsOn); sfxPop(); toast(spotsOn ? 'Đã bật đèn chiếu tranh' : 'Đã tắt đèn chiếu tranh'); } else if (s.door) useDoor(); else if (!arrangeOn) selectSlot(s, true); }
 addEventListener('keydown', e => {
-  if (e.target.matches('input,textarea,[contenteditable="true"]')) return; keys[e.code] = true;
-  if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { focus = null; stopTour(); e.preventDefault(); }
-  if (e.code === 'Space' && started) { e.preventDefault(); volley(true); }
-  if (started && (e.code === 'Enter' || e.code === 'NumpadEnter') && NET.ch) { e.preventDefault(); openChat(true); }
-  if (started && e.code === 'KeyV') { if (NET.tp) NET.mirror = false; setThirdPerson(!NET.tp); }
-  if (started && e.code === 'KeyM') setMirror(!NET.mirror);
-  if (started && NET.ch) { if (e.code === 'Digit1') doEmote('wave'); if (e.code === 'Digit2') doEmote('jump'); if (e.code === 'Digit3') doEmote('dance'); }
-  if (arrangeOn && selDecor) { if (e.code === 'KeyQ') rotSel(PI / 12); if (e.code === 'KeyE') rotSel(-PI / 12); if (e.code === 'Delete' || e.code === 'Backspace') { e.preventDefault(); delSel(false); } }
+  if (e.target.matches('input,textarea,[contenteditable="true"]')) return; keys[e.code] = true; keys[keyFamily(e.code)] = true;
+  if (kbWait) return; // Cài đặt → Phím tắt is waiting for a new key
+  const A = actOf(e.code);
+  if (['fwd', 'back', 'left', 'right'].includes(A) || ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { focus = null; stopTour(); e.preventDefault(); }
+  if (A === 'fire' && started) { e.preventDefault(); volley(true); }
+  if (started && A === 'chat' && NET.ch) { e.preventDefault(); openChat(true); }
+  if (started && A === 'view') { if (NET.tp) NET.mirror = false; setThirdPerson(!NET.tp); }
+  if (started && A === 'mirror') setMirror(!NET.mirror);
+  if (started && NET.ch) { if (A === 'wave') doEmote('wave'); if (A === 'jump') doEmote('jump'); if (A === 'dance') doEmote('dance'); }
+  if (A === 'menu') setToolbarMin(!document.body.classList.contains('tb-min'));
+  if (A === 'full') $('#tFull').click();
+  if (arrangeOn && selDecor) { if (A === 'rotL') rotSel(PI / 12); if (A === 'rotR') rotSel(-PI / 12); if (e.code === 'Delete' || e.code === 'Backspace') { e.preventDefault(); delSel(false); } }
   if (e.code === 'Escape' && pendingCase) { pendingCase = null; toast('Đã huỷ đặt vào tủ kính.'); }
-  if (e.code === 'Escape') { if (arrangeOn) setArrange(false); closePanel(); closePops(); closeModal(); $('#rooms').classList.remove('open'); focus = null; }
+  if (e.code === 'Escape') { if (arrangeOn) setArrange(false); closePanel(); closeMediaP(); closePops(); closeModal(); $('#rooms').classList.remove('open'); focus = null; }
 });
-addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('keyup', e => { keys[e.code] = false; keys[keyFamily(e.code)] = false; });
+const held = a => !!KB[a] && !!keys[keyFamily(KB[a])];
+let kbWait = null;
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 const joyEl = $('#joy'), knob = joyEl.querySelector('i'); let joyId = null;
 joyEl.addEventListener('pointerdown', e => { joyId = e.pointerId; joyEl.setPointerCapture(e.pointerId); joyMove(e); e.stopPropagation(); });
@@ -2459,7 +2537,7 @@ function useDoor() {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function toast(msg, ms = 3200) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms); }
 function modal(html, bind) { const box = $('#modalBox'); box.innerHTML = html; $('#modal').classList.add('open'); box.querySelectorAll('[data-x]').forEach(b => b.onclick = closeModal); bind?.(box); }
-function closeModal() { $('#modal').classList.remove('open'); }
+function closeModal() { $('#modal').classList.remove('open'); kbWait = null; }
 $('#modal').addEventListener('pointerdown', e => { if (e.target.id === 'modal') closeModal(); });
 function openPop(id, btn) {
   const p = $(id), was = p.classList.contains('open'); closePops(); if (was) return;
@@ -2769,7 +2847,8 @@ $('#tKho').onclick = () => openKho(null);
 const SHOP_BUILTIN = [
   ['sculpture', 400, 'Tượng trắng trên bệ đá'], ['mai', 350, 'Mai vàng ngày Tết'], ['dao', 350, 'Đào hồng thắm'], ['ficus', 120, 'Cây xanh trong chậu sứ'],
   ['bonsai', 600, 'Bonsai dáng tùng trên kệ gỗ'], ['palm', 120, 'Chậu môn lá to'], ['snake', 80, 'Lưỡi hổ dễ chăm'], ['bouquet', 90, 'Bình hoa tươi trên bệ'], ['lamp', 140, 'Đèn cây ánh vàng'],
-  ['bench', 150, 'Ghế băng gỗ cho khách ngồi'], ['beanbag', 180, 'Ghế lười êm ái'], ['rug', 100, 'Thảm hoa văn']
+  ['bench', 150, 'Ghế băng gỗ cho khách ngồi'], ['beanbag', 180, 'Ghế lười êm ái'], ['rug', 100, 'Thảm hoa văn'],
+  ['tv', 500, 'Tivi treo tường, phát video YouTube'], ['radio', 300, 'Radio cổ, phát nhạc bạn tải lên']
 ];
 const WALLET_START = 2000;
 const walletKey = () => 'xu:' + (me?.id || 'khach');
@@ -2808,15 +2887,12 @@ async function openShop() {
   const card = (it, i) => `<div class="it"><div class="pic">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy">` : it.icon}</div><div class="bd"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small><button class="btn gold" data-buy="${i}">Mua · ${it.price ? it.price.toLocaleString('vi-VN') + ' xu' : 'Miễn phí'}</button></div></div>`;
   modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Cửa hàng trưng bày</h2><span class="wallet" id="shopXu"></span></div>
     <p style="margin-top:6px">Mua đồ rồi kéo đặt vào gian đang xem. Xu là tiền ảo để dùng thử, chưa thanh toán thật.</p>
-    <h3 style="margin:14px 0 6px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Giao diện theo mùa & dịp lễ</h3>
-    <div class="shop">${Object.entries(THEMES).filter(([, t]) => t.price).map(([k, t]) => `<div class="it"><div class="pic" style="background:linear-gradient(135deg,${t.sw[0]} 0 45%,${t.sw[1]} 45% 75%,${t.sw[2]} 75%)"></div><div class="bd"><b>${esc(t.name)}</b><small>${esc(t.desc)}</small>${themeOwned(k) ? `<button class="btn" data-th-use="${k}">Đã mua · Dùng cho gian này</button>` : `<button class="btn gold" data-th-buy="${k}">Mua · ${t.price} xu</button>`}</div></div>`).join('')}</div>
+    <p class="note" style="margin:4px 0 0">Giao diện theo mùa và dịp lễ được bán ngay trong nút <b>Giao diện</b>.</p>
     <h3 style="margin:16px 0 6px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Đồ trưng bày</h3>
     <div class="shop">${items.map(card).join('')}</div>
     <div class="row" style="margin-top:14px"><button class="btn" data-x>Đóng</button></div>`, box => {
     const showXu = () => box.querySelector('#shopXu').textContent = '🪙 ' + walletGet().toLocaleString('vi-VN') + ' xu';
     showXu();
-    box.querySelectorAll('[data-th-buy]').forEach(b => b.onclick = async () => { const k = b.dataset.thBuy; if (await buyTheme(k)) { closeModal(); setRoomTheme(k); } });
-    box.querySelectorAll('[data-th-use]').forEach(b => b.onclick = () => { closeModal(); setRoomTheme(b.dataset.thUse); });
     box.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => {
       const it = items[+b.dataset.buy], glb = it.add.type === 'glb';
       b.disabled = true; let row;
@@ -2851,7 +2927,7 @@ $('#tFull').onclick = async () => { try { if (!document.fullscreenElement) await
 let tourOn = false, tourT = 0, tourI = -1;
 function stopTour() { if (!tourOn) return; tourOn = false; $('#tTour').classList.remove('on'); }
 $('#tTour').onclick = () => { if (arrangeOn) setArrange(false); tourOn = !tourOn; $('#tTour').classList.toggle('on', tourOn); if (tourOn) { tourI = -1; tourT = 0; } else focus = null; };
-$('#soundBtn').onclick = () => { muted = !muted; $('#soundWave').style.display = muted ? 'none' : ''; const a = audio(); if (a && a.state !== 'running') a.resume().catch(() => { }); };
+$('#soundBtn').onclick = () => { muted = !muted; MEDIA.forEach(st => st.kind === 'tv' ? tvVolume(st, true) : radioVolume(st)); renderMediaP(); $('#soundWave').style.display = muted ? 'none' : ''; const a = audio(); if (a && a.state !== 'running') a.resume().catch(() => { }); };
 
 /* ================================================================ UI: rooms (gian) drawer */
 $('#tRooms').onclick = () => { $('#rooms').classList.toggle('open'); if (arrangeOn) setArrange(false); renderRooms(); closePops(); };
@@ -2988,6 +3064,144 @@ function updateGalleryUI() {
   R?.slots.forEach(s => s.label()); renderRooms(); updateDoorSign(); renderPanel();
 }
 
+/* ================================================================ UI: settings (guide, shortcuts, account) */
+function setToolbarMin(on) {
+  document.body.classList.toggle('tb-min', on); $('#tMenuL').textContent = on ? 'Menu' : 'Thu gọn';
+  $('#tMenu').title = (on ? 'Mở thanh menu' : 'Thu gọn thanh menu') + ` (${keyLabel(KB.menu)})`;
+  try { localStorage.setItem('tbMin', on ? '1' : ''); } catch { }
+  if (on) closePops();
+}
+$('#tMenu').onclick = () => setToolbarMin(!document.body.classList.contains('tb-min'));
+try { setToolbarMin(!!localStorage.getItem('tbMin')); } catch { }
+function updateKeyHints() {
+  const t = (id, txt) => { const el = $(id); if (el) el.title = txt; };
+  t('#tFire', `Pháo hoa (${keyLabel(KB.fire)})`); t('#tChat', `Trò chuyện (${keyLabel(KB.chat)})`); t('#tFull', `Toàn màn hình (${keyLabel(KB.full)})`);
+  t('#tAvatar', `Nhân vật LEGO của bạn (phím ${keyLabel(KB.view)}: góc nhìn thứ ba)`);
+  $('#tMenu').title = (document.body.classList.contains('tb-min') ? 'Mở thanh menu' : 'Thu gọn thanh menu') + ` (${keyLabel(KB.menu)})`;
+}
+updateKeyHints();
+// capture the next key press while "Phím tắt" waits for one
+addEventListener('keydown', e => {
+  if (!kbWait) return; e.preventDefault(); e.stopImmediatePropagation();
+  const w = kbWait; kbWait = null;
+  if (e.code === 'Escape') { w.done(); return; }
+  if (RESERVED_KEYS.includes(e.code)) { toast('Phím này đã dùng cho việc khác (mũi tên, Esc, Delete…). Hãy chọn phím khác.'); w.done(); return; }
+  const other = KEY_ACTIONS.find(([a]) => a !== w.a && isAct(a, e.code));
+  if (other) KB[other[0]] = KB[w.a]; // swap, so no two actions share a key
+  KB[w.a] = e.code; saveKB(); w.done();
+  if (other) toast(`Phím ${keyLabel(e.code)} đang dùng cho “${other[1]}”, nên hai việc đã đổi phím cho nhau.`, 5000);
+}, true);
+let setTab = 'guide';
+function openSettings(tab) {
+  if (tab) setTab = tab; kbWait = null;
+  const acct = !!me && api?.mode === 'supabase';
+  if (setTab === 'acct' && !acct) setTab = 'guide';
+  const tabs = [['guide', 'Hướng dẫn'], ['keys', 'Phím tắt'], ...(acct ? [['acct', 'Tài khoản & bảo mật']] : [])];
+  modal(`<h2 style="margin:0">Cài đặt</h2><div class="stabs">${tabs.map(([k, n]) => `<button data-st="${k}" class="${k === setTab ? 'on' : ''}">${n}</button>`).join('')}</div><div class="sbox" id="sBody"></div><div class="row" style="margin-top:12px"><button class="btn" data-x>Đóng</button></div>`, box => {
+    box.querySelectorAll('[data-st]').forEach(b => b.onclick = () => openSettings(b.dataset.st));
+    const body = box.querySelector('#sBody');
+    if (setTab === 'guide') body.innerHTML = guideHTML();
+    if (setTab === 'keys') renderKeys(body);
+    if (setTab === 'acct') renderAcct(body);
+  });
+}
+$('#settingsBtn').onclick = () => openSettings();
+function guideHTML() {
+  const K = a => `<kbd>${keyLabel(KB[a])}</kbd>`;
+  const btns = [...document.querySelectorAll('#toolbar .tb')].filter(b => b.id !== 'tMenu' && !(b.classList.contains('member-only') && !canEdit()) && !(b.classList.contains('owner-only') && role !== 'owner'));
+  return `<div class="guide">
+    <h4>Đi lại & nhìn quanh</h4><dl>
+      <dt>Kéo chuột / vuốt</dt><dd>Nhìn quanh</dd>
+      <dt>${K('fwd')}${K('left')}${K('back')}${K('right')} · <kbd>↑</kbd><kbd>↓</kbd></dt><dd>Đi lại (<kbd>←</kbd><kbd>→</kbd> để quay người)</dd>
+      <dt>Giữ ${K('run')}</dt><dd>Chạy nhanh</dd>
+      <dt>Cuộn chuột</dt><dd>Tiến / lùi (khi xem cận cảnh mô hình: phóng to, thu nhỏ)</dd>
+      <dt>Điện thoại</dt><dd>Cần điều khiển góc trái để đi, vuốt màn hình để nhìn</dd></dl>
+    <h4>Tương tác</h4><dl>
+      <dt>Nhấn tác phẩm</dt><dd>Xem thông tin, cảm xúc, chấm sao, ủng hộ</dd>
+      <dt>Nhấn tivi / radio</dt><dd>Mở bảng điều khiển: chọn video YouTube hay bài nhạc, âm lượng, loa</dd>
+      <dt>Cửa cuối gian</dt><dd>Sang gian tiếp theo</dd>
+      <dt>Nhấn người khác</dt><dd>Tặng hoa, thả tim, vẫy tay</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Đóng bảng đang mở</dd></dl>
+    <h4>Nhân vật & trò chuyện</h4><dl>
+      <dt>${K('chat')}</dt><dd>Mở ô trò chuyện</dd>
+      <dt>${K('view')} · ${K('mirror')}</dt><dd>Góc nhìn thứ ba · soi gương</dd>
+      <dt>${K('wave')} ${K('jump')} ${K('dance')}</dt><dd>Vẫy tay · nhảy · nhảy múa</dd>
+      <dt>${K('fire')}</dt><dd>Bắn pháo hoa</dd></dl>
+    ${canEdit() ? `<h4>Sắp xếp đồ vật</h4><dl><dt>Kéo trên sàn</dt><dd>Di chuyển đồ vật đã chọn</dd><dt>${K('rotL')} ${K('rotR')}</dt><dd>Xoay</dd><dt><kbd>Delete</kbd></dt><dd>Bỏ đồ vật</dd></dl>` : ''}
+    <h4>Thanh menu</h4><dl><dt>${K('menu')}</dt><dd>Thu gọn / mở thanh menu (hoặc bấm nút đầu tiên)</dd>
+      ${btns.map(b => `<dt>${esc(b.textContent.trim())}</dt><dd>${esc(b.title || '')}</dd>`).join('')}</dl>
+    <p class="note">Đổi phím tắt ở thẻ <b>Phím tắt</b>.</p></div>`;
+}
+function renderKeys(body) {
+  body.innerHTML = `<p class="note" style="margin-top:0">Nhấn vào ô phím rồi bấm phím mới (Esc để huỷ). Phím mũi tên luôn dùng được để đi và quay. Cài đặt này lưu trên trình duyệt này.</p>` +
+    KEY_ACTIONS.map(([a, n]) => `<div class="kbrow"><span>${n}</span><button class="kbkey" data-kb="${a}">${keyLabel(KB[a])}</button></div>`).join('') +
+    `<div class="row" style="margin-top:10px"><button class="btn" id="kbReset">Khôi phục mặc định</button></div>`;
+  body.querySelectorAll('[data-kb]').forEach(b => b.onclick = () => {
+    body.querySelectorAll('.kbkey.wait').forEach(x => { x.classList.remove('wait'); x.textContent = keyLabel(KB[x.dataset.kb]); });
+    b.classList.add('wait'); b.textContent = 'Bấm phím…'; kbWait = { a: b.dataset.kb, done: () => { renderKeys(body); updateKeyHints(); } };
+  });
+  body.querySelector('#kbReset').onclick = () => { Object.assign(KB, KB_DEFAULT); saveKB(); renderKeys(body); updateKeyHints(); toast('Đã khôi phục phím tắt mặc định.'); };
+}
+async function renderAcct(body) {
+  body.innerHTML = '<div class="spin"></div>';
+  let info; try { info = await api.authInfo(); } catch (e) { body.innerHTML = `<p class="err">${esc(e.message)}</p>`; return; }
+  const linked = info.email && !info.fake;
+  if (linked) try { localStorage.setItem('acctEmail:' + me.username, info.email); } catch { }
+  body.innerHTML = `<div class="note" style="margin-top:0">Tài khoản <b>@${esc(me.username)}</b>${linked ? ` · email <b>${esc(info.email)}</b>` : ' · <span style="color:#ffb38a">chưa gắn email</span>'}
+      ${info.pending ? `<br>Đang chờ xác nhận <b>${esc(info.pending)}</b>: mở hộp thư (cả mục Spam) và bấm liên kết.` : ''}</div>
+    <h4>Đổi mật khẩu</h4>
+    <form id="pwF"><input class="field" type="password" name="cur" placeholder="Mật khẩu hiện tại" autocomplete="current-password" required>
+      <input class="field" type="password" name="n1" placeholder="Mật khẩu mới (ít nhất 8 ký tự)" autocomplete="new-password" required>
+      <input class="field" type="password" name="n2" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" required>
+      <div class="err" id="pwE"></div><button class="btn gold full" type="submit">Đổi mật khẩu</button></form>
+    <h4>${linked ? 'Đổi email' : 'Gắn email để bảo vệ tài khoản'}</h4>
+    <p class="note">Email đã xác nhận giúp bạn lấy lại mật khẩu khi quên. Sau khi xác nhận, hãy đăng nhập bằng email${linked ? '' : `; tên @${esc(me.username)} vẫn là tên của bạn trong phòng`}.</p>
+    <form id="emF"><input class="field" type="email" name="email" placeholder="email@vidu.com" autocomplete="email" required><div class="err" id="emE"></div><button class="btn gold full" type="submit">Gửi thư xác nhận</button></form>
+    <h4>Thiết bị đang đăng nhập</h4>
+    <p class="note">Mỗi tài khoản chỉ có một nhân vật trong phòng: khi vào từ thiết bị mới, nhân vật ở thiết bị cũ sẽ rời phòng. Nếu nghi có người khác dùng tài khoản, hãy đổi mật khẩu rồi đăng xuất các thiết bị khác.</p>
+    <button class="btn full" id="outOthers">Đăng xuất khỏi mọi thiết bị khác</button>`;
+  body.querySelector('#pwF').onsubmit = async ev => {
+    ev.preventDefault(); const fd = new FormData(ev.target), er = body.querySelector('#pwE'), btn = ev.target.querySelector('button');
+    const cur = String(fd.get('cur')), n1 = String(fd.get('n1')), n2 = String(fd.get('n2'));
+    er.style.color = ''; if (n1.length < 8) { er.textContent = 'Mật khẩu mới cần ít nhất 8 ký tự.'; return; }
+    if (n1 !== n2) { er.textContent = 'Hai mật khẩu mới chưa khớp nhau.'; return; }
+    if (n1 === cur) { er.textContent = 'Mật khẩu mới phải khác mật khẩu hiện tại.'; return; }
+    btn.disabled = true; er.textContent = '';
+    try { await api.changePassword(cur, n1); ev.target.reset(); er.style.color = 'var(--gold)'; er.textContent = 'Đã đổi mật khẩu ✓'; toast('Đã đổi mật khẩu. Nên đăng xuất các thiết bị khác nếu bạn từng cho người khác mượn tài khoản.', 6000); }
+    catch (e) { er.textContent = e.message; } finally { btn.disabled = false; }
+  };
+  body.querySelector('#emF').onsubmit = async ev => {
+    ev.preventDefault(); const addr = String(new FormData(ev.target).get('email')).trim().toLowerCase(), er = body.querySelector('#emE'), btn = ev.target.querySelector('button');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) { er.textContent = 'Email chưa đúng định dạng.'; return; }
+    btn.disabled = true; er.textContent = ''; er.style.color = '';
+    try {
+      const r = await api.setEmail(addr);
+      if (r?.user?.email === addr) { try { localStorage.setItem('acctEmail:' + me.username, addr); } catch { } er.style.color = 'var(--gold)'; er.textContent = 'Đã gắn email. (Máy chủ chưa bật bước xác nhận qua thư.)'; }
+      else { er.style.color = 'var(--gold)'; er.textContent = `Đã gửi thư tới ${addr}. Mở thư và bấm liên kết để xác nhận.`; }
+    } catch (e) { er.textContent = /rate|limit/i.test(e.message) ? 'Gửi thư quá nhiều lần, hãy thử lại sau ít phút.' : 'Chưa gửi được: ' + e.message; }
+    finally { btn.disabled = false; }
+  };
+  body.querySelector('#outOthers').onclick = async ev => {
+    ev.target.disabled = true;
+    try { await api.signOutOthers(); toast('Đã đăng xuất mọi thiết bị khác.'); } catch (e) { toast('Chưa đăng xuất được: ' + e.message); } finally { ev.target.disabled = false; }
+  };
+}
+// opened from the "đặt mật khẩu mới" link in the email
+function promptNewPassword() {
+  modal(`<h2>Đặt mật khẩu mới</h2><form id="npF" style="display:flex;flex-direction:column;gap:8px">
+      <input class="field" type="password" name="n1" placeholder="Mật khẩu mới (ít nhất 8 ký tự)" autocomplete="new-password" required>
+      <input class="field" type="password" name="n2" placeholder="Nhập lại mật khẩu mới" autocomplete="new-password" required>
+      <div class="err" id="npE"></div><button class="btn gold full" type="submit">Lưu mật khẩu</button></form>`, b => {
+    b.querySelector('#npF').onsubmit = async ev => {
+      ev.preventDefault(); const fd = new FormData(ev.target), n1 = String(fd.get('n1')), er = b.querySelector('#npE');
+      if (n1.length < 8) { er.textContent = 'Mật khẩu cần ít nhất 8 ký tự.'; return; }
+      if (n1 !== fd.get('n2')) { er.textContent = 'Hai mật khẩu chưa khớp nhau.'; return; }
+      try { await api.newPassword(n1); closeModal(); toast('Đã đặt mật khẩu mới ✓'); history.replaceState(null, '', location.pathname + location.search); }
+      catch (e) { er.textContent = e.message; }
+    };
+  });
+}
+
 /* ================================================================ UI: gate (sign in, dashboard, messages) */
 function showGate(kind, data = {}) {
   const box = $('#gateBox'); box.className = 'card'; $('#gate').classList.add('open'); $('#intro').classList.add('hide');
@@ -2999,7 +3213,7 @@ function showGate(kind, data = {}) {
       <div class="authbox glass">
         <div class="tabs"><button data-t="in" class="${up ? '' : 'on'}">Đăng nhập</button><button data-t="up" class="${up ? 'on' : ''}">Tạo tài khoản</button></div>
         <form id="authForm" autocomplete="on">
-          <input class="field" name="username" placeholder="Tên đăng nhập" autocomplete="username" autocapitalize="off" required>
+          <input class="field" name="username" placeholder="${up ? 'Tên đăng nhập' : 'Tên đăng nhập hoặc email'}" autocomplete="username" autocapitalize="off" required>
           ${up ? '<input class="field" name="display" placeholder="Tên hiển thị (có thể có dấu, ví dụ: Nhà Mình)" maxlength="40">' : ''}
           <input class="field" type="password" name="password" placeholder="Mật khẩu${up ? ' (ít nhất 6 ký tự)' : ''}" autocomplete="${up ? 'new-password' : 'current-password'}" required>
           ${up ? '<input class="field" type="password" name="password2" placeholder="Nhập lại mật khẩu" autocomplete="new-password" required>' : ''}
@@ -3007,11 +3221,26 @@ function showGate(kind, data = {}) {
           <div class="err" id="authErr"></div>
           <button class="primary" type="submit">${up ? 'Tạo tài khoản' : 'Đăng nhập'}</button>
         </form>
+        ${up ? '' : '<button class="linkbtn" id="forgot" type="button">Quên mật khẩu?</button>'}
         ${pendingSlug ? '<button class="linkbtn" id="asGuest">← Xem phòng trưng bày với tư cách khách</button>' : ''}
       </div>`;
+    box.querySelector('#forgot')?.addEventListener('click', () => showGate('forgot'));
     box.querySelectorAll('.tabs button').forEach(b => b.onclick = () => showGate('auth', { tab: b.dataset.t }));
     box.querySelector('#asGuest')?.addEventListener('click', () => openGallery(pendingSlug));
     box.querySelector('#authForm').onsubmit = ev => { ev.preventDefault(); doAuth(tab, new FormData(ev.target), ev.target); };
+  }
+  if (kind === 'forgot') {
+    box.innerHTML = `<div class="eyebrow">Quên mật khẩu</div><h1>Lấy lại<br><em>mật khẩu</em></h1>
+      <p>Nhập email bạn đã gắn và xác nhận trong <b>Cài đặt → Tài khoản & bảo mật</b>. Chúng tôi sẽ gửi liên kết đặt mật khẩu mới.</p>
+      <form class="authbox glass" id="fgForm"><input class="field" type="email" name="email" placeholder="email@vidu.com" autocomplete="email" required><div class="err" id="fgErr"></div><button class="primary" type="submit">Gửi liên kết</button></form>
+      <p class="note">Tài khoản chưa gắn email thì chủ dự án đặt lại mật khẩu giúp trong Supabase → Authentication → Users.</p>
+      <button class="linkbtn" id="fgBack">← Quay lại đăng nhập</button>`;
+    box.querySelector('#fgBack').onclick = () => showGate('auth', { tab: 'in' });
+    box.querySelector('#fgForm').onsubmit = async ev => {
+      ev.preventDefault(); const btn = ev.target.querySelector('button'), er = box.querySelector('#fgErr'); btn.disabled = true; er.textContent = '';
+      try { await api.resetPassword(String(new FormData(ev.target).get('email')).trim()); er.style.color = 'var(--gold)'; er.textContent = 'Đã gửi. Mở hộp thư (cả mục Spam) và bấm liên kết để đặt mật khẩu mới.'; }
+      catch (e) { er.textContent = 'Chưa gửi được: ' + e.message; } finally { btn.disabled = false; }
+    };
   }
   if (kind === 'notfound') box.innerHTML = `<div class="eyebrow">Không tìm thấy</div><h1>Phòng trưng bày<br><em>không tồn tại</em></h1><p>Link có thể đã sai hoặc phòng đã bị xoá.</p><button class="primary" id="gHome">${me ? 'Về phòng của tôi' : 'Đăng nhập'}</button>`;
   if (kind === 'private') box.innerHTML = `<div class="eyebrow">Riêng tư</div><h1>${esc(data.name)}</h1><p>Phòng trưng bày này chỉ dành cho thành viên. ${me ? 'Tài khoản của bạn chưa được mời, hãy nhờ chủ phòng thêm tên đăng nhập <b>@' + esc(me.username) + '</b>.' : 'Hãy đăng nhập bằng tài khoản đã được mời.'}</p><button class="primary" id="gHome">${me ? 'Về phòng của tôi' : 'Đăng nhập'}</button>`;
@@ -3047,7 +3276,8 @@ const authMsg = e => (AUTH_ERR.find(([r]) => r.test(e?.message || '')) || [0, e?
 async function doAuth(tab, fd, form) {
   const err = m => form.querySelector('#authErr').textContent = m;
   const u = String(fd.get('username') || '').trim().toLowerCase(), p = String(fd.get('password') || '');
-  if (!/^[a-z0-9_.]{3,24}$/.test(u)) return err('Tên đăng nhập 3–24 ký tự: chữ thường không dấu, số, dấu chấm hoặc gạch dưới.');
+  const byEmail = tab === 'in' && u.includes('@');
+  if (!byEmail && !/^[a-z0-9_.]{3,24}$/.test(u)) return err('Tên đăng nhập 3–24 ký tự: chữ thường không dấu, số, dấu chấm hoặc gạch dưới.');
   if (p.length < 6) return err('Mật khẩu cần ít nhất 6 ký tự.');
   if (tab === 'up' && p !== fd.get('password2')) return err('Hai mật khẩu chưa khớp nhau.');
   const btn = form.querySelector('button[type=submit]'); btn.disabled = true; err('');
@@ -3141,10 +3371,14 @@ function newGalleryModal() {
 }
 
 /* ================================================================ backend: Supabase */
+const AUTH_LINK = new URLSearchParams(location.hash.slice(1)).get('type') || new URLSearchParams(location.search).get('type');
 const extOf = f => (f.name.match(/\.([a-z0-9]{1,5})$/i)?.[1] || (f.type.split('/')[1] || 'bin')).toLowerCase();
 async function makeSupabaseAPI(cfg) {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
   const sb = createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true } });
+  // links from emails: "set a new password" and "email confirmed"
+  sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') setTimeout(promptNewPassword, 400); });
+  if (AUTH_LINK === 'email_change') setTimeout(() => toast('Email đã được xác nhận ✓ Từ giờ bạn có thể đăng nhập bằng email này.', 6000), 1500);
   const domain = cfg.usernameDomain || 'users.phongtrungbay3d.app';
   const email = u => `${u}@${domain}`;
   const chk = ({ data, error }) => { if (error) throw new Error(error.message || String(error)); return data; };
@@ -3160,7 +3394,29 @@ async function makeSupabaseAPI(cfg) {
       const d = chk(await sb.auth.signUp({ email: email(username), password, options: { data: { username, display_name: display } } }));
       if (!d.session) throw new Error('Email not confirmed');
     },
-    async signIn(username, password) { chk(await sb.auth.signInWithPassword({ email: email(username), password })); },
+    async signIn(username, password) {
+      if (username.includes('@')) { chk(await sb.auth.signInWithPassword({ email: username, password })); return; }
+      const r = await sb.auth.signInWithPassword({ email: email(username), password });
+      if (!r.error) return;
+      // this account was moved to a real email on this device: try that address
+      let linked = null; try { linked = localStorage.getItem('acctEmail:' + username); } catch { }
+      if (linked) { const r2 = await sb.auth.signInWithPassword({ email: linked, password }); if (!r2.error) return; }
+      throw new Error(r.error.message);
+    },
+    async authInfo() {
+      const { data } = await sb.auth.getUser(); const u = data.user; if (!u) throw new Error('Bạn chưa đăng nhập.');
+      return { email: u.email || '', fake: (u.email || '').endsWith('@' + domain), pending: u.new_email || null };
+    },
+    async changePassword(cur, next) {
+      const { data } = await sb.auth.getUser(); const em = data.user?.email;
+      const r = await sb.auth.signInWithPassword({ email: em, password: cur }); // prove it is really you
+      if (r.error) throw new Error('Mật khẩu hiện tại chưa đúng.');
+      chk(await sb.auth.updateUser({ password: next }));
+    },
+    async setEmail(addr) { return chk(await sb.auth.updateUser({ email: addr }, { emailRedirectTo: location.origin + location.pathname })); },
+    async resetPassword(addr) { chk(await sb.auth.resetPasswordForEmail(addr, { redirectTo: location.origin + location.pathname })); },
+    async newPassword(p) { chk(await sb.auth.updateUser({ password: p })); },
+    async signOutOthers() { chk(await sb.auth.signOut({ scope: 'others' })); },
     async signOut() { await sb.auth.signOut(); },
     async myGalleries() {
       const d = chk(await sb.from('gallery_members').select('role, galleries(id,name,slug,visibility,created_at)').eq('user_id', me.id));
@@ -3759,11 +4015,11 @@ function animFig(f, dt, t, speed, emote, emoteT) {
 }
 function disposeFig(f) { scene.remove(f.root); f.root.traverse(o => { if (!o.geometry?.userData.keep) o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map && o.isSprite) m.map.dispose(); m.dispose(); }); }); }
 
-const NET = { ch: null, id: raterId() + '-' + Math.random().toString(36).slice(2, 6), peers: new Map(), lastSend: 0, sentKey: '', emote: null, emoteT: 0, held: 0, me: null, tp: false, tpSaved: null, picks: [] };
+const NET = { t0: Date.now(), kicked: false, ch: null, id: raterId() + '-' + Math.random().toString(36).slice(2, 6), peers: new Map(), lastSend: 0, sentKey: '', emote: null, emoteT: 0, held: 0, me: null, tp: false, tpSaved: null, picks: [] };
 const myName = () => (me?.display || me?.username || 'Khách ' + NET.id.slice(-4)).slice(0, 24);
 const roomKey = () => !room || !api ? '' : api.mode === 'demo' ? 'i' + rooms.indexOf(room) : room.id;
 function netStart() {
-  netStop(); if (!api.channel || !gallery) return;
+  netStop(); if (!api.channel || !gallery || NET.kicked) return;
   NET.ch = api.channel(api.mode === 'demo' ? 'phong-trung-bay-demo' : 'gal:' + gallery.id, onNet);
   NET.ch.send({ t: 'hi', id: NET.id }); sendState(true);
 }
@@ -3775,7 +4031,7 @@ addEventListener('pagehide', () => { try { NET.ch?.send({ t: 'bye', id: NET.id }
 function sendState(force) {
   if (!NET.ch || !room) return;
   const now = performance.now(), p = NET.tpSaved || camera.position;
-  const st = { t: 's', id: NET.id, n: myName(), u: me?.username || '', a: myAvatar(), r: roomKey(), x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +yaw.toFixed(2), e: NET.emote, eid: NET.emoteT, et: NET.emoteT ? Date.now() - NET.emoteT : 0, h: NET.held > Date.now() ? 1 : 0, fx: NET.exprUntil > performance.now() ? NET.expr : '', fu: Math.max(0, Math.round(NET.exprUntil - performance.now())) };
+  const st = { t: 's', id: NET.id, uid: api.mode === 'supabase' ? me?.id || '' : '', t0: NET.t0, n: myName(), u: me?.username || '', a: myAvatar(), r: roomKey(), x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +yaw.toFixed(2), e: NET.emote, eid: NET.emoteT, et: NET.emoteT ? Date.now() - NET.emoteT : 0, h: NET.held > Date.now() ? 1 : 0, fx: NET.exprUntil > performance.now() ? NET.expr : '', fu: Math.max(0, Math.round(NET.exprUntil - performance.now())) };
   const key = `${st.r}|${st.x}|${st.z}|${st.y}|${st.e}|${st.h}|${st.fx}`, moving = key !== NET.sentKey;
   if (!force && now - NET.lastSend < (moving ? 110 : 1500)) return;
   NET.lastSend = now; NET.sentKey = key; NET.ch.send(st);
@@ -3801,9 +4057,13 @@ function onNet(m) {
   if (m.t === 'gi') { if (me && m.toUser === me.username) { toast(`${String(m.from || 'Ai đó').slice(0, 24)} vừa tặng bạn “${String(m.name || 'một món đồ').slice(0, 60)}” 🎁 Xem trong Kho đồ.`, 7000); sfxChime(); setExpr?.('love', 4000); INV = null; } return; }
   if (m.t === 'bye') { const pr = NET.peers.get(m.id); if (pr) { disposeFig(pr.fig); NET.peers.delete(m.id); chatLine(null, `${pr.n} đã rời phòng`); updateOnline(); } return; }
   if (m.t === 's') {
+    // the same account open twice: keep only the newest session's minifig
+    const uid = String(m.uid || ''), t0 = +m.t0 || 0;
+    if (uid && me && uid === me.id) { if (t0 > NET.t0) netKicked(); return; }
+    if (uid) for (const [oid, q] of NET.peers) if (oid !== m.id && q.uid === uid) { if ((q.t0 || 0) > t0) return; disposeFig(q.fig); NET.peers.delete(oid); }
     let pr = NET.peers.get(m.id); const isNew = !pr;
     if (!pr) { pr = { id: m.id }; NET.peers.set(m.id, pr); }
-    Object.assign(pr, { u: String(m.u || '').slice(0, 24), n: String(m.n || 'Khách').slice(0, 24), a: m.a || {}, r: m.r, x: +m.x || 0, z: +m.z || 0, yaw: +m.y || 0, last: performance.now(), held: !!m.h });
+    Object.assign(pr, { uid, t0, u: String(m.u || '').slice(0, 24), n: String(m.n || 'Khách').slice(0, 24), a: m.a || {}, r: m.r, x: +m.x || 0, z: +m.z || 0, yaw: +m.y || 0, last: performance.now(), held: !!m.h });
     if (m.fx) { pr.expr = String(m.fx); pr.exprUntil = performance.now() + Math.min(10000, +m.fu || 0); } else pr.exprUntil = 0;
     if (m.e && m.eid && m.eid !== pr.eid && m.et < 4000) { pr.eid = m.eid; pr.e = m.e; pr.eT = clock.elapsedTime - m.et / 1000; }
     peerFig(pr); if (isNew && pr.r === roomKey()) chatLine(null, `${pr.n} vừa vào gian này 👋`);
@@ -3818,6 +4078,15 @@ function onNet(m) {
     const tgt = m.to === NET.id ? (NET.tpSaved || camera.position) : to?.fig?.root.position;
     if (tgt) { const col = m.k === 'flower' ? [1, .3, .4] : m.k === 'heart' ? [1, .2, .5] : [1, .85, .3]; for (let i = 0; i < 30; i++) spawn(tgt.x, 1.6, tgt.z, rand(-1, 1), rand(.5, 2), rand(-1, 1), ...col, rand(.8, 1.4), .06, 1.2, -.3); }
   }
+}
+function netKicked() {
+  if (NET.kicked) return; NET.kicked = true; netStop();
+  modal(`<h2>Tài khoản đang mở ở nơi khác</h2><p>Tài khoản <b>@${esc(me?.username || '')}</b> vừa vào phòng từ một thiết bị hoặc tab khác. Mỗi tài khoản chỉ có một nhân vật, nên nhân vật ở đây đã tạm rời phòng (bạn vẫn xem phòng bình thường).</p>
+    <p class="note">Nếu đó không phải bạn, hãy đổi mật khẩu và đăng xuất các thiết bị khác.</p>
+    <div class="row"><button class="btn" id="kAcc">Đổi mật khẩu</button><button class="btn gold" id="kBack">Dùng nhân vật ở đây</button></div>`, b => {
+    b.querySelector('#kBack').onclick = () => { closeModal(); NET.kicked = false; NET.t0 = Date.now(); netStart(); };
+    b.querySelector('#kAcc').onclick = () => openSettings('acct');
+  });
 }
 function updateOnline() {
   const here = [...NET.peers.values()].filter(p => p.r === roomKey()).length, all = NET.peers.size, el = $('#online');
@@ -4025,6 +4294,265 @@ async function openLixi() {
 }
 $('#tLixi').onclick = openLixi;
 
+/* ================================================================ TV (YouTube) & radio (uploaded music) */
+// A YouTube player can't be drawn into WebGL, so the TV shows a real <iframe> laid exactly over its 3D screen
+// (CSS3DRenderer) and hidden when a wall is in the way. The radio plays an uploaded mp3/mp4 through Web Audio:
+// "Loa radio" = sound comes from the radio (louder when you are near), "Loa cả phòng" = same volume everywhere.
+const TV_W = 1.3, TV_H = .73, TV_Y = 2.25, TV_PX = 1280;
+const cssR = new CSS3DRenderer(); cssR.setSize(innerWidth, innerHeight); $('#css3d').appendChild(cssR.domElement);
+const cssScene = new THREE.Scene();
+addEventListener('resize', () => cssR.setSize(innerWidth, innerHeight));
+const MEDIA = new Map(); // decor id → player state
+let audioL = null;
+function audioListener() {
+  if (!audioL) { audioL = new THREE.AudioListener(); camera.add(audioL); }
+  if (audioL.context.state !== 'running') audioL.context.resume().catch(() => { });
+  return audioL;
+}
+const mediaVol = (st) => muted ? 0 : (st.localVol ?? st.e.vol ?? 70);
+
+/* ---------- models */
+function idleScreenTex(kind) {
+  return cached('idle-' + kind, () => {
+    const [c, g] = canvas(512, 288); const gr = g.createLinearGradient(0, 0, 512, 288); gr.addColorStop(0, '#0c1118'); gr.addColorStop(1, '#05070a');
+    g.fillStyle = gr; g.fillRect(0, 0, 512, 288);
+    g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.roundRect(206, 92, 100, 70, 18); g.fill();
+    g.fillStyle = '#0c1118'; g.beginPath(); g.moveTo(244, 108); g.lineTo(278, 127); g.lineTo(244, 146); g.fill();
+    g.fillStyle = 'rgba(244,237,225,.75)'; g.font = '500 22px "Be Vietnam Pro", Arial'; g.textAlign = 'center';
+    g.fillText(kind === 'off' ? 'Nhấn để chọn video YouTube' : 'Đang tải…', 256, 205);
+    return tex(c, true, true);
+  });
+}
+function makeTV(e) {
+  const g = new THREE.Group();
+  const frame = std({ color: 0x0b0b0c, roughness: .3, metalness: .6 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(TV_W + .05, TV_H + .05, .045), frame); body.position.set(0, TV_Y, .03);
+  const mount = new THREE.Mesh(new THREE.BoxGeometry(.22, .16, .2), std({ color: 0x1b1b1d, roughness: .5, metalness: .5 })); mount.position.set(0, TV_Y, -.09);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(TV_W, TV_H), new THREE.MeshStandardMaterial({ color: 0x000000, roughness: .12, metalness: .1, emissive: 0xffffff, emissiveMap: idleScreenTex('off'), emissiveIntensity: .55 }));
+  scr.position.set(0, TV_Y, .0535);
+  const led = new THREE.Mesh(new THREE.SphereGeometry(.008, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3a2a })); led.position.set(TV_W / 2 - .06, TV_Y - TV_H / 2 - .012, .055);
+  const logo = new THREE.Mesh(new THREE.PlaneGeometry(.08, .012), new THREE.MeshBasicMaterial({ color: 0x8a8a8a })); logo.position.set(0, TV_Y - TV_H / 2 - .013, .0535);
+  g.add(mount, body, scr, led, logo); g.userData.screen = scr; g.userData.led = led;
+  [mount, body, scr, led, logo].forEach(m => m.userData.noCast = true);
+  return g;
+}
+function makeRadio(e) {
+  const g = new THREE.Group();
+  const wood = std({ color: 0x6e3f22, roughness: .45, metalness: .05 }), brass = std({ color: 0xc9a25a, roughness: .3, metalness: .9 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.5, .3, .19), wood); body.position.y = .17;
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(.46, .02, .16), std({ color: 0x241510, roughness: .6 })); foot.position.y = .01;
+  const grille = new THREE.Mesh(new THREE.CircleGeometry(.095, 32), new THREE.MeshStandardMaterial({ map: cached('radioGrille', () => { const [c, gg] = canvas(128, 128); gg.fillStyle = '#2a1d14'; gg.fillRect(0, 0, 128, 128); gg.fillStyle = '#5a4130'; for (let y = 6; y < 128; y += 9) for (let x = 6 + (y / 9 % 2) * 4; x < 128; x += 9) { gg.beginPath(); gg.arc(x, y, 2.4, 0, 7); gg.fill(); } return tex(c, true, true); }), roughness: .9 }));
+  grille.position.set(-.1, .17, .0955);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.098, .008, 8, 40), brass); ring.position.copy(grille.position);
+  const dial = new THREE.Mesh(new THREE.PlaneGeometry(.14, .05), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xffc46a, emissiveIntensity: .25, roughness: .3 })); dial.position.set(.12, .21, .0956);
+  const knobG = new THREE.CylinderGeometry(.022, .022, .025, 20); knobG.rotateX(PI / 2);
+  const k1 = new THREE.Mesh(knobG, brass), k2 = new THREE.Mesh(knobG, brass); k1.position.set(.08, .12, .105); k2.position.set(.16, .12, .105);
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(.004, .004, .42, 6), std({ color: 0xd8d8d8, metalness: 1, roughness: .2 })); ant.position.set(.19, .5, -.04); ant.rotation.z = -.45;
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(.12, .01, 8, 24, PI), brass); handle.position.set(0, .32, 0);
+  const led = new THREE.Mesh(new THREE.SphereGeometry(.009, 8, 6), new THREE.MeshBasicMaterial({ color: 0x3a1a10 })); led.position.set(.2, .21, .097);
+  g.add(body, foot, grille, ring, dial, k1, k2, ant, handle, led); g.userData.led = led; g.userData.grille = grille; g.userData.dial = dial;
+  return g;
+}
+// a TV hangs on a side wall, on an arm in front of a wall column, between two paintings (every 4.2 m), facing into the room.
+// The entrance and door walls are full (niches, bookshelves, the door), so a TV never goes there.
+function snapWall(e) {
+  const right = e.x >= 0;
+  e.x = right ? HW - .2 : -HW + .2; e.rot = right ? -PI / 2 : PI / 2; // 20 cm out, on an arm in front of the wall column
+  e.z = +THREE.MathUtils.clamp(Math.round((e.z - 2.1) / 4.2) * 4.2 + 2.1, -14.7, 14.7).toFixed(2);
+}
+
+/* ---------- YouTube */
+function ytParse(u) {
+  u = String(u || '').trim(); if (!u) return null;
+  if (/^[\w-]{11}$/.test(u)) return { id: u, list: null };
+  try {
+    const x = new URL(/^https?:\/\//.test(u) ? u : 'https://' + u), h = x.hostname.replace(/^(www|m|music)\./, '');
+    let id = null; const list = x.searchParams.get('list');
+    if (h === 'youtu.be') id = x.pathname.slice(1).split('/')[0];
+    else if (h === 'youtube.com' || h === 'youtube-nocookie.com') id = x.searchParams.get('v') || (x.pathname.match(/^\/(embed|shorts|live)\/([\w-]+)/) || [])[2] || null;
+    else return null;
+    if (id && !/^[\w-]{6,20}$/.test(id)) id = null;
+    return id || (list && /^[\w-]+$/.test(list)) ? { id, list: list && /^[\w-]+$/.test(list) ? list : null } : null;
+  } catch { return null; }
+}
+let ytApi = null;
+function loadYT() {
+  return ytApi ||= new Promise((res, rej) => {
+    if (window.YT?.Player) return res(window.YT);
+    const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { prev?.(); res(window.YT); };
+    const sc = document.createElement('script'); sc.src = 'https://www.youtube.com/iframe_api';
+    sc.onerror = () => { ytApi = null; rej(new Error('Không tải được YouTube')); }; document.head.appendChild(sc);
+  });
+}
+async function tvStart(st) {
+  const yt = ytParse(st.e.yt); st.key = st.e.yt || ''; if (!yt) return;
+  const myKey = st.key; let YT;
+  try { YT = await loadYT(); } catch (e) { toast(e.message); return; }
+  if (st.dead || st.key !== myKey) return;
+  const wrap = document.createElement('div'); wrap.style.cssText = `width:${TV_PX}px;height:${Math.round(TV_PX * TV_H / TV_W)}px;pointer-events:none;background:#000`;
+  const inner = document.createElement('div'); wrap.appendChild(inner);
+  st.wrap = wrap; st.obj = new CSS3DObject(wrap); cssScene.add(st.obj);
+  const vars = { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, iv_load_policy: 3, controls: 0, disablekb: 1, fs: 0 };
+  if (yt.list) Object.assign(vars, { listType: 'playlist', list: yt.list }); else Object.assign(vars, { loop: 1, playlist: yt.id });
+  st.player = new YT.Player(inner, {
+    width: TV_PX, height: Math.round(TV_PX * TV_H / TV_W), videoId: yt.id || undefined, playerVars: vars,
+    events: {
+      onReady: ev => { st.ready = true; tvVolume(st, true); if (!st.paused) ev.target.playVideo(); renderMediaP(); },
+      onStateChange: ev => { st.playing = ev.data === 1; st.g.userData.led.material.color.setHex(st.playing ? 0x3aff6a : 0xff3a2a); if (ev.data === 1) renderMediaP(); },
+      onError: () => toast('Video YouTube này không phát được trên trang khác (chủ video đã chặn). Hãy chọn video khác.', 6000)
+    }
+  });
+  st.g.userData.screen.material.emissiveMap = idleScreenTex('load'); st.g.userData.screen.material.needsUpdate = true;
+}
+function tvVolume(st, force) {
+  if (!st.ready || !st.player?.setVolume) return;
+  let v = mediaVol(st);
+  if ((st.e.mode || 'tv') === 'tv') { const d = camera.position.distanceTo(st.pos); v *= THREE.MathUtils.clamp(1 - (d - 2.5) / 13, 0, 1); }
+  v = Math.round(v); if (!force && v === st.lastVol) return; st.lastVol = v;
+  try { if (v <= 0) st.player.mute(); else { st.player.unMute(); st.player.setVolume(v); } } catch { }
+}
+function tvStop(st) {
+  try { st.player?.destroy?.(); } catch { } st.player = null; st.ready = false; st.playing = false;
+  if (st.obj) { cssScene.remove(st.obj); st.obj.element.remove(); st.obj = null; }
+  const scr = st.g.userData.screen; if (scr) { scr.material.emissiveMap = idleScreenTex('off'); scr.material.needsUpdate = true; }
+  st.g.userData.led?.material.color.setHex(0xff3a2a);
+}
+
+/* ---------- radio */
+function radioStart(st) {
+  const e = st.e; st.key = (e.path || '') + '|' + (e.mode || 'radio'); if (!e.path) return;
+  const el = new Audio(); el.crossOrigin = 'anonymous'; el.preload = 'auto'; el.loop = e.loop !== false; el.src = api.url(e.path);
+  if (st.resumeAt) el.currentTime = st.resumeAt;
+  const L = audioListener(), room = (e.mode || 'radio') === 'room';
+  const snd = room ? new THREE.Audio(L) : new THREE.PositionalAudio(L);
+  snd.setMediaElementSource(el);
+  if (!room) { snd.setDistanceModel('inverse'); snd.setRefDistance(1.6); snd.setRolloffFactor(1.3); snd.setMaxDistance(40); snd.position.y = .2; }
+  st.g.add(snd); st.el = el; st.snd = snd; radioVolume(st);
+  el.onplay = () => { st.playing = true; renderMediaP(); }; el.onpause = () => { st.playing = false; renderMediaP(); };
+  el.onerror = () => toast('Không phát được tệp nhạc này. Hãy thử tệp mp3 khác.');
+  if (!st.paused) el.play().catch(() => { st.playing = false; renderMediaP(); });
+}
+function radioVolume(st) { if (st.snd) st.snd.setVolume(mediaVol(st) / 100); }
+function radioStop(st) {
+  if (st.el) { st.resumeAt = st.el.currentTime; st.el.pause(); st.el.removeAttribute('src'); st.el.load(); st.el = null; }
+  if (st.snd) { try { st.snd.disconnect(); } catch { } st.snd.parent?.remove(st.snd); st.snd = null; }
+  st.playing = false;
+}
+
+/* ---------- keep players in step with the room's decor */
+const _mq = new THREE.Quaternion(), _ms = new THREE.Vector3(), _mn = new THREE.Vector3(), _mv = new THREE.Vector3();
+let mediaT = 0, occT = 0;
+function mediaTick(dt) {
+  // stop players whose TV/radio left the room (deleted, other gian, rebuilt)
+  for (const [id, st] of MEDIA) {
+    const d = R?.decor[id];
+    if (!d || d.g !== st.g) { st.dead = true; st.kind === 'tv' ? tvStop(st) : radioStop(st); MEDIA.delete(id); if (mpOpen === id) closeMediaP(); }
+  }
+  if (!R || !started) { if (MEDIA.size) cssR.render(cssScene, camera); return; }
+  for (const id in R.decor) {
+    const d = R.decor[id], type = d.e.type; if (type !== 'tv' && type !== 'radio') continue;
+    let st = MEDIA.get(id);
+    if (!st) { st = { kind: type, e: d.e, g: d.g, pos: new THREE.Vector3() }; MEDIA.set(id, st); }
+    st.e = d.e;
+    if (type === 'tv') { if ((st.e.yt || '') !== (st.key ?? null)) { tvStop(st); st.key = null; tvStart(st); } }
+    else { const k = (st.e.path || '') + '|' + (st.e.mode || 'radio'); if (k !== st.key) { radioStop(st); if (st.key?.split('|')[0] !== (st.e.path || '')) st.resumeAt = 0; radioStart(st); } if (st.el) st.el.loop = st.e.loop !== false; }
+  }
+  mediaT -= dt; occT -= dt; const slow = mediaT <= 0, occ = occT <= 0; if (slow) mediaT = .2; if (occ) occT = .25;
+  let anyCss = false;
+  MEDIA.forEach(st => {
+    if (st.kind === 'radio') {
+      if (slow) radioVolume(st);
+      const on = st.playing; st.g.userData.led.material.color.setHex(on ? 0xff9a3a : 0x3a1a10);
+      st.g.userData.dial.material.emissiveIntensity = on ? .9 : .25;
+      if (on) st.g.userData.grille.scale.setScalar(1 + Math.sin(performance.now() / 90) * .015);
+      return;
+    }
+    const scr = st.g.userData.screen; scr.updateWorldMatrix(true, false); scr.getWorldPosition(st.pos);
+    if (slow) tvVolume(st);
+    if (!st.obj) return;
+    scr.matrixWorld.decompose(st.obj.position, _mq, _ms); st.obj.quaternion.copy(_mq);
+    st.obj.scale.set(_ms.x * TV_W / TV_PX, _ms.y * TV_W / TV_PX, 1);
+    if (occ) { // hide the video when you look at the back of the TV, are far away, or a wall is in the way
+      _mn.set(0, 0, 1).applyQuaternion(_mq); _mv.copy(camera.position).sub(st.pos); const dist = _mv.length();
+      let vis = _mn.dot(_mv) > 0 && dist < 22;
+      if (vis) { ray.set(camera.position, _mv.multiplyScalar(-1 / dist)); ray.far = dist - .15; const hit = ray.intersectObjects(R.group.children, true).find(h => h.object.visible && !h.object.isPoints && !h.object.isSprite && !(h.object.material?.transparent && h.object.material.opacity < .5) && !st.g.getObjectById(h.object.id)); vis = !hit; ray.far = Infinity; }
+      st.wrap.style.visibility = vis ? 'visible' : 'hidden'; st.vis = vis;
+    }
+    if (st.vis !== false) anyCss = true;
+  });
+  if (anyCss || cssScene.children.length) cssR.render(cssScene, camera);
+}
+addEventListener('pagehide', () => MEDIA.forEach(st => st.kind === 'radio' && st.el?.pause()));
+
+/* ---------- control panel */
+let mpOpen = null;
+function closeMediaP() { mpOpen = null; $('#mediaP').classList.remove('open'); }
+function openMediaPanel(id) { closePanel(); closePops(); mpOpen = id; $('#mediaP').classList.add('open'); renderMediaP(); }
+function saveMediaE(e, patch) { Object.assign(e, patch); if (canEdit()) scheduleLayoutSave(); }
+function renderMediaP() {
+  if (!mpOpen) return; const d = R?.decor[mpOpen]; if (!d) { closeMediaP(); return; }
+  const e = d.e, st = MEDIA.get(mpOpen) || { e }, ed = canEdit(), box = $('#mediaP'), tv = e.type === 'tv';
+  if (box.contains(document.activeElement) && document.activeElement.matches('input[type=text],input[type=url]')) return; // don't wipe what is being typed
+  const vol = Math.round(st.localVol ?? e.vol ?? 70), mode = e.mode || (tv ? 'tv' : 'radio');
+  let title = '';
+  if (tv) { try { title = st.player?.getVideoData?.().title || ''; } catch { } }
+  const now = tv ? (e.yt ? (title || 'Video YouTube') : '') : (e.path ? (e.fname || 'Bài nhạc') : '');
+  box.innerHTML = `<div class="ph"><span>${tv ? '📺 Tivi' : '📻 Radio'}</span><button id="mpX" title="Đóng">✕</button></div>
+    <div class="note" style="margin-top:0">${now ? `Đang ${st.playing ? 'phát' : 'chọn'}: <b>${esc(now)}</b>` : tv ? 'Tivi chưa có video.' : 'Radio chưa có bài nhạc.'}${!ed && !now ? ' Chủ phòng sẽ chọn nội dung.' : ''}</div>
+    ${tv && ed ? `<label class="lb" for="mpUrl">Link YouTube (video, shorts hoặc danh sách phát)</label><input class="field" type="url" id="mpUrl" placeholder="https://www.youtube.com/watch?v=…" value="${esc(e.yt || '')}"><button class="btn gold full" id="mpSet" style="margin-top:8px">Phát trên tivi</button>` : ''}
+    ${!tv && ed ? `<button class="btn gold full" id="mpUp">⬆ ${e.path ? 'Đổi bài nhạc' : 'Tải lên bài nhạc'} (mp3, m4a, wav, mp4)</button>` : ''}
+    ${now ? `<div class="row" style="margin-top:8px"><button class="btn" id="mpPlay">${st.playing ? '⏸ Tạm dừng' : '▶ Phát'}</button>${tv && /list=/.test(e.yt || '') ? '<button class="btn" id="mpNext">⏭ Bài sau</button>' : `<button class="btn" id="mpRe">⏮ Từ đầu</button>`}</div>` : ''}
+    <label class="lb" for="mpVol"><span>Âm lượng${ed ? '' : ' (trên máy bạn)'}</span><span id="mpVolT">${vol}%</span></label>
+    <input type="range" class="range" id="mpVol" min="0" max="100" step="5" value="${vol}">
+    <label class="lb">Loa</label>
+    <div class="seg" id="mpMode" style="margin-top:0">${(tv ? [['tv', 'Loa tivi'], ['room', 'Loa cả phòng']] : [['radio', 'Loa radio'], ['room', 'Loa cả phòng']]).map(([k, n]) => `<button data-m="${k}" class="${k === mode ? 'on' : ''}"${ed ? '' : ' disabled'}>${n}</button>`).join('')}</div>
+    <div class="note" style="margin:6px 0 0">${mode === 'room' ? 'Cả gian nghe to như nhau, đứng đâu cũng rõ.' : `Âm thanh phát ra từ ${tv ? 'tivi' : 'radio'}: lại gần nghe to, đi xa nhỏ dần.`}${ed ? '' : ' Chủ phòng chọn chế độ loa.'}</div>
+    ${!tv && ed && e.path ? `<div class="tg ${e.loop !== false ? 'on' : ''}" id="mpLoop" style="margin-top:10px">Lặp lại bài nhạc<span class="sw2"></span></div>` : ''}
+    ${ed && now ? `<button class="btn full danger" id="mpOff" style="margin-top:10px">${tv ? 'Tắt tivi (bỏ video)' : 'Gỡ bài nhạc'}</button>` : ''}
+    <p class="note" style="margin-top:10px">${muted ? '🔇 Âm thanh trang đang tắt: bật lại bằng nút loa góc trên. ' : ''}Mỗi người xem tự phát trên máy mình.</p>`;
+  const q = s => box.querySelector(s);
+  q('#mpX').onclick = closeMediaP;
+  q('#mpSet')?.addEventListener('click', () => {
+    const v = q('#mpUrl').value.trim(), yt = ytParse(v);
+    if (!yt) { toast('Link YouTube chưa đúng. Ví dụ: https://www.youtube.com/watch?v=… hoặc https://youtu.be/…'); return; }
+    if (st) st.paused = false; saveMediaE(e, { yt: v }); toast('Đang mở video trên tivi…'); setTimeout(renderMediaP, 50);
+  });
+  q('#mpUp')?.addEventListener('click', () => { const inp = $('#audioInput'); inp.value = ''; inp.onchange = () => inp.files[0] && uploadRadio(e, inp.files[0]); inp.click(); });
+  q('#mpPlay')?.addEventListener('click', () => {
+    const s2 = MEDIA.get(mpOpen); if (!s2) return; audioListener();
+    if (tv) { if (!s2.player?.playVideo) return; s2.paused = s2.playing; s2.playing ? s2.player.pauseVideo() : s2.player.playVideo(); }
+    else if (s2.el) { s2.paused = s2.playing; s2.playing ? s2.el.pause() : s2.el.play().catch(er => toast('Không phát được: ' + er.message)); }
+    setTimeout(renderMediaP, 150);
+  });
+  q('#mpNext')?.addEventListener('click', () => { try { MEDIA.get(mpOpen)?.player?.nextVideo(); } catch { } });
+  q('#mpRe')?.addEventListener('click', () => { const s2 = MEDIA.get(mpOpen); if (tv) s2?.player?.seekTo?.(0); else if (s2?.el) { s2.el.currentTime = 0; s2.el.play().catch(() => { }); } });
+  q('#mpVol').oninput = ev => {
+    const v = +ev.target.value; q('#mpVolT').textContent = v + '%'; const s2 = MEDIA.get(mpOpen);
+    if (s2) { s2.localVol = v; tv ? tvVolume(s2, true) : radioVolume(s2); }
+  };
+  q('#mpVol').onchange = ev => { if (ed) { const s2 = MEDIA.get(mpOpen); if (s2) s2.localVol = null; saveMediaE(e, { vol: +ev.target.value }); } };
+  box.querySelectorAll('#mpMode button').forEach(b => b.onclick = () => { if (!ed) return; saveMediaE(e, { mode: b.dataset.m }); renderMediaP(); });
+  q('#mpLoop')?.addEventListener('click', () => { saveMediaE(e, { loop: e.loop === false }); renderMediaP(); });
+  q('#mpOff')?.addEventListener('click', async () => {
+    if (tv) saveMediaE(e, { yt: '' });
+    else { const old = e.path; saveMediaE(e, { path: '', fname: '' }); if (old) api.removeFiles?.([old]).catch(() => { }); }
+    renderMediaP();
+  });
+}
+async function uploadRadio(e, file) {
+  if (!canEdit()) return;
+  if (!/^(audio\/|video\/mp4)/.test(file.type) && !/\.(mp3|m4a|aac|wav|ogg|oga|flac|mp4)$/i.test(file.name)) { toast('Hãy chọn tệp âm thanh (mp3, m4a, wav, ogg) hoặc video mp4.'); return; }
+  if (file.size > 50 * 1024 * 1024) { toast('Tệp lớn hơn 50 MB. Hãy nén lại hoặc chọn bài ngắn hơn.'); return; }
+  toast('Đang tải bài nhạc lên…', 60000);
+  try {
+    const path = await api.upload(gallery.id, file), old = e.path;
+    const st = MEDIA.get(e.id); if (st) st.paused = false;
+    saveMediaE(e, { path, fname: file.name.replace(/\.[^.]+$/, '').slice(0, 80) });
+    if (old) api.removeFiles?.([old]).catch(() => { });
+    toast('Đã tải lên. Radio đang phát 🎶'); renderMediaP();
+  } catch (er) { toast('Chưa tải lên được: ' + er.message, 6000); }
+}
+
 /* ================================================================ loop */
 const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), want = new THREE.Vector3();
 // If the visitor's device can't keep up on "Cao", switch to "Nhẹ" once, automatically.
@@ -4035,17 +4563,18 @@ function watchFps(raw) {
   if (perf.time < 2) return;
   const fps = perf.frames / perf.time; perf.time = perf.frames = 0;
   perf.slow = fps < 30 ? perf.slow + 1 : 0;
-  if (perf.slow >= 2) { quality = 0; applyQuality(); toast('Máy hơi chậm nên đã chuyển sang chất lượng Nhẹ cho mượt hơn. Bấm "Nhẹ" để đổi lại.', 5000); }
+  if (perf.slow >= 2 && resScale > .7) { perf.slow = 0; resScale = +(resScale - .15).toFixed(2); applyQuality(); return; }
+  if (perf.slow >= 2) { quality = 0; resScale = 1; applyQuality(); toast('Máy hơi chậm nên đã chuyển sang chất lượng Nhẹ cho mượt hơn. Bấm "Nhẹ" để đổi lại.', 5000); }
 }
 function tick() {
   if (NET.tpSaved) { camera.position.copy(NET.tpSaved); NET.tpSaved = null; }
   const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
   watchFps(raw);
   let f = 0, s = 0;
-  if (keys.KeyW || keys.ArrowUp) f += 1; if (keys.KeyS || keys.ArrowDown) f -= 1; if (keys.KeyD) s += 1; if (keys.KeyA) s -= 1;
+  if (held('fwd') || keys.ArrowUp) f += 1; if (held('back') || keys.ArrowDown) f -= 1; if (held('right')) s += 1; if (held('left')) s -= 1;
   if (keys.ArrowLeft) yawT += 1.8 * dt; if (keys.ArrowRight) yawT -= 1.8 * dt;
   f -= joy.y; s += joy.x;
-  const speed = (keys.ShiftLeft || keys.ShiftRight) ? 5 : 2.4;
+  const speed = held('run') ? 5 : 2.4;
   fwd.set(-Math.sin(yaw), 0, -Math.cos(yaw)); right.set(Math.cos(yaw), 0, -Math.sin(yaw));
   want.set(0, 0, 0).addScaledVector(fwd, f).addScaledVector(right, s); if (want.lengthSq() > 1) want.normalize(); want.multiplyScalar(speed);
   vel.lerp(want, 1 - Math.exp(-dt * 8));
@@ -4083,7 +4612,9 @@ function tick() {
     camera.position.x = THREE.MathUtils.clamp(camera.position.x + Math.sin(yaw) * 2.6, -HW + .3, HW - .3);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z + Math.cos(yaw) * 2.6, -HL + .3, HL - .3); camera.position.y += .55;
   }
+  shadowT -= raw; if (shadowT <= 0) { renderer.shadowMap.needsUpdate = true; shadowT = .1; }
   if (quality) composer.render(dt); else renderer.render(scene, camera);
+  mediaTick(dt);
   requestAnimationFrame(tick);
 }
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); applyQuality(); });
@@ -4119,7 +4650,7 @@ $('#enter').onclick = () => {
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.2';
+const BUILD = '2026-11-06.3';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();

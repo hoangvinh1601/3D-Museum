@@ -114,3 +114,18 @@ Bản này thêm cột `lights` để lưu cài đặt đèn. Mở Supabase, và
 Vân tường, sàn (White Plaster 02, Marble 01, Concrete Floor 02, Herringbone Parquet) và ảnh HDRI *Museum of Ethnography* lấy từ [Poly Haven](https://polyhaven.com), giấy phép CC0 (dùng tự do). Các tệp nằm trong `assets/polyhaven/`.
 
 Mô hình cây cảnh, sofa, ghế bành, tượng, bình gốm, đèn chùm… trong `assets/polyhaven/models/` cũng lấy từ Poly Haven (CC0), đã nén lại bằng gltf-transform. Vân đá cẩm thạch, travertine, gỗ óc chó trong `assets/ambientcg/` lấy từ [ambientCG](https://ambientcg.com) (Marble012, Marble016, Travertine009, Wood066), giấy phép CC0.
+
+## Tính năng mới (06/11/2026)
+
+- **Thu gọn thanh menu:** bấm nút đầu tiên trên thanh menu (hoặc phím **H**) để thu gọn thành một nút nhỏ, bấm lại để mở ra.
+- **Cài đặt (nút bánh răng ⚙ góc trên):** thẻ *Hướng dẫn* giải thích mọi thao tác và nút; thẻ *Phím tắt* cho đổi phím (lưu trên từng trình duyệt); thẻ *Tài khoản & bảo mật* để đổi mật khẩu, gắn email, đăng xuất các thiết bị khác.
+- **Một tài khoản, một nhân vật:** khi cùng tài khoản vào phòng từ nơi khác, nhân vật ở thiết bị cũ rời phòng và hiện thông báo.
+- **Tivi treo tường:** thêm trong *Sắp xếp* hoặc mua trong *Cửa hàng*. Nhấn vào tivi, dán link YouTube, chọn *Loa tivi* (gần to, xa nhỏ) hoặc *Loa cả phòng*. Mỗi người xem tự phát trên máy mình.
+- **Radio cổ:** nhấn vào radio, tải lên bài nhạc mp3/m4a/wav hoặc video mp4 (tối đa 50 MB), chỉnh âm lượng, loa và lặp lại.
+- **Giao diện theo mùa** giờ chỉ bán trong nút *Giao diện*, không lặp lại trong *Cửa hàng*.
+
+### Về xác nhận email
+
+- Đổi mật khẩu, quên mật khẩu (với tài khoản đã có email) và đăng xuất thiết bị khác dùng được ngay.
+- Supabase của dự án đang **tắt** *Confirm email* (vì tài khoản đăng ký bằng tên đăng nhập dùng email ảo). Khi tắt, email gắn vào tài khoản được ghi nhận ngay mà **không** qua bước bấm liên kết trong thư; web sẽ báo rõ điều này.
+- Muốn xác nhận email thật cần: (1) gắn dịch vụ gửi thư ở **Authentication → Emails → SMTP Settings** (Resend, Brevo… có gói miễn phí; máy chủ thư mặc định của Supabase chỉ gửi cho thành viên dự án), (2) đặt *Site URL* ở **Authentication → URL Configuration** là địa chỉ web, (3) đổi cách đăng ký sang dùng email thật, rồi mới bật *Confirm email* và tắt *Secure email change*. Đừng bật *Confirm email* trước bước (3), nếu không người mới sẽ không đăng ký được.
