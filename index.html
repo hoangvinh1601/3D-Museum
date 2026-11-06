@@ -300,6 +300,7 @@ body.can-edit span.member-only{display:block}
     <div class="seg" id="plK" style="margin-top:0"><button data-k="2700">Ấm 2700K</button><button data-k="3000">3000K</button><button data-k="4000">4000K</button><button data-k="5000">Ánh ngày</button></div>
     <div class="note" id="plNote" style="margin:8px 0 10px"></div>
   </div>
+  <button class="btn full gold" id="pOpt" style="display:none;margin-bottom:8px"></button>
   <button class="btn full" id="pAnim" style="display:none;margin-bottom:8px">Dừng chuyển động</button>
   <div class="row"><button class="btn sq" id="pPrev">‹</button><button class="btn" id="pFocus">Xem cận cảnh</button><button class="btn sq" id="pNext">›</button></div>
   <button class="btn full" id="pSound" style="display:none;margin-bottom:8px">Bật tiếng video</button>
@@ -1999,6 +2000,8 @@ function renderPanel(fill) {
     $('#vDesc').textContent = inf.description || '';
   }
   renderLightPanel();
+  const heavy = ed && s.media?.kind === 'model' && s.media.path && s.media.bytes > 6 * 1048576 && !s.media.pending;
+  $('#pOpt').style.display = heavy ? '' : 'none'; if (heavy) $('#pOpt').textContent = `Tối ưu mô hình (${(s.media.bytes / 1048576).toFixed(0)} MB, tải chậm)`;
   $('#pAnim').style.display = s.mixer ? '' : 'none'; if (s.mixer) $('#pAnim').textContent = s.mixer.timeScale ? 'Dừng chuyển động' : 'Phát chuyển động';
   const hint = { wall: 'ảnh hoặc video', case: 'ảnh chụp figure/LEGO hoặc mô hình 3D .glb', book: 'ảnh bìa sách' }[s.type];
   const tip = s.type === 'case' ? ' · Khi xem cận cảnh: kéo để xoay, cuộn chuột để lại gần' : '';
@@ -2021,6 +2024,16 @@ function renderLightPanel() {
 $('#plOn').onclick = () => selected && setSlotLight(selected, { on: !slotLight(selected).on });
 $('#plLv').oninput = e => selected && setSlotLight(selected, { lv: +e.target.value / 100, on: true });
 document.querySelectorAll('#plK button').forEach(b => b.onclick = () => selected && setSlotLight(selected, { k: +b.dataset.k, on: true }));
+$('#pOpt').onclick = async () => {
+  const s = selected; if (!s?.media?.path) return; const keep = { ...s.info };
+  $('#pOpt').disabled = true; toast('Đang tải mô hình về để tối ưu…', 60000);
+  try {
+    const r = await fetch(s.media.url || api.url(s.media.path)); if (!r.ok) throw new Error('lỗi ' + r.status);
+    const f = new File([await r.blob()], (keep.title || 'mo-hinh').slice(0, 60) + '.glb', { type: 'model/gltf-binary' });
+    if (await putFile(s, f, 'model', '')) { s.info = keep; s.label(); await saveInfo(s); toast('Đã tối ưu và lưu lại mô hình ✓', 4000); }
+  } catch (e) { toast('Không tối ưu được: ' + e.message, 6000); }
+  $('#pOpt').disabled = false; if (selected === s) renderPanel();
+};
 $('#pAnim').onclick = () => { const m = selected?.mixer; if (!m) return; m.timeScale = m.timeScale ? 0 : 1; renderPanel(); };
 function closePanel() { $('#panel').classList.remove('open'); selected = null; }
 $('#pClose').onclick = () => { closePanel(); focus = null; };
@@ -2425,9 +2438,25 @@ function disposeMedia(m, keepBlob) {
   m.tex?.dispose(); if (m.scene) disposeTree(m.scene);
   if (!keepBlob && m.blobUrl) URL.revokeObjectURL(m.blobUrl);
 }
+// Big 3D models are downloaded and parsed one at a time, so a room full of them doesn't run out of memory.
+let modelChain = Promise.resolve();
+function modelQueue(fn) { const run = modelChain.then(fn, fn); modelChain = run.catch(() => { }); return run; }
+// Shrink a .glb before upload (fewer triangles, compressed geometry, 1024 px WebP textures).
+async function shrinkModel(file) {
+  if (file.size < 2.5 * 1048576) return file;
+  try {
+    toast(`Đang tối ưu mô hình “${file.name}” để tải nhanh hơn…`, 60000);
+    const { optimizeGlb } = await import('./assets/vendor/glb-optimizer.js');
+    const r = await optimizeGlb(await file.arrayBuffer(), { onStep: st => toast(`Đang tối ưu mô hình: ${st}…`, 60000) });
+    if (!r || r.after > r.before * .85) return file;
+    toast(`Đã nén mô hình: ${(r.before / 1048576).toFixed(1)} MB → ${(r.after / 1048576).toFixed(1)} MB`, 4000);
+    return new File([r.buf], file.name.replace(/\.glb$/i, '') + '.glb', { type: 'model/gltf-binary' });
+  } catch (e) { console.warn('Không tối ưu được mô hình, tải lên bản gốc', e); return file; }
+}
 async function createMedia(src) {
   const base = { kind: src.kind, url: src.url, blobUrl: src.blobUrl || null, path: src.path || null };
   if (src.kind === 'model') {
+    return modelQueue(async () => {
     let buf = src.buf; if (!buf && src.file) buf = await src.file.arrayBuffer();
     if (!buf) {
       const r = await fetch(src.url); if (!r.ok) throw new Error(`máy chủ trả về lỗi ${r.status}`);
@@ -2444,8 +2473,9 @@ async function createMedia(src) {
         buf = out.buffer.slice(0, got); toast('Đã tải xong mô hình 3D', 1500);
       }
     }
-    const gltf = await new Promise((res, rej) => gltfLoader.parse(buf.slice(0), '', res, rej));
-    return { ...base, scene: gltf.scene, clips: gltf.animations, buf };
+    const bytes = buf.byteLength, gltf = await new Promise((res, rej) => gltfLoader.parse(buf, '', res, rej));
+    return { ...base, scene: gltf.scene, clips: gltf.animations, bytes };
+    });
   }
   if (src.kind === 'video') return new Promise((res, rej) => {
     const v = document.createElement('video'); v.crossOrigin = 'anonymous'; v.src = src.url; v.muted = true; v.loop = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
@@ -2513,6 +2543,7 @@ const MAX_MB = 50;
 let pendingUploads = 0;
 addEventListener('beforeunload', e => { if (pendingUploads > 0) { e.preventDefault(); e.returnValue = ''; } });
 async function putFile(s, file, kind, prog) {
+  if (kind === 'model') file = await shrinkModel(file);
   if (file.size > MAX_MB * 1024 * 1024) { toast(`“${file.name}” lớn hơn ${MAX_MB} MB, hãy nén nhỏ lại rồi tải lên.`); return false; }
   const blobUrl = kind === 'model' ? null : URL.createObjectURL(file), rid = room.id, oldPath = s.media?.path;
   try { await loadSlotMedia(s, { kind, url: blobUrl, blobUrl, file }); }
