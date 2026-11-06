@@ -186,6 +186,21 @@ body.can-edit span.member-only{display:block}
 .shop .bd b{font-size:13.5px;font-weight:600}.shop .bd small{font-size:11px;color:var(--muted);flex:1}
 .shop .btn{flex:0 0 auto;padding:7px 8px;font-size:12px}
 .wallet{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:var(--gold-soft);color:var(--gold);font-weight:600;font-size:13px}
+.fb .rx{display:flex;gap:5px;margin:10px 0 8px}
+.fb .rx button{flex:1;border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;padding:6px 2px;font-size:17px;display:flex;flex-direction:column;align-items:center;gap:1px;transition:transform .15s}
+.fb .rx button b{font-size:10.5px;font-weight:600;color:var(--muted);min-height:13px}
+.fb .rx button.on{border-color:var(--gold);background:var(--gold-soft)}.fb .rx button:active{transform:scale(.9)}
+.fb .stars{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.fb .stars button{background:none;border:0;font-size:21px;color:rgba(255,255,255,.25);padding:0 1px}.fb .stars button.on{color:var(--gold)}
+.fb .stars small{font-size:11.5px;color:var(--muted)}
+#roomFb{position:fixed;right:16px;bottom:96px;z-index:12;display:none;flex-direction:column;align-items:flex-end;gap:8px}
+body.in-gallery #roomFb{display:flex}
+body:has(#panel.open) #roomFb,body:has(#arrange.open) #roomFb{display:none!important}
+#roomFbBtn{gap:10px}#roomFbBtn span{font-size:12.5px}
+#roomFbPop{width:290px;max-width:calc(100vw - 32px);padding:14px;display:none}#roomFbPop.open{display:block}
+.floatEmoji{position:fixed;z-index:60;font-size:26px;pointer-events:none;animation:floatUp 1.5s ease-out forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-160px) scale(1.25)}}
+@media (max-width:620px){#roomFb{bottom:96px;right:10px}#roomFbBtn .lbl{display:none}}
 /* toolbar: fade the edge that has more buttons to scroll to */
 #toolbar.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 #toolbar.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
@@ -292,6 +307,7 @@ body.can-edit span.member-only{display:block}
     <div id="fSaved"></div>
   </div>
   <div id="pMeta"></div>
+  <div id="pFb" class="fb"></div>
   <div id="pLight">
     <div class="tg" id="plOn">Đèn chiếu tác phẩm<span class="sw2"></span></div>
     <label class="lb" for="plLv"><span>Độ sáng</span><span id="plLvT"></span></label>
@@ -332,6 +348,7 @@ body.can-edit span.member-only{display:block}
   <button class="btn full" id="aReset" style="margin-top:12px">Khôi phục bố cục mặc định</button>
 </aside>
 
+<div id="roomFb"><div id="roomFbPop" class="glass"><h3 style="margin:0 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Cảm nhận về gian này</h3><div id="roomFbBox" class="fb"></div></div><button class="iconbtn" id="roomFbBtn" title="Thả tim, đánh giá, ủng hộ gian này"></button></div>
 <div id="modal"><div class="box glass" id="modalBox"></div></div>
 <div id="toast" class="glass"></div>
 <div id="drop">Thả ảnh, video hoặc mô hình .glb vào đây</div>
@@ -2101,10 +2118,11 @@ const themeOwned = k => !THEMES[k]?.price || ownedThemes().has(k);
 async function buyTheme(k) {
   const t = THEMES[k]; if (themeOwned(k)) return true;
   if (role !== 'owner') { toast('Chỉ chủ phòng mới mua được giao diện. Bạn vẫn có thể xem thử.'); return false; }
-  const xu = walletGet(); if (xu < t.price) { toast(`Chưa đủ xu: giao diện “${t.name}” cần ${t.price} xu, bạn còn ${xu} xu.`); return false; }
+  if (walletGet() < t.price) { toast(`Chưa đủ xu: giao diện “${t.name}” cần ${t.price} xu, bạn còn ${walletGet()} xu.`); return false; }
   const settings = { ...(gallery.settings || {}), themes: [...ownedThemes(), k] };
-  try { await api.updateGallery(gallery.id, { settings }); } catch (e) { toast('Chưa mua được: ' + e.message); return false; }
-  gallery.settings = settings; walletSet(xu - t.price); sfxChime();
+  try { await walletSpend(t.price); } catch (e) { toast(e.message); return false; }
+  try { await api.updateGallery(gallery.id, { settings }); } catch (e) { toast('Đã trừ xu nhưng chưa lưu được giao diện: ' + e.message + '. Hãy thử lại.', 8000); return false; }
+  gallery.settings = settings; sfxChime();
   toast(`Đã mua giao diện “${t.name}”. Dùng được cho mọi gian trong phòng trưng bày này. Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000); return true;
 }
 function confirmBuyTheme(k, then) {
@@ -2125,6 +2143,80 @@ function themeCards(container, cur, onPick) {
 }
 const kindName = { image: 'Ảnh', video: 'Video', model: 'Mô hình 3D' };
 
+/* ================================================================ feedback: reactions, stars, donations */
+const RX = [['heart', '❤️', 'Thả tim'], ['clap', '👏', 'Vỗ tay'], ['wow', '😮', 'Ấn tượng'], ['haha', '😂', 'Vui'], ['fire', '🔥', 'Tuyệt']];
+const FB = {};
+const fbKey = (roomId, slot) => roomId + '|' + (slot || '');
+const fbGet = (roomId, slot) => FB[fbKey(roomId, slot)] ||= { counts: {}, mine: new Set(), avg: null, votes: 0, xu: 0, my_stars: null };
+function raterId() { try { let v = localStorage.getItem('rater'); if (!v) { v = crypto.randomUUID(); localStorage.setItem('rater', v); } return v; } catch { return 'tab-' + (raterId.v ||= Math.random().toString(36).slice(2)); } }
+async function loadFeedback() {
+  if (!gallery || !api.feedback) return;
+  try {
+    const rows = await api.feedback(gallery.id);
+    for (const k in FB) delete FB[k];
+    rows.forEach(r => { FB[fbKey(r.room_id, r.slot)] = { counts: r.counts || {}, mine: new Set(r.mine || []), avg: r.avg == null ? null : +r.avg, votes: +r.votes || 0, xu: +r.xu || 0, my_stars: r.my_stars }; });
+  } catch (e) { console.warn('feedback', e); }
+  renderFbAll();
+}
+function renderFbAll() { if (selected) renderFb($('#pFb'), room.id, selected.id); renderFb($('#roomFbBox'), room?.id, ''); renderRoomFbBadge(); }
+function renderRoomFbBadge() {
+  if (!room) return; const f = fbGet(room.id, ''), hearts = Object.values(f.counts).reduce((a, b) => a + b, 0);
+  $('#roomFbBtn').innerHTML = `<span>❤️ ${hearts}</span><span>⭐ ${f.avg ? f.avg.toFixed(1) : '–'}</span><span class="lbl">Gian này</span>`;
+}
+function renderFb(box, roomId, slot) {
+  if (!box || !roomId || roomId === 'none') { if (box) box.innerHTML = ''; return; }
+  const f = fbGet(roomId, slot), mineStars = f.my_stars || 0;
+  box.innerHTML = `<div class="rx">${RX.map(([k, e, t]) => `<button class="${f.mine.has(k) ? 'on' : ''}" data-rx="${k}" title="${t}">${e}<b>${f.counts[k] || ''}</b></button>`).join('')}</div>
+    <div class="stars"><span>${[1, 2, 3, 4, 5].map(n => `<button data-st="${n}" class="${n <= mineStars ? 'on' : ''}" title="${n} sao">★</button>`).join('')}</span>
+    <small>${f.votes ? `${f.avg.toFixed(1)} / 5 · ${f.votes} lượt` : 'Chưa có đánh giá'}${f.xu ? ` · 🪙 ${f.xu.toLocaleString('vi-VN')} xu ủng hộ` : ''}</small></div>
+    ${role === 'owner' ? '' : `<button class="btn full" data-donate>🪙 Ủng hộ ${slot ? 'tác giả' : 'chủ phòng'}</button>`}`;
+  box.querySelectorAll('[data-rx]').forEach(b => b.onclick = e => doReact(roomId, slot, b.dataset.rx, e));
+  box.querySelectorAll('[data-st]').forEach(b => b.onclick = () => doRate(roomId, slot, +b.dataset.st));
+  box.querySelector('[data-donate]')?.addEventListener('click', () => openDonate(roomId, slot));
+}
+function floatEmoji(emoji, x, y) {
+  for (let i = 0; i < 6; i++) {
+    const el = document.createElement('div'); el.className = 'floatEmoji'; el.textContent = emoji;
+    el.style.left = (x + rand(-18, 18)) + 'px'; el.style.top = (y - 10) + 'px'; el.style.animationDelay = (i * .07) + 's'; el.style.setProperty('--dx', rand(-60, 60) + 'px');
+    document.body.appendChild(el); setTimeout(() => el.remove(), 1700);
+  }
+}
+function burstAt(slotId, kind) {
+  const s = R?.map[slotId]; if (!s) return;
+  const c = s.type === 'wall' ? s.center : s.group.getWorldPosition(new THREE.Vector3()).setY(1.5);
+  const col = { heart: [1, .25, .45], clap: [1, .8, .3], wow: [.5, .8, 1], haha: [1, .9, .2], fire: [1, .45, .1] }[kind] || [1, 1, 1];
+  for (let i = 0; i < 40; i++) spawn(c.x, c.y, c.z, rand(-1.2, 1.2), rand(.4, 2.4), rand(-1.2, 1.2), ...col, rand(.8, 1.5), .07, 1.2, -.3);
+}
+async function doReact(roomId, slot, kind, ev) {
+  const f = fbGet(roomId, slot), was = f.mine.has(kind);
+  was ? f.mine.delete(kind) : f.mine.add(kind); f.counts[kind] = Math.max(0, (f.counts[kind] || 0) + (was ? -1 : 1));
+  if (!was) { floatEmoji(RX.find(r => r[0] === kind)[1], ev.clientX, ev.clientY); if (slot) burstAt(slot, kind); sfxPop(); }
+  renderFbAll();
+  try { await api.react(roomId, slot, kind); } catch (e) { toast('Chưa gửi được: ' + e.message); }
+  loadFeedback();
+}
+async function doRate(roomId, slot, stars) {
+  const f = fbGet(roomId, slot); f.my_stars = stars; renderFbAll();
+  try { await api.rate(roomId, slot, stars); toast(`Đã chấm ${stars} sao ★`); } catch (e) { toast('Chưa gửi được: ' + e.message); }
+  loadFeedback();
+}
+function openDonate(roomId, slot) {
+  if (api.mode === 'supabase' && !me) { toast('Hãy đăng nhập để ủng hộ xu.'); showGate('auth', { tab: 'in' }); return; }
+  const target = slot ? (R?.map[slot]?.info?.title || 'tác phẩm này') : (room?.name || 'gian này');
+  modal(`<h2>Ủng hộ “${esc(target)}”</h2><p>Xu được chuyển cho chủ phòng ${esc(ownerInfo?.display_name || ownerInfo?.username || '')}. Bạn đang có <b>${walletGet().toLocaleString('vi-VN')} xu</b> (xu ảo dùng thử).</p>
+    <div class="seg" id="dAmt">${[10, 50, 100, 500].map((n, i) => `<button data-n="${n}" class="${i === 1 ? 'on' : ''}">${n} xu</button>`).join('')}</div>
+    <label class="lb" for="dMsg">Lời nhắn (không bắt buộc)</label><input class="field" id="dMsg" maxlength="200" placeholder="Tác phẩm đẹp quá!">
+    <div class="row" style="margin-top:14px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="dGo">Ủng hộ</button></div>`, box => {
+    let amt = 50; box.querySelectorAll('#dAmt button').forEach(b => b.onclick = () => { amt = +b.dataset.n; box.querySelectorAll('#dAmt button').forEach(x => x.classList.toggle('on', x === b)); });
+    box.querySelector('#dGo').onclick = async ev => {
+      ev.target.disabled = true;
+      try { xuCache = await api.donate(roomId, slot, amt, box.querySelector('#dMsg').value.trim()); closeModal(); sfxChime(); if (slot) burstAt(slot, 'clap'); toast(`Cảm ơn bạn đã ủng hộ ${amt} xu! Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000); loadFeedback(); updateAcct(); }
+      catch (e) { ev.target.disabled = false; toast(/not enough/.test(e.message) ? 'Chưa đủ xu để ủng hộ.' : /yourself/.test(e.message) ? 'Bạn không thể tự ủng hộ phòng của mình.' : 'Chưa ủng hộ được: ' + e.message, 6000); }
+    };
+  });
+}
+$('#roomFbBtn').onclick = () => { renderFb($('#roomFbBox'), room.id, ''); $('#roomFbPop').classList.toggle('open'); };
+
 /* ================================================================ UI: artwork panel */
 function selectSlot(s, doFocus) { if (arrangeOn) return; selected = s; $('#panel').classList.add('open'); renderPanel(true); if (doFocus) focusOn(s); }
 function renderPanel(fill) {
@@ -2141,6 +2233,7 @@ function renderPanel(fill) {
     $('#vSub').textContent = [inf.artist, inf.year].filter(Boolean).join(' · ');
     $('#vDesc').textContent = inf.description || '';
   }
+  $('#pFb').style.display = has && room.id !== 'none' ? '' : 'none'; if (has) renderFb($('#pFb'), room.id, s.id);
   renderLightPanel();
   const heavy = ed && s.media?.kind === 'model' && s.media.path && s.media.bytes > 6 * 1048576 && !s.media.pending;
   $('#pOpt').style.display = heavy ? '' : 'none'; if (heavy) $('#pOpt').textContent = `Tối ưu mô hình (${(s.media.bytes / 1048576).toFixed(0)} MB, tải chậm)`;
@@ -2222,8 +2315,23 @@ const SHOP_BUILTIN = [
 ];
 const WALLET_START = 2000;
 const walletKey = () => 'xu:' + (me?.id || 'khach');
-function walletGet() { try { const v = localStorage.getItem(walletKey()); return v === null ? WALLET_START : +v || 0; } catch { return WALLET_START; } }
-function walletSet(v) { try { localStorage.setItem(walletKey(), String(v)); } catch { } }
+let xuCache = null; // balance from the server (null = not loaded / not signed in)
+function walletLocal() { try { const v = localStorage.getItem(walletKey()); return v === null ? WALLET_START : +v || 0; } catch { return WALLET_START; } }
+function walletGet() { return api?.mode === 'supabase' ? (xuCache ?? 0) : walletLocal(); }
+async function refreshWallet() {
+  if (api?.mode !== 'supabase' || !me) { xuCache = null; return; }
+  try { xuCache = await api.wallet(); } catch (e) { console.warn('wallet', e); }
+  const el = $('#acctXu'); if (el) el.textContent = '🪙 ' + walletGet().toLocaleString('vi-VN') + ' xu';
+}
+// throws when there is not enough xu; returns the new balance
+async function walletSpend(n) {
+  if (api?.mode === 'supabase') {
+    if (!me) throw new Error('Hãy đăng nhập để dùng xu.');
+    try { xuCache = await api.spend(n); } catch (e) { throw new Error(/not enough/.test(e.message) ? `Chưa đủ xu: cần ${n} xu, bạn còn ${walletGet()} xu.` : e.message); }
+  } else { const v = walletLocal(); if (v < n) throw new Error(`Chưa đủ xu: cần ${n} xu, bạn còn ${v} xu.`); try { localStorage.setItem(walletKey(), String(v - n)); } catch { } }
+  const el = $('#acctXu'); if (el) el.textContent = '🪙 ' + walletGet().toLocaleString('vi-VN') + ' xu';
+  return walletGet();
+}
 let shopCatalog = null;
 async function loadShopCatalog() {
   if (shopCatalog) return shopCatalog;
@@ -2251,10 +2359,10 @@ async function openShop() {
     showXu();
     box.querySelectorAll('[data-th-buy]').forEach(b => b.onclick = async () => { const k = b.dataset.thBuy; if (await buyTheme(k)) { closeModal(); setRoomTheme(k); } });
     box.querySelectorAll('[data-th-use]').forEach(b => b.onclick = () => { closeModal(); setRoomTheme(b.dataset.thUse); });
-    box.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
-      const it = items[+b.dataset.buy], xu = walletGet();
-      if (xu < it.price) { toast(`Chưa đủ xu: cần ${it.price} xu, bạn còn ${xu} xu.`); return; }
-      walletSet(xu - it.price); closeModal(); if (!arrangeOn) setArrange(true);
+    box.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => {
+      const it = items[+b.dataset.buy];
+      b.disabled = true; try { await walletSpend(it.price); } catch (e) { b.disabled = false; toast(e.message); return; }
+      closeModal(); if (!arrangeOn) setArrange(true);
       addDecor(it.add.type, it.add.extra); sfxChime();
       toast(`Đã mua “${it.name}”. Kéo trên sàn để đặt chỗ, Q/E để xoay. Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000);
     });
@@ -2375,11 +2483,13 @@ function confirmDeleteGallery() {
 
 /* ================================================================ UI: account */
 function updateAcct() {
+  if (me && api?.mode === 'supabase' && xuCache === null && !updateAcct.loading) { updateAcct.loading = true; refreshWallet().finally(() => updateAcct.loading = false); }
+  if (!me) xuCache = null;
   const b = $('#acctBtn');
   if (me) b.innerHTML = `<span class="avatar">${esc((me.display || me.username)[0].toUpperCase())}</span><span>${esc(me.display || me.username)}</span>`;
   else b.innerHTML = 'Đăng nhập';
   const m = $('#acctMenu');
-  m.innerHTML = me ? `<div class="who">${esc(me.display)}<small>@${esc(me.username)}${api.mode === 'demo' ? ' · bản dùng thử' : ''}</small></div><button data-a="dash">Phòng trưng bày của tôi</button>${api.mode === 'demo' ? '' : '<button data-a="out">Đăng xuất</button>'}` : '';
+  m.innerHTML = me ? `<div class="who">${esc(me.display)}<small>@${esc(me.username)}${api.mode === 'demo' ? ' · bản dùng thử' : ''}</small><small id="acctXu" style="color:var(--gold);margin-top:4px">🪙 ${walletGet().toLocaleString('vi-VN')} xu</small></div><button data-a="dash">Phòng trưng bày của tôi</button>${api.mode === 'demo' ? '' : '<button data-a="out">Đăng xuất</button>'}` : '';
   m.querySelectorAll('button').forEach(x => x.onclick = () => { m.classList.remove('open'); if (x.dataset.a === 'dash') showDash(); if (x.dataset.a === 'out') doSignOut(); });
 }
 $('#acctBtn').onclick = () => { if (!me) { showGate('auth', { tab: 'in' }); return; } $('#acctMenu').classList.toggle('open'); };
@@ -2534,6 +2644,12 @@ async function makeSupabaseAPI(cfg) {
       if (error) throw new Error(/duplicate/i.test(error.message) ? `@${username} đã là thành viên.` : error.message);
     },
     async removeMember(gid, uid) { chk(await sb.from('gallery_members').delete().eq('gallery_id', gid).eq('user_id', uid)); },
+    async wallet() { return chk(await sb.rpc('my_wallet')); },
+    async spend(n) { return chk(await sb.rpc('spend_xu', { p_amount: n })); },
+    async react(roomId, slot, kind) { return chk(await sb.rpc('react', { p_room: roomId, p_slot: slot, p_kind: kind, p_rater: raterId() })); },
+    async rate(roomId, slot, stars) { chk(await sb.rpc('rate', { p_room: roomId, p_slot: slot, p_stars: stars, p_rater: raterId() })); },
+    async donate(roomId, slot, amount, message) { return chk(await sb.rpc('donate', { p_room: roomId, p_slot: slot, p_amount: amount, p_message: message })); },
+    async feedback(gid) { return chk(await sb.rpc('get_feedback', { p_gallery: gid, p_rater: raterId() })) || []; },
     subscribe(gid, cb) {
       const ch = sb.channel('g-' + gid)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `gallery_id=eq.${gid}` }, p => cb('items', p))
@@ -2552,6 +2668,15 @@ function makeDemoAPI() {
   return {
     mode: 'demo',
     async me() { return user; }, async signUp() { }, async signIn() { }, async signOut() { },
+    async react(roomId, slot, kind) { const k = roomId + '|' + slot + '|' + kind; db.fb ||= {}; db.fb[k] = !db.fb[k]; return db.fb[k]; },
+    async rate(roomId, slot, stars) { db.rt ||= {}; db.rt[roomId + '|' + slot] = stars; },
+    async donate() { throw new Error('Bản dùng thử chưa kết nối máy chủ nên chưa ủng hộ được.'); },
+    async feedback() {
+      const out = {}, get = (r, sl) => out[r + '|' + sl] ||= { room_id: r, slot: sl, counts: {}, mine: [], avg: null, votes: 0, xu: 0, my_stars: null };
+      for (const k in db.fb || {}) if (db.fb[k]) { const [r, sl, kind] = k.split('|'); const o = get(r, sl); o.counts[kind] = 1; o.mine.push(kind); }
+      for (const k in db.rt || {}) { const [r, sl] = k.split('|'); const o = get(r, sl); o.avg = o.my_stars = db.rt[k]; o.votes = 1; }
+      return Object.values(out);
+    },
     async myGalleries() { return db.galleries.map(g => ({ ...g, role: 'owner' })); },
     async createGallery(name) {
       const g = { id: uid(), name, slug: Math.random().toString(36).slice(2, 12), visibility: 'link', owner_id: user.id, settings: {} };
@@ -2757,7 +2882,7 @@ async function goRoom(id) {
   const r = rooms.find(x => x.id === id); if (!r || switching) return; switching = true;
   closePanel(); stopTour(); if (arrangeOn) setArrange(false); $('#fade').classList.add('on'); await wait(360);
   room = r; try { localStorage.setItem('lastRoom:' + gallery.id, r.id); } catch { }
-  buildRoom(); applyRoomItems(); resetCamera(); renderRooms();
+  buildRoom(); applyRoomItems(); resetCamera(); renderRooms(); renderRoomFbBadge(); $('#roomFbPop').classList.remove('open');
   await wait(80); $('#fade').classList.remove('on'); switching = false; sfxChime();
   toast(`${r.name} · ${(THEMES[r.theme] || THEMES.classic).name}`);
 }
@@ -2787,6 +2912,7 @@ async function openGallery(slug) {
   buildRoom(); applyRoomItems(); resetCamera();
   if (canEdit()) unsubRealtime = api.subscribe(gallery.id, onRealtime);
   updateGalleryUI(); hideGate();
+  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback();
   $('#introEyebrow').textContent = role === 'viewer' ? 'Mời bạn tham quan' : role === 'owner' ? 'Phòng trưng bày của bạn' : 'Bạn là thành viên';
   $('#introTitle').textContent = gallery.name;
   $('#introSub').textContent = `${ownerInfo ? 'Chủ phòng: ' + (ownerInfo.display_name || ownerInfo.username) + ' · ' : ''}${rooms.length} gian · ${Object.values(itemsByRoom).reduce((n, m) => n + Object.keys(m).length, 0)} tác phẩm`;

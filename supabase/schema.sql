@@ -219,3 +219,146 @@ drop policy if exists "gallery media delete" on storage.objects;
 create policy "gallery media delete" on storage.objects
   for delete to authenticated
   using (bucket_id = 'media' and public.is_member(((storage.foldername(name))[1])::uuid));
+
+-- =====================================================================
+--  Ví xu, thả tim / đánh giá, ủng hộ (chạy lại cả file vẫn an toàn)
+-- =====================================================================
+create table if not exists public.wallets (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  balance int not null default 2000 check (balance >= 0),
+  updated_at timestamptz not null default now()
+);
+alter table public.wallets enable row level security;
+drop policy if exists "wallet self read" on public.wallets;
+create policy "wallet self read" on public.wallets for select to authenticated using (user_id = auth.uid());
+
+create table if not exists public.feedback (
+  id bigserial primary key,
+  gallery_id uuid not null references public.galleries(id) on delete cascade,
+  room_id uuid not null references public.rooms(id) on delete cascade,
+  slot text not null default '',          -- '' = cả gian
+  rater text not null,                    -- id tài khoản, hoặc 'anon:<mã trình duyệt>'
+  kind text not null check (kind in ('heart', 'clap', 'wow', 'haha', 'fire', 'rate')),
+  stars int check (stars between 1 and 5),
+  created_at timestamptz not null default now(),
+  unique (room_id, slot, rater, kind)
+);
+create index if not exists feedback_gallery_idx on public.feedback (gallery_id);
+alter table public.feedback enable row level security;  -- chỉ đọc/ghi qua các hàm bên dưới
+
+create table if not exists public.donations (
+  id bigserial primary key,
+  gallery_id uuid not null references public.galleries(id) on delete cascade,
+  room_id uuid references public.rooms(id) on delete set null,
+  slot text not null default '',
+  from_user uuid references public.profiles(id) on delete set null,
+  to_user uuid references public.profiles(id) on delete set null,
+  amount int not null check (amount > 0),
+  message text not null default '' check (length(message) <= 200),
+  created_at timestamptz not null default now()
+);
+create index if not exists donations_gallery_idx on public.donations (gallery_id);
+alter table public.donations enable row level security;
+drop policy if exists "donations involved read" on public.donations;
+create policy "donations involved read" on public.donations for select to authenticated using (from_user = auth.uid() or to_user = auth.uid());
+
+-- khách xem được phòng này không (link công khai, hoặc là thành viên)
+create or replace function public.can_view(g uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from galleries where id = g and (visibility = 'link' or public.is_member(g)));
+$$;
+
+create or replace function public.my_wallet() returns int
+language plpgsql security definer set search_path = public as $$
+declare b int;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  insert into wallets (user_id) values (auth.uid()) on conflict do nothing;
+  select balance into b from wallets where user_id = auth.uid();
+  return b;
+end $$;
+
+create or replace function public.spend_xu(p_amount int) returns int
+language plpgsql security definer set search_path = public as $$
+declare b int;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  if p_amount < 0 or p_amount > 100000 then raise exception 'invalid amount'; end if;
+  perform public.my_wallet();
+  update wallets set balance = balance - p_amount, updated_at = now()
+    where user_id = auth.uid() and balance >= p_amount returning balance into b;
+  if not found then raise exception 'not enough xu'; end if;
+  return b;
+end $$;
+
+create or replace function public.react(p_room uuid, p_slot text, p_kind text, p_rater text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare g uuid; who text := coalesce(auth.uid()::text, 'anon:' || left(coalesce(p_rater, ''), 40)); removed int;
+begin
+  select gallery_id into g from rooms where id = p_room;
+  if g is null or not public.can_view(g) then raise exception 'not allowed'; end if;
+  if p_kind not in ('heart', 'clap', 'wow', 'haha', 'fire') then raise exception 'bad kind'; end if;
+  delete from feedback where room_id = p_room and slot = coalesce(p_slot, '') and rater = who and kind = p_kind;
+  get diagnostics removed = row_count;
+  if removed > 0 then return false; end if;
+  insert into feedback (gallery_id, room_id, slot, rater, kind) values (g, p_room, coalesce(p_slot, ''), who, p_kind);
+  return true;
+end $$;
+
+create or replace function public.rate(p_room uuid, p_slot text, p_stars int, p_rater text) returns void
+language plpgsql security definer set search_path = public as $$
+declare g uuid; who text := coalesce(auth.uid()::text, 'anon:' || left(coalesce(p_rater, ''), 40));
+begin
+  select gallery_id into g from rooms where id = p_room;
+  if g is null or not public.can_view(g) then raise exception 'not allowed'; end if;
+  if p_stars < 1 or p_stars > 5 then raise exception 'bad stars'; end if;
+  insert into feedback (gallery_id, room_id, slot, rater, kind, stars) values (g, p_room, coalesce(p_slot, ''), who, 'rate', p_stars)
+  on conflict (room_id, slot, rater, kind) do update set stars = excluded.stars, created_at = now();
+end $$;
+
+create or replace function public.donate(p_room uuid, p_slot text, p_amount int, p_message text) returns int
+language plpgsql security definer set search_path = public as $$
+declare g uuid; owner uuid; b int;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  if p_amount < 1 or p_amount > 10000 then raise exception 'invalid amount'; end if;
+  select r.gallery_id, gl.owner_id into g, owner from rooms r join galleries gl on gl.id = r.gallery_id where r.id = p_room;
+  if g is null or not public.can_view(g) then raise exception 'not allowed'; end if;
+  if owner = auth.uid() then raise exception 'cannot donate to yourself'; end if;
+  b := public.spend_xu(p_amount);
+  insert into wallets (user_id) values (owner) on conflict do nothing;
+  update wallets set balance = balance + p_amount, updated_at = now() where user_id = owner;
+  insert into donations (gallery_id, room_id, slot, from_user, to_user, amount, message)
+    values (g, p_room, coalesce(p_slot, ''), auth.uid(), owner, p_amount, left(coalesce(p_message, ''), 200));
+  return b;
+end $$;
+
+-- tổng hợp cho cả phòng trưng bày: mỗi tác phẩm / gian một dòng
+create or replace function public.get_feedback(p_gallery uuid, p_rater text) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare who text := coalesce(auth.uid()::text, 'anon:' || left(coalesce(p_rater, ''), 40));
+begin
+  if not public.can_view(p_gallery) then return '[]'::jsonb; end if;
+  return coalesce((
+    select jsonb_agg(t) from (
+      select k.room_id, k.slot,
+        (select coalesce(jsonb_object_agg(kind, n), '{}'::jsonb) from (select kind, count(*) n from feedback f where f.room_id = k.room_id and f.slot = k.slot and kind <> 'rate' group by kind) c) as counts,
+        (select round(avg(stars)::numeric, 2) from feedback f where f.room_id = k.room_id and f.slot = k.slot and kind = 'rate') as avg,
+        (select count(*) from feedback f where f.room_id = k.room_id and f.slot = k.slot and kind = 'rate') as votes,
+        (select coalesce(sum(amount), 0) from donations d where d.room_id = k.room_id and d.slot = k.slot) as xu,
+        (select coalesce(jsonb_agg(kind), '[]'::jsonb) from feedback f where f.room_id = k.room_id and f.slot = k.slot and f.rater = who and kind <> 'rate') as mine,
+        (select stars from feedback f where f.room_id = k.room_id and f.slot = k.slot and f.rater = who and kind = 'rate') as my_stars
+      from (select distinct room_id, slot from feedback where gallery_id = p_gallery
+            union select distinct room_id, slot from donations where gallery_id = p_gallery and room_id is not null) k
+    ) t), '[]'::jsonb);
+end $$;
+
+grant execute on function public.react(uuid, text, text, text) to anon, authenticated;
+grant execute on function public.rate(uuid, text, int, text) to anon, authenticated;
+grant execute on function public.get_feedback(uuid, text) to anon, authenticated;
+grant execute on function public.my_wallet() to authenticated;
+grant execute on function public.spend_xu(int) to authenticated;
+grant execute on function public.donate(uuid, text, int, text) to authenticated;
+revoke execute on function public.my_wallet() from anon;
+revoke execute on function public.spend_xu(int) from anon;
+revoke execute on function public.donate(uuid, text, int, text) from anon;
