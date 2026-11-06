@@ -1627,6 +1627,14 @@ function makeRealSculpture(e) {
   const top = makeGlbDecor({ id: e.id, src: PH_MODELS + 'gothic-statue.glb', h: 1.25 }); top.position.y = .6; g.add(top);
   return g;
 }
+// Models that hang: "mount" in assets/shop/catalog.json, with defaults for the ones already sold
+const MOUNT_BY_FILE = { 'chandelier-01.glb': 'ceiling' };
+const CAT_MOUNT = {};
+const fileOf = src => String(src || '').split('/').pop();
+const mountFor = src => CAT_MOUNT[fileOf(src)] || MOUNT_BY_FILE[fileOf(src)] || null;
+const isCeil = e => e.type === 'glb' && e.mount === 'ceiling';
+const isWallMount = e => DECOR[e.type]?.wall || (e.type === 'glb' && e.mount === 'wall');
+const CORD = 1.6; // metres of chain between the ceiling and a hanging model
 function makeGlbDecor(e) {
   const g = new THREE.Group();
   const ph = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), std({ color: 0xd9b56c, transparent: true, opacity: .25 })); ph.position.y = .25; g.add(ph);
@@ -1635,7 +1643,14 @@ function makeGlbDecor(e) {
     const k = (e.h || 1) / Math.max(size.y, 1e-6); sc.scale.setScalar(k); sc.position.set(-c.x * k, -box.min.y * k, -c.z * k);
     e._r = Math.max(.15, Math.max(size.x, size.z) * k / 2); const d0 = R.decor[e.id]; if (d0) d0.e._r = e._r; recomputeDecorCol(); updateSelRing();
     sc.traverse(o => { if (o.isMesh) { o.userData.decor = e.id; o.castShadow = o.receiveShadow = true; } });
-    g.remove(ph); ph.geometry.dispose(); ph.material.dispose(); if (e.innerRot) { const w = new THREE.Group(); w.rotation.y = e.innerRot; w.add(sc); g.add(w); } else g.add(sc); refreshPick();
+    g.remove(ph); ph.geometry.dispose(); ph.material.dispose(); if (e.innerRot) { const w = new THREE.Group(); w.rotation.y = e.innerRot; w.add(sc); g.add(w); } else g.add(sc);
+    if (isCeil(e)) {
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, 1, 6), std({ color: 0x2a2520, metalness: .8, roughness: .4 })); cord.userData.decor = e.id; cord.userData.noCast = true; g.add(cord);
+      const rose = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, .05, 20), std({ color: 0x2a2520, metalness: .8, roughness: .4 })); rose.userData.decor = e.id; g.add(rose);
+      g.userData.fit = ee => { const s = ee.s || 1, top = (ee.h || 1), len = Math.max(.05, (H - supportY(ee)) / s - top); cord.scale.y = len; cord.position.y = top + len / 2; rose.position.y = top + len - .025 / s; rose.scale.setScalar(1 / s); };
+      g.userData.fit(e);
+    }
+    refreshPick();
   }).catch(err => { console.warn('Không tải được mô hình cửa hàng', e.src, err); ph.material.color.setHex(0xc0392b); });
   return g;
 }
@@ -1679,7 +1694,7 @@ function defaultLayout(key, th) {
 }
 function layoutList() {
   let list = Array.isArray(room.layout?.decor) ? room.layout.decor : defaultLayout(R.key, R.th);
-  list = list.filter(e => e && DECOR[e.type]).map(e => ({ ...e }));
+  list = list.filter(e => e && DECOR[e.type]).map(e => { const x = { ...e }; if (x.type === 'glb' && !x.mount) { const m = mountFor(x.src); if (m) x.mount = m; } return x; });
   const defs = defaultLayout(R.key, R.th);
   if (!(room.layout?.v >= 2)) for (let k = 0; k < 4; k++) if (!list.some(e => e.type === 'vitrine' && e.slot === 'c' + k)) list.push(defs.find(e => e.slot === 'c' + k));
   const bigTV = { id: 'tv0', type: 'tv', x: +(4.05 - .025 * 2.2).toFixed(3), z: 9, rot: -PI / 2, s: 2.2, y: 2.0, slot: 'w14', seed: 1 };
@@ -1696,10 +1711,11 @@ function layoutList() {
 const COUNTER = { hx: .52, hz: 3.07, top: .97 };
 const canStack = e => e.type === 'glb' || e.type === 'bouquet' || e.type === 'radio';
 const onCounter = (x, z) => Math.abs(x) < COUNTER.hx - .08 && Math.abs(z) < COUNTER.hz - .08;
-const supportY = e => canStack(e) && onCounter(e.x, e.z) ? COUNTER.top : 0;
-function footR(e) { const d = DECOR[e.type]; if (d.flat) return 0; return (e._r || d.r || (d.box ? Math.max(...d.box) * .75 : .4)) * e.s; }
+const supportY = e => isCeil(e) ? H - CORD - (e.h || 1) * (e.s || 1) : (e.type === 'glb' && e.mount === 'wall') ? (e.y ?? 1.5) : canStack(e) && onCounter(e.x, e.z) ? COUNTER.top : 0;
+function footR(e) { const d = DECOR[e.type]; if (d.flat || isCeil(e) || isWallMount(e)) return 0; return (e._r || d.r || (d.box ? Math.max(...d.box) * .75 : .4)) * e.s; }
 function placementOk(e) {
-  if (DECOR[e.type]?.wall) return true; // hangs on the wall: snapWall keeps it there
+  if (isWallMount(e)) return true; // hangs on the wall: snapWall keeps it there
+  if (isCeil(e)) return Math.abs(e.x) < HW - .5 && Math.abs(e.z) < HL - .5; // hangs from the ceiling: people walk underneath
   const r = footR(e); if (!r) return Math.abs(e.x) < HW - .3 && Math.abs(e.z) < HL - .3;
   if (Math.abs(e.x) > HW - r - .05 || Math.abs(e.z) > HL - r - .05) return false;
   const y = supportY(e);
@@ -1716,7 +1732,7 @@ function freeSpot(e) { // nearest free place to where it was asked for
   }
   e.x = x0; e.z = z0; return false;
 }
-const placeG = d => d.g.position.set(d.e.x, supportY(d.e), d.e.z);
+const placeG = d => { d.g.position.set(d.e.x, supportY(d.e), d.e.z); d.g.userData.fit?.(d.e); };
 function buildDecorObj(e) {
   const g = DECOR[e.type].make(e);
   g.position.set(e.x, supportY(e), e.z); g.rotation.y = e.rot; g.scale.setScalar(e.s);
@@ -1741,7 +1757,7 @@ function dropSlot(slotId) {
   R.slots = R.slots.filter(x => x !== s); delete R.map[slotId]; if (selected === s) closePanel();
 }
 function decorCollider(e) {
-  const d = DECOR[e.type];
+  const d = DECOR[e.type]; if (isCeil(e) || isWallMount(e)) return null;
   if (d.box) { const sw = Math.abs(Math.sin(e.rot)) > .7, [a, b] = d.box; return { x: e.x, z: e.z, hx: (sw ? b : a) * e.s, hz: (sw ? a : b) * e.s }; }
   if (d.r) { const r = (e._r || d.r) * e.s; return { x: e.x, z: e.z, hx: r, hz: r }; }
   return null;
@@ -1784,7 +1800,7 @@ function addDecor(type, extra = {}) {
   const p0 = NET.tpSaved || camera.position;
   const e = { id: newId(), type, x: THREE.MathUtils.clamp(p0.x + f.x * 2.6, -HW + .8, HW - .8), z: THREE.MathUtils.clamp(p0.z + f.z * 2.6, -HL + .8, HL - .8), rot: 0, s: 1, seed: (Math.random() * 1e6) | 0, ...extra };
   if (type === 'vitrine') e.slot = 'cv' + e.id;
-  if (DECOR[type].wall) { e.x = f.x >= 0 ? 1 : -1; e.z = p0.z + f.z * 2.5; snapWall(e); } // the side wall you are turned toward, a little ahead
+  if (isWallMount(e)) { e.x = f.x >= 0 ? 1 : -1; e.z = p0.z + f.z * 2.5; snapWall(e); } // the side wall you are turned toward, a little ahead
   else if (!freeSpot(e)) toast('Gian này khá chật, hãy kéo đồ vật đến chỗ trống.');
   syncDecor([...R.layout, e]); selectDecor(R.decor[e.id].e); scheduleLayoutSave(); sfxPop();
 }
@@ -1794,7 +1810,7 @@ function mutateSel(fn) {
   const d = R.decor[selDecor.id]; placeG(d); d.g.rotation.y = selDecor.rot; d.g.scale.setScalar(selDecor.s);
   recomputeDecorCol(); updateSelRing(); scheduleLayoutSave();
 }
-const rotSel = d => { if (selDecor && DECOR[selDecor.type].wall) { toast('Tivi luôn treo sát tường: kéo để đổi chỗ trên tường.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
+const rotSel = d => { if (selDecor && isWallMount(selDecor)) { toast('Đồ treo tường luôn áp sát tường: kéo để đổi chỗ trên tường.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
 const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, e.type === 'tv' ? 2.7 : 2.2).toFixed(2));
 function dupSel() {
   if (!selDecor) return;
@@ -2528,7 +2544,7 @@ cvs.addEventListener('pointermove', e => {
     const fp = floorPoint(e.clientX, e.clientY); if (!fp) return;
     const de = dragDecor.e, px = de.x, pz = de.z;
     de.x = +THREE.MathUtils.clamp(fp.x - dragDecor.ox, -HW + .4, HW - .4).toFixed(3); de.z = +THREE.MathUtils.clamp(fp.z - dragDecor.oz, -HL + .4, HL - .4).toFixed(3);
-    if (DECOR[de.type].wall) { snapWall(de); dragDecor.g.rotation.y = de.rot; }
+    if (isWallMount(de)) { snapWall(de); dragDecor.g.rotation.y = de.rot; }
     let ok = placementOk(de);
     if (!ok) { const tx = de.x, tz = de.z; de.z = pz; ok = placementOk(de); if (!ok) { de.x = px; de.z = tz; ok = placementOk(de); } if (!ok) { de.x = px; de.z = pz; } } // slide along obstacles
     selRing.userData.bad = !ok; dragDecor.g.position.set(de.x, supportY(de), de.z); dragDecor.moved = true; updateSelRing(); cvs.style.cursor = ok ? 'grabbing' : 'not-allowed'; return;
@@ -2866,7 +2882,7 @@ async function placeFromInv(it) {
   if (!canEdit()) { toast('Chỉ chủ phòng và thành viên mới trưng bày được.'); return; }
   try { await invTake(it); } catch (e) { toast('Không lấy được khỏi kho: ' + e.message); return; }
   if (!arrangeOn) setArrange(true);
-  if (it.kind === 'model') addDecor('glb', { src: it.item, name: it.name, h: it.h || 1, thumb: it.thumb, inv: true });
+  if (it.kind === 'model') { const mount = mountFor(it.item); addDecor('glb', { src: it.item, name: it.name, h: it.h || 1, thumb: it.thumb, inv: true, ...(mount ? { mount } : {}) }); if (mount) toast(mount === 'ceiling' ? `“${it.name}” được treo từ trần nhà. Kéo trên sàn để chọn chỗ treo.` : `“${it.name}” được treo lên tường. Kéo để đổi chỗ trên tường.`, 5000); return; }
   else addDecor(it.item, { name: it.name, inv: true });
   toast(`Đã đặt “${it.name}”. Kéo để chọn chỗ, Q/E để xoay, “Cất vào kho” để thu hồi.`, 5000);
 }
@@ -2951,7 +2967,7 @@ async function walletSpend(n) {
 let shopCatalog = null;
 async function loadShopCatalog() {
   if (shopCatalog) return shopCatalog;
-  try { const r = await fetch('assets/shop/catalog.json', { cache: 'no-cache' }); shopCatalog = r.ok ? (await r.json()).filter(x => x && x.file) : []; }
+  try { const r = await fetch('assets/shop/catalog.json', { cache: 'no-cache' }); shopCatalog = r.ok ? (await r.json()).filter(x => x && x.file) : []; shopCatalog.forEach(x => { if (x.mount === 'ceiling' || x.mount === 'wall') CAT_MOUNT[fileOf(x.file)] = x.mount; }); }
   catch { shopCatalog = []; }
   return shopCatalog;
 }
@@ -4469,7 +4485,7 @@ function makeRadio(e) {
 // a TV hangs on a side wall, on an arm in front of a wall column, between two paintings (every 4.2 m), facing into the room.
 // The entrance and door walls are full (niches, bookshelves, the door), so a TV never goes there.
 function snapWall(e) {
-  delete e.slot; delete e.y; // moved by hand: off the partition, onto a side wall
+  delete e.slot; if (e.type === 'tv') delete e.y; // moved by hand: off the partition, onto a side wall
   const right = e.x >= 0;
   e.x = right ? HW - .2 : -HW + .2; e.rot = right ? -PI / 2 : PI / 2; // 20 cm out, on an arm in front of the wall column
   e.z = +THREE.MathUtils.clamp(Math.round((e.z - 2.1) / 4.2) * 4.2 + 2.1, -14.7, 14.7).toFixed(2);
@@ -4886,7 +4902,7 @@ $('#enter').onclick = () => {
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.9';
+const BUILD = '2026-11-06.10';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();

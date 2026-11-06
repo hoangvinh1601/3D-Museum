@@ -5,7 +5,8 @@
   "name": "Đèn chùm cổ điển",
   "desc": "Đèn chùm 6 chao vải, khung đồng · Poly Haven (CC0)",
   "price": 500,
-  "height": 0.8
+  "height": 0.8,
+  "mount": "ceiling"
  },
  {
   "file": "../polyhaven/models/sofa-02.glb",
@@ -293,7 +294,7 @@
   "name": "Ông già Noel ôm quà",
   "desc": "Ông già Noel ôm hộp quà đỏ · Pixabay, tác giả tiny_planet_friends",
   "price": 500,
-  "height": 1.0
+  "height": 1
  },
  {
   "file": "ong-gia-noel.glb",
@@ -349,7 +350,7 @@
   "name": "Cân đĩa cổ",
   "desc": "Cân đồng thau treo móc · Pixabay, tác giả gal-b",
   "price": 220,
-  "height": 1.0
+  "height": 1
  },
  {
   "file": "den-long-sat.glb",

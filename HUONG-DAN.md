@@ -168,3 +168,11 @@ Lưu ý: GitHub tự tắt tác vụ hẹn giờ nếu repo **60 ngày** không 
 | 7 | Claude (sau này) | Thêm bước nén mã (minify) khi đưa lên, để mã trên trình duyệt khó đọc hơn. Mã chạy trên trình duyệt thì không giấu được hoàn toàn; phần quan trọng (xu, lì xì, mua bán) đã được Supabase kiểm tra phía máy chủ. |
 
 **Chi phí:** 0 đồng (trừ tên miền nếu mua). Có thể chạy song song GitHub Pages và Cloudflare một thời gian, rồi mới tắt GitHub Pages.
+
+### Đồ treo trần, treo tường
+
+Trong `assets/shop/catalog.json`, thêm `"mount": "ceiling"` cho đồ treo trần (đèn chùm…) hoặc `"mount": "wall"` cho đồ treo tường (đồng hồ, kệ treo…). Không ghi thì đồ đứng dưới sàn hoặc trên quầy.
+- **Treo trần:** đồ treo bằng dây từ trần xuống; kéo trên sàn để chọn chỗ treo; khách đi bên dưới không bị vướng.
+- **Treo tường:** đồ tự áp sát tường bên, nằm giữa hai bức tranh như tivi.
+
+Đèn chùm cổ điển đã được đánh dấu treo trần; đèn chùm đã đặt dưới sàn từ trước sẽ tự treo lên.
