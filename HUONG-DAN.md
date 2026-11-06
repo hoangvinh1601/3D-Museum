@@ -144,3 +144,27 @@ Mô hình cây cảnh, sofa, ghế bành, tượng, bình gốm, đèn chùm… 
 ### Video trưng bày
 
 Nhấn vào video trên tường: có nút **Phát / Dừng**, **Từ đầu**; chủ phòng bật/tắt **Tự động phát khi vào gian** và **Lặp lại video** (lưu cho cả phòng).
+
+## Giữ Supabase luôn chạy
+
+Supabase gói miễn phí tự tạm dừng sau 7 ngày không ai truy cập. Tác vụ `.github/workflows/supabase-keepalive.yml` tự “gõ cửa” cơ sở dữ liệu **3 ngày một lần** (chỉ đọc 1 dòng, không thay đổi gì). Muốn chạy tay: tab **Actions** trên GitHub → *Giữ Supabase luôn chạy* → **Run workflow**.
+
+Lưu ý: GitHub tự tắt tác vụ hẹn giờ nếu repo **60 ngày** không có commit nào (GitHub sẽ gửi email báo trước). Chỉ cần thỉnh thoảng đẩy một thay đổi lên là tác vụ tiếp tục chạy.
+
+## Kế hoạch chuyển sang Cloudflare Pages
+
+**Vì sao:** miễn phí, không giới hạn băng thông, **cho phép dùng thương mại**, chạy được từ repo GitHub **riêng tư** (giấu mã nguồn trên GitHub), đưa bản mới lên nhanh và ổn định hơn GitHub Pages (GitHub Pages đã vài lần bị quá thời gian chờ), máy chủ gần Việt Nam.
+
+**Giới hạn gói miễn phí:** 500 lần đưa bản mới mỗi tháng, tối đa 20.000 file, mỗi file ≤ 25 MB. Dự án hiện có 126 file, file lớn nhất 2,8 MB, nên vừa thoải mái.
+
+| Bước | Ai làm | Việc |
+|---|---|---|
+| 1 | Bạn | Tạo tài khoản miễn phí tại https://dash.cloudflare.com/sign-up (không cần thẻ). |
+| 2 | Bạn | **Workers & Pages → Create → Pages → Connect to Git**, cho Cloudflare truy cập GitHub (chỉ chọn repo `3D-Museum`). |
+| 3 | Bạn | Chọn repo `3D-Museum`, nhánh `main`. *Framework preset*: **None**, *Build command*: **để trống**, *Build output directory*: **/** . Đặt tên dự án, ví dụ `phong-trung-bay-3d` (web sẽ ở `https://phong-trung-bay-3d.pages.dev`). Bấm **Save and Deploy**. |
+| 4 | Claude | Kiểm tra web trên địa chỉ mới; thêm địa chỉ mới vào Supabase (**Authentication → URL Configuration**: Site URL và Redirect URLs) để link đặt lại mật khẩu trỏ đúng; thêm file `_headers` để ảnh, mô hình được lưu bộ nhớ đệm lâu (web mở nhanh hơn ở lần sau) còn `index.html` và `version.json` luôn mới. |
+| 5 | Bạn (tuỳ chọn) | **Tên miền riêng**: Cloudflare → *Domain Registration* → mua tên miền (`.com` khoảng 10 USD/năm, không cộng phí). Vào dự án Pages → **Custom domains → Set up a custom domain**; HTTPS được bật tự động. |
+| 6 | Bạn (tuỳ chọn) | **Giấu mã nguồn trên GitHub**: repo → *Settings → Danger Zone → Change visibility → Private*. Cloudflare vẫn tự đưa bản mới lên. Link `github.io` cũ sẽ ngừng (GitHub Pages miễn phí không chạy repo riêng tư), nên hãy gửi link mới cho người dùng trước. Tác vụ “gõ cửa” Supabase vẫn chạy bình thường. |
+| 7 | Claude (sau này) | Thêm bước nén mã (minify) khi đưa lên, để mã trên trình duyệt khó đọc hơn. Mã chạy trên trình duyệt thì không giấu được hoàn toàn; phần quan trọng (xu, lì xì, mua bán) đã được Supabase kiểm tra phía máy chủ. |
+
+**Chi phí:** 0 đồng (trừ tên miền nếu mua). Có thể chạy song song GitHub Pages và Cloudflare một thời gian, rồi mới tắt GitHub Pages.
