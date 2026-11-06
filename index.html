@@ -210,7 +210,7 @@ body.in-gallery #chat{display:flex}
 #chatLog div{align-self:flex-start;max-width:100%;padding:6px 11px;border-radius:12px;background:rgba(16,14,12,.62);backdrop-filter:blur(8px);font-size:13px;line-height:1.4;transition:opacity 1s;word-wrap:break-word}
 #chatLog div b{color:var(--gold);font-weight:600;margin-right:6px}#chatLog div.sys{color:var(--muted);font-style:italic}#chatLog div.old{opacity:0}
 #chatForm{display:none;padding:6px;border-radius:14px;pointer-events:auto;gap:6px;align-items:center}#chat.typing #chatForm{display:flex}
-#chatForm .field{flex:1;padding:8px 10px}#chatForm .emo{display:flex;gap:2px}#chatForm .emo button{background:none;border:0;font-size:18px;padding:4px}
+#chatForm{flex-wrap:wrap}#chatForm .field{flex:1 1 100%;padding:8px 10px;order:3}#chatForm .emo{display:flex;gap:2px}#chatForm .emo button{background:none;border:0;font-size:18px;padding:4px}
 #peerMenu{position:fixed;z-index:42;display:none;padding:8px;min-width:190px}#peerMenu.open{display:block}
 #peerMenu b{display:block;padding:4px 8px 8px;font-size:14px}#peerMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:9px;font-size:13.5px}
 #peerMenu button:hover{background:rgba(255,255,255,.08)}
@@ -382,7 +382,7 @@ body.in-gallery #chat{display:flex}
 </aside>
 
 <div id="roomFb"><div id="roomFbPop" class="glass"><h3 style="margin:0 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Cảm nhận về gian này</h3><div id="roomFbBox" class="fb"></div></div><button class="iconbtn" id="roomFbBtn" title="Thả tim, đánh giá, ủng hộ gian này"></button></div>
-<div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
+<div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><div class="emo" id="exprBar"></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
 <div id="peerMenu" class="glass"></div>
 <div id="modal"><div class="box glass" id="modalBox"></div></div>
 <div id="toast" class="glass"></div>
@@ -3103,24 +3103,74 @@ const AV_SHIRT = ['#c91a09', '#0055bf', '#237841', '#f2cd37', '#ffffff', '#1b2a3
 const AV_PANTS = ['#1b2a34', '#0055bf', '#6c6e68', '#582a12', '#ffffff', '#c91a09', '#237841', '#a0a5a9'];
 const AV_HAIRC = ['#582a12', '#1b2a34', '#f2cd37', '#c91a09', '#a0a5a9', '#e4cd9e', '#0055bf', '#c870a0'];
 const AV_HAIR = [['short', 'Tóc ngắn'], ['long', 'Tóc dài'], ['cap', 'Mũ lưỡi trai'], ['tophat', 'Mũ chóp'], ['none', 'Đầu trọc']];
-const AV_FACE = [['smile', '🙂'], ['grin', '😁'], ['wink', '😉'], ['cool', '😎']];
+const AV_FACE = [['happy', '🙂'], ['grin', '😁'], ['wink', '😉'], ['cool', '😎'], ['love', '😍'], ['wow', '😮']];
 const pickOf = a => a[(Math.random() * a.length) | 0];
 function myAvatar() {
   try { const a = JSON.parse(localStorage.getItem('avatar') || 'null'); if (a?.shirt) return a; } catch { }
-  const a = { shirt: pickOf(AV_SHIRT), pants: pickOf(AV_PANTS), hair: pickOf(['short', 'long', 'cap', 'short']), hairCol: pickOf(AV_HAIRC), face: pickOf(['smile', 'grin', 'wink']) };
+  const a = { shirt: pickOf(AV_SHIRT), pants: pickOf(AV_PANTS), hair: pickOf(['short', 'long', 'cap', 'short']), hairCol: pickOf(AV_HAIRC), face: pickOf(['happy', 'grin', 'wink']), print: pickOf(['plain', 'suit', 'heart', 'star', 'hoodie']) };
   try { localStorage.setItem('avatar', JSON.stringify(a)); } catch { } return a;
 }
-function faceTex(kind) {
-  return cached('face-' + kind, () => {
-    const [c, g] = canvas(512, 256); g.fillStyle = '#f2cd37'; g.fillRect(0, 0, 512, 256); g.fillStyle = '#1b1b1b'; g.strokeStyle = '#1b1b1b'; g.lineCap = 'round';
-    const eye = (x, wink) => { if (wink) { g.lineWidth = 7; g.beginPath(); g.moveTo(x - 13, 104); g.quadraticCurveTo(x, 94, x + 13, 104); g.stroke(); return; } g.beginPath(); g.ellipse(x, 102, 10, 13, 0, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 3, 97, 3.5, 0, TAU); g.fill(); g.fillStyle = '#1b1b1b'; };
-    if (kind === 'cool') { g.fillRect(206, 88, 44, 26); g.fillRect(262, 88, 44, 26); g.fillRect(244, 92, 24, 6); }
-    else { eye(228, false); eye(284, kind === 'wink'); }
-    g.lineWidth = 7; g.beginPath();
-    if (kind === 'grin') { g.moveTo(222, 140); g.quadraticCurveTo(256, 182, 290, 140); g.closePath(); g.fill(); g.fillStyle = '#fff'; g.fillRect(232, 141, 48, 9); }
-    else { g.moveTo(226, 142); g.quadraticCurveTo(256, 170, 286, 142); g.stroke(); }
+const AV_PRINT = [['plain', 'Trơn'], ['suit', 'Vest cà vạt'], ['heart', 'Trái tim'], ['star', 'Ngôi sao'], ['hoodie', 'Hoodie']];
+const EXPR = [['happy', '🙂', 'Vui'], ['grin', '😁', 'Cười tươi'], ['wow', '😮', 'Ngạc nhiên'], ['sad', '😢', 'Buồn'], ['angry', '😠', 'Giận'], ['love', '😍', 'Yêu thích'], ['wink', '😉', 'Nháy mắt'], ['cool', '😎', 'Ngầu']];
+// face decal: transparent canvas drawn on the front of the head, redrawn when the expression, a blink or speech changes
+function drawFace(g, expr, blink, talk) {
+  g.clearRect(0, 0, 256, 128); g.fillStyle = '#1b1b1b'; g.strokeStyle = '#1b1b1b'; g.lineCap = 'round'; g.lineJoin = 'round';
+  const L = 100, Rx = 156, EY = 54;
+  const brow = (x, tilt, y = 30) => { g.lineWidth = 5; g.beginPath(); g.moveTo(x - 13, y + tilt); g.quadraticCurveTo(x, y - 5, x + 13, y - tilt); g.stroke(); };
+  const eye = x => {
+    if (blink) { g.lineWidth = 5; g.beginPath(); g.moveTo(x - 10, EY); g.quadraticCurveTo(x, EY + 6, x + 10, EY); g.stroke(); return; }
+    g.beginPath(); g.ellipse(x, EY, 8, 11, 0, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 3, EY - 4, 3, 0, TAU); g.fill(); g.fillStyle = '#1b1b1b';
+  };
+  const heart = (x, y, r) => { g.fillStyle = '#e0234e'; g.beginPath(); g.moveTo(x, y + r * .9); g.bezierCurveTo(x - r * 1.6, y - r * .2, x - r * .6, y - r * 1.4, x, y - r * .4); g.bezierCurveTo(x + r * .6, y - r * 1.4, x + r * 1.6, y - r * .2, x, y + r * .9); g.fill(); g.fillStyle = '#1b1b1b'; };
+  // eyes + brows
+  if (expr === 'cool') { g.beginPath(); g.roundRect(L - 22, EY - 14, 42, 26, 8); g.roundRect(Rx - 20, EY - 14, 42, 26, 8); g.fill(); g.fillRect(L + 16, EY - 9, Rx - L - 32, 6); g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(L - 14, EY - 9, 10, 4); g.fillRect(Rx - 12, EY - 9, 10, 4); g.fillStyle = '#1b1b1b'; }
+  else if (expr === 'love') { heart(L, EY, 13); heart(Rx, EY, 13); }
+  else if (expr === 'wink') { eye(L); g.lineWidth = 5; g.beginPath(); g.moveTo(Rx - 11, EY + 2); g.quadraticCurveTo(Rx, EY - 8, Rx + 11, EY + 2); g.stroke(); }
+  else { eye(L); eye(Rx); }
+  if (expr === 'angry') { brow(L, -7, 34); brow(Rx, 7, 34); }
+  else if (expr === 'sad') { brow(L, 6, 32); brow(Rx, -6, 32); }
+  else if (expr === 'wow') { brow(L, 0, 26); brow(Rx, 0, 26); }
+  else if (expr !== 'cool') { g.lineWidth = 4; [L, Rx].forEach(x => { g.beginPath(); g.moveTo(x - 11, 33); g.quadraticCurveTo(x, 28, x + 11, 33); g.stroke(); }); }
+  if (expr === 'sad' && !blink) { g.fillStyle = '#5ab4ff'; g.beginPath(); g.ellipse(Rx + 6, EY + 18, 4, 6, 0, 0, TAU); g.fill(); g.fillStyle = '#1b1b1b'; }
+  // cheeks
+  if (expr === 'love' || expr === 'grin' || expr === 'happy') { g.fillStyle = 'rgba(230,90,90,.28)'; g.beginPath(); g.ellipse(L - 18, 78, 12, 7, 0, 0, TAU); g.ellipse(Rx + 18, 78, 12, 7, 0, 0, TAU); g.fill(); g.fillStyle = '#1b1b1b'; }
+  // mouth
+  const M = 128, MY = 86; g.lineWidth = 6;
+  const open = (w, h) => { g.beginPath(); g.ellipse(M, MY + 4, w, h, 0, 0, TAU); g.fill(); g.fillStyle = '#c23b4a'; g.beginPath(); g.ellipse(M, MY + 4 + h * .45, w * .6, h * .4, 0, 0, TAU); g.fill(); g.fillStyle = '#1b1b1b'; };
+  if (talk) open(expr === 'wow' ? 11 : 14, expr === 'wow' ? 13 : 9);
+  else if (expr === 'wow') open(10, 12);
+  else if (expr === 'grin' || expr === 'love') { g.beginPath(); g.moveTo(M - 30, MY - 6); g.quadraticCurveTo(M, MY + 34, M + 30, MY - 6); g.closePath(); g.fill(); g.fillStyle = '#fff'; g.fillRect(M - 22, MY - 6, 44, 8); g.fillStyle = '#1b1b1b'; }
+  else if (expr === 'sad') { g.beginPath(); g.moveTo(M - 20, MY + 10); g.quadraticCurveTo(M, MY - 8, M + 20, MY + 10); g.stroke(); }
+  else if (expr === 'angry') { g.beginPath(); g.moveTo(M - 20, MY + 6); g.quadraticCurveTo(M, MY - 4, M + 20, MY + 6); g.stroke(); }
+  else if (expr === 'cool' || expr === 'wink') { g.beginPath(); g.moveTo(M - 22, MY); g.quadraticCurveTo(M + 4, MY + 18, M + 26, MY - 6); g.stroke(); }
+  else { g.beginPath(); g.moveTo(M - 24, MY - 2); g.quadraticCurveTo(M, MY + 22, M + 24, MY - 2); g.stroke(); }
+}
+function torsoPrint(kind, shirt) {
+  return cached('print-' + kind + shirt, () => {
+    const [c, g] = canvas(256, 320); const dark = hexC(shirt).multiplyScalar(.55).getStyle(), light = hexC(shirt).lerp(new THREE.Color(1, 1, 1), .55).getStyle();
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    // every shirt: a neck line and a subtle fold, like printed minifig torsos
+    g.strokeStyle = dark; g.lineWidth = 6; g.beginPath(); g.moveTo(96, 6); g.quadraticCurveTo(128, 34, 160, 6); g.stroke();
+    if (kind === 'suit') {
+      g.fillStyle = '#f4f2ee'; g.beginPath(); g.moveTo(98, 4); g.lineTo(158, 4); g.lineTo(128, 120); g.closePath(); g.fill();
+      g.fillStyle = '#c91a09'; g.beginPath(); g.moveTo(120, 22); g.lineTo(136, 22); g.lineTo(142, 110); g.lineTo(128, 130); g.lineTo(114, 110); g.closePath(); g.fill();
+      g.strokeStyle = dark; g.lineWidth = 8; g.beginPath(); g.moveTo(98, 4); g.lineTo(128, 150); g.lineTo(158, 4); g.stroke();
+      g.fillStyle = dark; [190, 240].forEach(y => { g.beginPath(); g.arc(128, y, 7, 0, TAU); g.fill(); });
+    } else if (kind === 'heart') {
+      g.fillStyle = '#ff4d86'; const x = 128, y = 160, r = 46; g.beginPath(); g.moveTo(x, y + r * .9); g.bezierCurveTo(x - r * 1.6, y - r * .2, x - r * .6, y - r * 1.4, x, y - r * .4); g.bezierCurveTo(x + r * .6, y - r * 1.4, x + r * 1.6, y - r * .2, x, y + r * .9); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.ellipse(104, 142, 9, 6, -.6, 0, TAU); g.fill();
+    } else if (kind === 'star') {
+      g.fillStyle = '#ffd23f'; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -PI / 2 + i * PI / 5, r = i % 2 ? 22 : 54; g.lineTo(128 + Math.cos(a) * r, 165 + Math.sin(a) * r); } g.closePath(); g.fill();
+      g.strokeStyle = dark; g.lineWidth = 4; g.stroke();
+    } else if (kind === 'hoodie') {
+      g.strokeStyle = light; g.lineWidth = 5; [112, 144].forEach(x => { g.beginPath(); g.moveTo(x, 16); g.lineTo(x, 92); g.stroke(); g.beginPath(); g.arc(x, 96, 5, 0, TAU); g.fillStyle = light; g.fill(); });
+      g.fillStyle = dark; g.beginPath(); g.roundRect(70, 210, 116, 64, 14); g.fill(); g.strokeStyle = light; g.lineWidth = 3; g.beginPath(); g.moveTo(128, 214); g.lineTo(128, 270); g.stroke();
+    } else { g.strokeStyle = dark; g.globalAlpha = .35; g.lineWidth = 3; g.beginPath(); g.moveTo(84, 150); g.quadraticCurveTo(100, 200, 90, 250); g.moveTo(172, 150); g.quadraticCurveTo(156, 200, 166, 250); g.stroke(); g.globalAlpha = 1; }
     return tex(c, true, true);
   });
+}
+function faceTex(kind) { // static face (shop previews / fallback)
+  return cached('face-' + kind, () => { const [c, g] = canvas(256, 128); drawFace(g, kind, false, false); return tex(c, true, true); });
 }
 function textSprite(text, { size = 34, bg = 'rgba(16,14,12,.72)', color = '#f4ede1', maxW = 460, bold = true } = {}) {
   const [c, g] = canvas(512, 128); g.font = `${bold ? 600 : 400} ${size}px "Be Vietnam Pro", Arial`;
@@ -3134,53 +3184,100 @@ function makeFlower() {
   const pet = std({ color: 0xe0234e, roughness: .5 }); for (let i = 0; i < 6; i++) { const p = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), pet); p.position.set(Math.cos(i) * .035, .34, Math.sin(i) * .035); g.add(p); }
   const ct = new THREE.Mesh(new THREE.SphereGeometry(.025, 8, 6), std({ color: 0xffd23f })); ct.position.y = .35; g.add(ct); return g;
 }
+const FIG_GEO = {};
+function figGeo() {
+  if (FIG_GEO.head) return FIG_GEO;
+  const prof = [[0, -.15], [.12, -.15], [.145, -.142], [.155, -.12], [.157, 0], [.155, .12], [.145, .142], [.12, .15], [0, .15]].map(p => new THREE.Vector2(...p));
+  FIG_GEO.head = keepGeo(new THREE.LatheGeometry(prof, 32));
+  FIG_GEO.face = keepGeo(new THREE.CylinderGeometry(.1585, .1585, .27, 24, 1, true, -.95, 1.9));
+  const tg = new THREE.BoxGeometry(.46, .56, .26, 1, 4, 1), tp = tg.attributes.position;
+  for (let i = 0; i < tp.count; i++) { const y = tp.getY(i), k = .76 + (.28 - y) / .56 * .24; tp.setX(i, tp.getX(i) * Math.min(1, k)); }
+  tg.computeVertexNormals(); FIG_GEO.torso = keepGeo(tg);
+  FIG_GEO.print = keepGeo(new THREE.PlaneGeometry(.44, .55));
+  FIG_GEO.arm = keepGeo(new THREE.CylinderGeometry(.06, .068, .36, 14));
+  FIG_GEO.shoulder = keepGeo(new THREE.SphereGeometry(.07, 14, 10));
+  FIG_GEO.hand = keepGeo(new THREE.TorusGeometry(.048, .021, 8, 18, 4.7));
+  FIG_GEO.leg = keepGeo(new THREE.BoxGeometry(.205, .5, .25));
+  FIG_GEO.foot = keepGeo(new THREE.BoxGeometry(.205, .09, .33));
+  FIG_GEO.hips = keepGeo(new THREE.BoxGeometry(.46, .11, .26));
+  FIG_GEO.crotch = keepGeo(new THREE.BoxGeometry(.05, .13, .2));
+  FIG_GEO.stud = keepGeo(new THREE.CylinderGeometry(.088, .088, .07, 22));
+  FIG_GEO.neck = keepGeo(new THREE.CylinderGeometry(.068, .075, .06, 16));
+  FIG_GEO.hairTop = keepGeo(new THREE.SphereGeometry(.176, 28, 14, 0, TAU, 0, PI * .34));
+  FIG_GEO.hairBack = keepGeo(new THREE.SphereGeometry(.178, 28, 14, PI * .8, PI * 1.4, 0, PI * .66));
+  FIG_GEO.fringe = keepGeo(new THREE.SphereGeometry(.179, 20, 6, PI * .28, PI * .44, PI * .2, PI * .13));
+  return FIG_GEO;
+}
 function makeMinifig(cfg, name) {
-  const root = new THREE.Group(), skin = std({ color: SKIN, roughness: .35 }), shirt = std({ color: cfg.shirt, roughness: .4 }), pants = std({ color: cfg.pants, roughness: .4 }), hairM = std({ color: cfg.hairCol, roughness: .45 });
+  const G = figGeo(), root = new THREE.Group(), skin = std({ color: SKIN, roughness: .3 }), shirt = std({ color: cfg.shirt, roughness: .35 }), pants = std({ color: cfg.pants, roughness: .38 }), hairM = std({ color: cfg.hairCol, roughness: .4 });
   const P = {};
+  const hips = new THREE.Mesh(G.hips, pants); hips.position.y = .66; root.add(hips);
+  const cr = new THREE.Mesh(G.crotch, pants); cr.position.y = .57; root.add(cr);
   [-1, 1].forEach(sd => {
-    const hip = new THREE.Group(); hip.position.set(sd * .11, .62, 0); root.add(hip);
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(.2, .56, .26), pants); leg.position.y = -.3; hip.add(leg);
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(.2, .08, .32), pants); foot.position.set(0, -.58, .03); hip.add(foot);
+    const hip = new THREE.Group(); hip.position.set(sd * .118, .6, 0); root.add(hip);
+    const leg = new THREE.Mesh(G.leg, pants); leg.position.y = -.27; hip.add(leg);
+    const foot = new THREE.Mesh(G.foot, pants); foot.position.set(0, -.555, .04); hip.add(foot);
     P[sd < 0 ? 'legL' : 'legR'] = hip;
   });
-  const hips = new THREE.Mesh(new THREE.BoxGeometry(.46, .1, .26), pants); hips.position.y = .67; root.add(hips);
-  const tg = new THREE.BoxGeometry(.46, .56, .26), tp = tg.attributes.position; for (let i = 0; i < tp.count; i++) if (tp.getY(i) > 0) tp.setX(i, tp.getX(i) * .76); tg.computeVertexNormals();
-  const torso = new THREE.Mesh(tg, shirt); torso.position.y = 1; root.add(torso);
+  const torso = new THREE.Mesh(G.torso, shirt); torso.position.y = 1; root.add(torso);
+  const print = new THREE.Mesh(G.print, new THREE.MeshStandardMaterial({ map: torsoPrint(cfg.print || 'plain', cfg.shirt), transparent: true, roughness: .35, polygonOffset: true, polygonOffsetFactor: -2 }));
+  print.position.set(0, 1, .1315); root.add(print);
   [-1, 1].forEach(sd => {
-    const sh = new THREE.Group(); sh.position.set(sd * .215, 1.2, 0); root.add(sh);
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(.062, .07, .4, 12), shirt); arm.position.set(sd * .05, -.18, .02); arm.rotation.z = sd * .2; sh.add(arm);
-    const hand = new THREE.Mesh(new THREE.TorusGeometry(.05, .022, 8, 16, 4.6), skin); hand.position.set(sd * .09, -.4, .07); hand.rotation.set(PI / 2, 0, PI * .75); sh.add(hand);
-    P[sd < 0 ? 'armL' : 'armR'] = sh; if (sd > 0) P.hand = hand;
+    const sh = new THREE.Group(); sh.position.set(sd * .2, 1.2, 0); root.add(sh);
+    const ball = new THREE.Mesh(G.shoulder, shirt); ball.position.set(sd * .03, 0, 0); sh.add(ball);
+    const arm = new THREE.Mesh(G.arm, shirt); arm.position.set(sd * .065, -.17, .03); arm.rotation.set(-.18, 0, sd * .24); sh.add(arm);
+    const hand = new THREE.Mesh(G.hand, skin); hand.position.set(sd * .11, -.38, .09); hand.rotation.set(PI / 2 - .2, 0, sd > 0 ? PI * .75 : PI * .25); sh.add(hand);
+    P[sd < 0 ? 'armL' : 'armR'] = sh;
   });
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .05, 12), skin); neck.position.y = 1.3; root.add(neck);
-  const head = new THREE.Group(); head.position.y = 1.47; root.add(head); P.head = head;
-  head.add(new THREE.Mesh(new THREE.CylinderGeometry(.155, .155, .3, 28, 1, false, PI), [std({ color: 0xffffff, map: faceTex(cfg.face || 'smile'), roughness: .35 }), skin, skin]));
-  const stud = new THREE.Mesh(new THREE.CylinderGeometry(.085, .085, .07, 20), skin); stud.position.y = .18; head.add(stud);
-  if (cfg.hair === 'short' || cfg.hair === 'long') {
-    const hr = new THREE.Mesh(new THREE.SphereGeometry(.175, 24, 12, 0, TAU, 0, PI * .55), hairM); hr.position.set(0, .04, -.01); hr.scale.set(1, .95, 1.02); head.add(hr);
-    if (cfg.hair === 'long') { const bk = new THREE.Mesh(new THREE.BoxGeometry(.34, .36, .1), hairM); bk.position.set(0, -.1, -.12); head.add(bk); }
-  } else if (cfg.hair === 'cap') {
-    const cp = new THREE.Mesh(new THREE.CylinderGeometry(.165, .17, .12, 24), hairM); cp.position.y = .17; head.add(cp);
-    const br = new THREE.Mesh(new THREE.BoxGeometry(.3, .025, .2), hairM); br.position.set(0, .12, .2); head.add(br);
-  } else if (cfg.hair === 'tophat') {
-    const br = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .025, 28), hairM); br.position.y = .16; head.add(br);
-    const tp2 = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .3, 24), hairM); tp2.position.y = .32; head.add(tp2);
+  const neck = new THREE.Mesh(G.neck, skin); neck.position.y = 1.3; root.add(neck);
+  const head = new THREE.Group(); head.position.y = 1.48; root.add(head); P.head = head;
+  head.add(new THREE.Mesh(G.head, skin));
+  const [fc, fg] = canvas(256, 128), ftex = tex(fc, true, true);
+  head.add(new THREE.Mesh(G.face, new THREE.MeshStandardMaterial({ map: ftex, transparent: true, roughness: .3, polygonOffset: true, polygonOffsetFactor: -2 })));
+  const stud = new THREE.Mesh(G.stud, skin); stud.position.y = .18; head.add(stud);
+  const hs = cfg.hair;
+  if (hs === 'short' || hs === 'long') {
+    const top = new THREE.Mesh(G.hairTop, hairM); top.position.y = .035; head.add(top);
+    const back = new THREE.Mesh(G.hairBack, hairM); back.position.y = .02; back.scale.y = 1.05; head.add(back);
+    const fr = new THREE.Mesh(G.fringe, hairM); fr.position.y = .03; head.add(fr);
+    stud.visible = false;
+    if (hs === 'long') { const bk = new THREE.Mesh(new THREE.CylinderGeometry(.168, .2, .34, 24, 1, false, PI * .42, PI * 1.16), hairM); bk.position.y = -.13; head.add(bk); }
+  } else if (hs === 'cap') {
+    const cp = new THREE.Mesh(new THREE.SphereGeometry(.172, 24, 12, 0, TAU, 0, PI * .45), hairM); cp.position.y = .05; head.add(cp);
+    const br = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .02, 24, 1, false, -PI * .45, PI * .9), hairM); br.position.set(0, .085, .1); br.scale.z = 1.3; head.add(br); stud.visible = false;
+  } else if (hs === 'tophat') {
+    const br = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .025, 28), hairM); br.position.y = .17; head.add(br);
+    const tp2 = new THREE.Mesh(new THREE.CylinderGeometry(.13, .14, .3, 24), hairM); tp2.position.y = .33; head.add(tp2);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(.142, .142, .05, 24), std({ color: 0xc91a09 })); band.position.y = .21; head.add(band);
   }
-  const flower = makeFlower(); flower.position.set(.31, .8, .12); flower.rotation.x = .3; flower.visible = false; root.add(flower); P.flower = flower;
+  const flower = makeFlower(); flower.position.set(.31, .8, .14); flower.rotation.x = .3; flower.visible = false; root.add(flower); P.flower = flower;
   root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   if (name) { const tag = textSprite(name); tag.position.y = 2.05; root.add(tag); P.tag = tag; }
-  return { root, P, cfgKey: JSON.stringify(cfg), name };
+  const f = { root, P, cfgKey: JSON.stringify(cfg), name, base: cfg.face || 'happy', face: { g: fg, tex: ftex, key: '', next: 1 + Math.random() * 3 } };
+  setFace(f, f.base, false, false); return f;
+}
+function setFace(f, expr, blink, talk) {
+  const key = expr + blink + talk; if (f.face.key === key) return;
+  f.face.key = key; drawFace(f.face.g, expr, blink, talk); f.face.tex.needsUpdate = true;
+}
+function faceState(f, t, exprTmp, exprUntil) {
+  const now = performance.now(), expr = exprTmp && now < exprUntil ? exprTmp : ({ smile: 'happy' }[f.base] || f.base);
+  if (t > f.face.next) { f.face.blinkEnd = t + .13; f.face.next = t + 2.5 + Math.random() * 3.5; }
+  const blink = t < (f.face.blinkEnd || 0) && expr !== 'cool' && expr !== 'love';
+  const talk = now < (f.talkUntil || 0) && Math.sin(t * 16) > 0;
+  setFace(f, expr, blink, talk);
 }
 function animFig(f, dt, t, speed, emote, emoteT) {
   f.phase = (f.phase || 0) + dt * speed * 4.2; const sw = Math.sin(f.phase) * Math.min(1, speed / 1.5) * .7;
-  f.P.legL.rotation.x = sw; f.P.legR.rotation.x = -sw; f.P.armL.rotation.x = -sw * .8; f.P.armR.rotation.x = sw * .8; f.P.armR.rotation.z = 0; f.P.head.rotation.y = 0;
+  f.P.legL.rotation.x = sw; f.P.legR.rotation.x = -sw; f.P.armL.rotation.x = -sw * .8; f.P.armR.rotation.x = sw * .8; f.P.armR.rotation.z = 0; f.P.armL.rotation.z = 0; f.P.head.rotation.y = 0; f.P.head.rotation.z = 0;
   let y = 0; const et = t - (emoteT || 0);
-  if (emote === 'wave' && et < 2.5) { f.P.armR.rotation.x = -2.7; f.P.armR.rotation.z = Math.sin(t * 12) * .35; }
-  if (emote === 'jump' && et < .8) y = Math.sin(et / .8 * PI) * .6;
+  if (speed < .2) { f.P.head.rotation.y = Math.sin(t * .5 + (f.phase || 0)) * .12; f.P.armL.rotation.x = Math.sin(t * 1.2) * .04; }
+  if (emote === 'wave' && et < 2.5) { f.P.armR.rotation.x = -2.7; f.P.armR.rotation.z = Math.sin(t * 12) * .35; f.P.head.rotation.z = -.1; }
+  if (emote === 'jump' && et < .8) { y = Math.sin(et / .8 * PI) * .6; f.P.armL.rotation.x = f.P.armR.rotation.x = -2.2 * Math.sin(et / .8 * PI); }
   if (emote === 'dance' && et < 4) { f.P.armL.rotation.x = -2.4 + Math.sin(t * 8) * .5; f.P.armR.rotation.x = -2.4 - Math.sin(t * 8) * .5; f.P.legL.rotation.x = Math.sin(t * 8) * .4; f.P.legR.rotation.x = -Math.sin(t * 8) * .4; y = Math.abs(Math.sin(t * 8)) * .12; f.P.head.rotation.y = Math.sin(t * 4) * .4; }
   f.root.position.y = y;
 }
-function disposeFig(f) { scene.remove(f.root); f.root.traverse(o => { o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map && o.isSprite) m.map.dispose(); m.dispose(); }); }); }
+function disposeFig(f) { scene.remove(f.root); f.root.traverse(o => { if (!o.geometry?.userData.keep) o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map && o.isSprite) m.map.dispose(); m.dispose(); }); }); }
 
 const NET = { ch: null, id: raterId() + '-' + Math.random().toString(36).slice(2, 6), peers: new Map(), lastSend: 0, sentKey: '', emote: null, emoteT: 0, held: 0, me: null, tp: false, tpSaved: null, picks: [] };
 const myName = () => (me?.display || me?.username || 'Khách ' + NET.id.slice(-4)).slice(0, 24);
@@ -3198,8 +3295,8 @@ addEventListener('pagehide', () => { try { NET.ch?.send({ t: 'bye', id: NET.id }
 function sendState(force) {
   if (!NET.ch || !room) return;
   const now = performance.now(), p = NET.tpSaved || camera.position;
-  const st = { t: 's', id: NET.id, n: myName(), a: myAvatar(), r: roomKey(), x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +yaw.toFixed(2), e: NET.emote, eid: NET.emoteT, et: NET.emoteT ? Date.now() - NET.emoteT : 0, h: NET.held > Date.now() ? 1 : 0 };
-  const key = `${st.r}|${st.x}|${st.z}|${st.y}|${st.e}|${st.h}`, moving = key !== NET.sentKey;
+  const st = { t: 's', id: NET.id, n: myName(), a: myAvatar(), r: roomKey(), x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +yaw.toFixed(2), e: NET.emote, eid: NET.emoteT, et: NET.emoteT ? Date.now() - NET.emoteT : 0, h: NET.held > Date.now() ? 1 : 0, fx: NET.exprUntil > performance.now() ? NET.expr : '', fu: Math.max(0, Math.round(NET.exprUntil - performance.now())) };
+  const key = `${st.r}|${st.x}|${st.z}|${st.y}|${st.e}|${st.h}|${st.fx}`, moving = key !== NET.sentKey;
   if (!force && now - NET.lastSend < (moving ? 110 : 1500)) return;
   NET.lastSend = now; NET.sentKey = key; NET.ch.send(st);
 }
@@ -3218,15 +3315,16 @@ function onNet(m) {
     let pr = NET.peers.get(m.id); const isNew = !pr;
     if (!pr) { pr = { id: m.id }; NET.peers.set(m.id, pr); }
     Object.assign(pr, { n: String(m.n || 'Khách').slice(0, 24), a: m.a || {}, r: m.r, x: +m.x || 0, z: +m.z || 0, yaw: +m.y || 0, last: performance.now(), held: !!m.h });
+    if (m.fx) { pr.expr = String(m.fx); pr.exprUntil = performance.now() + Math.min(10000, +m.fu || 0); } else pr.exprUntil = 0;
     if (m.e && m.eid && m.eid !== pr.eid && m.et < 4000) { pr.eid = m.eid; pr.e = m.e; pr.eT = clock.elapsedTime - m.et / 1000; }
     peerFig(pr); if (isNew && pr.r === roomKey()) chatLine(null, `${pr.n} vừa vào gian này 👋`);
     updateOnline(); return;
   }
   const pr = NET.peers.get(m.id); if (!pr) return;
-  if (m.t === 'c') { const txt = String(m.text || '').slice(0, 200); if (!txt || pr.r !== roomKey()) return; chatLine(pr.n, txt); showBubble(pr, txt); sfxPop(); }
+  if (m.t === 'c') { const txt = String(m.text || '').slice(0, 200); if (!txt || pr.r !== roomKey()) return; chatLine(pr.n, txt); showBubble(pr, txt); if (pr.fig) pr.fig.talkUntil = performance.now() + Math.min(4500, 600 + txt.length * 70); sfxPop(); }
   if (m.t === 'g') {
     const to = m.to === NET.id ? null : NET.peers.get(m.to), what = { flower: 'một bông hoa 🌹', heart: 'một trái tim ❤️', wave: 'một cái vẫy tay 👋' }[m.k] || 'một món quà';
-    if (m.to === NET.id) { toast(`${pr.n} tặng bạn ${what}`, 5000); floatEmoji({ flower: '🌹', heart: '❤️', wave: '👋' }[m.k] || '🎁', innerWidth / 2, innerHeight / 2); sfxChime(); if (m.k === 'flower') NET.held = Date.now() + 60000; sendState(true); }
+    if (m.to === NET.id) { toast(`${pr.n} tặng bạn ${what}`, 5000); floatEmoji({ flower: '🌹', heart: '❤️', wave: '👋' }[m.k] || '🎁', innerWidth / 2, innerHeight / 2); sfxChime(); if (m.k === 'flower') NET.held = Date.now() + 60000; setExpr(m.k === 'wave' ? 'grin' : 'love', 5000); }
     else if (to) chatLine(null, `${pr.n} tặng ${to.n} ${what}`);
     const tgt = m.to === NET.id ? (NET.tpSaved || camera.position) : to?.fig?.root.position;
     if (tgt) { const col = m.k === 'flower' ? [1, .3, .4] : m.k === 'heart' ? [1, .2, .5] : [1, .85, .3]; for (let i = 0; i < 30; i++) spawn(tgt.x, 1.6, tgt.z, rand(-1, 1), rand(.5, 2), rand(-1, 1), ...col, rand(.8, 1.4), .06, 1.2, -.3); }
@@ -3251,11 +3349,14 @@ $('#tChat').onclick = () => { if (!NET.ch) { toast('Mở một phòng trưng bà
 $('#chatForm').onsubmit = e => {
   e.preventDefault(); const txt = $('#chatIn').value.trim(); if (!txt) { openChat(false); return; }
   $('#chatIn').value = ''; NET.ch?.send({ t: 'c', id: NET.id, text: txt.slice(0, 200) }); chatLine(myName() + ' (bạn)', txt.slice(0, 200));
-  if (NET.me) showBubble({ fig: NET.me }, txt);
+  if (NET.me) { showBubble({ fig: NET.me }, txt); NET.me.talkUntil = performance.now() + Math.min(4500, 600 + txt.length * 70); }
 };
 $('#chatIn').addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); openChat(false); } });
 function doEmote(k) { NET.emote = k; NET.emoteT = Date.now(); NET.myEmoteT = clock.elapsedTime; sendState(true); if (!NET.tp) toast({ wave: 'Bạn đang vẫy tay 👋', jump: 'Hop! ⤴️', dance: 'Nhảy nào 🕺' }[k] + ' · bấm V để thấy nhân vật của bạn', 2000); }
 document.querySelectorAll('#chatForm [data-emo]').forEach(b => b.onclick = () => doEmote(b.dataset.emo));
+function setExpr(k, ms = 6000) { NET.expr = k; NET.exprUntil = performance.now() + ms; sendState(true); }
+$('#exprBar').innerHTML = EXPR.map(([k, e, n]) => `<button type="button" data-ex="${k}" title="${n}">${e}</button>`).join('');
+document.querySelectorAll('#exprBar [data-ex]').forEach(b => b.onclick = () => { setExpr(b.dataset.ex); if (!NET.tp) toast(`Biểu cảm: ${EXPR.find(x => x[0] === b.dataset.ex)[2]} · bấm V để thấy khuôn mặt của bạn`, 1800); });
 function setThirdPerson(on) {
   NET.tp = on;
   if (on && !NET.me) { NET.me = makeMinifig(myAvatar(), null); scene.add(NET.me.root); }
@@ -3283,7 +3384,8 @@ $('#tAvatar').onclick = () => {
     <label class="lb">Áo</label>${sw('shirt', AV_SHIRT)}<label class="lb">Quần</label>${sw('pants', AV_PANTS)}
     <label class="lb">Tóc / mũ</label><div class="seg" data-seg="hair" style="flex-wrap:wrap">${AV_HAIR.map(([k, n]) => `<button data-v="${k}" class="${a.hair === k ? 'on' : ''}">${n}</button>`).join('')}</div>
     <label class="lb">Màu tóc / mũ</label>${sw('hairCol', AV_HAIRC)}
-    <label class="lb">Nét mặt</label><div class="seg" data-seg="face">${AV_FACE.map(([k, e]) => `<button data-v="${k}" class="${a.face === k ? 'on' : ''}" style="font-size:18px">${e}</button>`).join('')}</div>
+    <label class="lb">Hình in trên áo</label><div class="seg" data-seg="print" style="flex-wrap:wrap">${AV_PRINT.map(([k, n]) => `<button data-v="${k}" class="${(a.print || 'plain') === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <label class="lb">Nét mặt thường ngày</label><div class="seg" data-seg="face">${AV_FACE.map(([k, e]) => `<button data-v="${k}" class="${({ smile: 'happy' }[a.face] || a.face) === k ? 'on' : ''}" style="font-size:18px">${e}</button>`).join('')}</div>
     <div class="tg ${NET.tp ? 'on' : ''}" id="avTp" style="margin-top:12px">Góc nhìn thứ ba (thấy nhân vật của bạn · phím V)<span class="sw2"></span></div>
     <p class="note">Phím tắt: Enter trò chuyện · 1 vẫy tay · 2 nhảy · 3 nhảy múa.</p>
     <div class="row" style="margin-top:12px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="avSave">Lưu nhân vật</button></div>`, box => {
@@ -3307,12 +3409,12 @@ function netTick(dt, t) {
     f.root.position.x += (pr.x - ox) * k; f.root.position.z += (pr.z - oz) * k;
     f.root.rotation.y = angleLerp(f.root.rotation.y, pr.yaw + PI, 1 - Math.exp(-dt * 10));
     const sp = Math.hypot(f.root.position.x - ox, f.root.position.z - oz) / Math.max(dt, 1e-3);
-    animFig(f, dt, t, sp, pr.e, pr.eT); f.P.flower.visible = pr.held;
+    animFig(f, dt, t, sp, pr.e, pr.eT); f.P.flower.visible = pr.held; faceState(f, t, pr.expr, pr.exprUntil);
     if (f.bubble && now > pr.bubbleUntil) { f.root.remove(f.bubble); f.bubble.material.map.dispose(); f.bubble.material.dispose(); f.bubble = null; }
   });
   if (NET.me && NET.tp) {
     const p = NET.tpSaved || camera.position, f = NET.me; f.root.position.x = p.x; f.root.position.z = p.z; f.root.rotation.y = yaw + PI;
-    animFig(f, dt, t, Math.hypot(vel.x, vel.z), NET.emote, NET.myEmoteT); f.P.flower.visible = NET.held > Date.now();
+    animFig(f, dt, t, Math.hypot(vel.x, vel.z), NET.emote, NET.myEmoteT); f.P.flower.visible = NET.held > Date.now(); faceState(f, t, NET.expr, NET.exprUntil);
     if (f.bubble && performance.now() > (f.bubbleUntil ||= performance.now() + 7000)) { f.root.remove(f.bubble); f.bubble = null; f.bubbleUntil = 0; }
   }
 }
