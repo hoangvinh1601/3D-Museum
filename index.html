@@ -558,6 +558,12 @@ function shapeTex(kind) {
     g.fillStyle = '#c98a2a'; g.beginPath(); g.arc(32, 32, 5, 0, 7); g.fill();
     g.strokeStyle = '#a0521a'; g.lineWidth = 1; for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; g.beginPath(); g.moveTo(32, 32); g.lineTo(32 + Math.cos(a) * 11, 32 + Math.sin(a) * 11); g.stroke(); }
   }
+  if (kind === 'bat') {
+    g.beginPath(); g.moveTo(32, 26); g.quadraticCurveTo(22, 12, 2, 16); g.quadraticCurveTo(12, 23, 9, 33); g.quadraticCurveTo(18, 27, 22, 37); g.quadraticCurveTo(26, 31, 32, 42);
+    g.quadraticCurveTo(38, 31, 42, 37); g.quadraticCurveTo(46, 27, 55, 33); g.quadraticCurveTo(52, 23, 62, 16); g.quadraticCurveTo(42, 12, 32, 26); g.fill();
+    g.beginPath(); g.arc(32, 27, 6, 0, 7); g.fill(); g.beginPath(); g.moveTo(27, 23); g.lineTo(28, 15); g.lineTo(31, 22); g.moveTo(37, 23); g.lineTo(36, 15); g.lineTo(33, 22); g.fill();
+  }
+  if (kind === 'confetti') g.fillRect(20, 8, 24, 48);
   const t = tex(c, true, true); SH[kind] = t; return t;
 }
 function leafTex(kind) {
@@ -646,7 +652,36 @@ const THEMES = {
     wall: { kind: 'galaxy' }, floor: { kind: 'marble', base: [.03, .03, .05], vein: [.45, .35, .85], op: .8, rough: .12 }, ceil: { kind: 'dark', col: 0x050510 },
     frames: ['chrome', 'black'], matCol: 0x0b0b14, trim: 0x15152a, stone: 0x1c1c2c, wood: 0x22223a,
     pots: ['black', 'navy'], hemi: [0x9a8cff, 0x0a0a1a, .4], env: .4, glow: 0x8c6bff, chand: 'none', parts: ['stardust'], wash: .18, beam: .1, washCol: 0xd8d0ff, art: .38, pals: [5, 7, 6],
-    starsDefault: true, extras: ['planets'], flowers: [0xb79cff, 0xffffff, 0x7ad7ff], trees: ['ficus'] }
+    starsDefault: true, extras: ['planets'], flowers: [0xb79cff, 0xffffff, 0x7ad7ff], trees: ['ficus'] },
+  /* ---- seasonal / special occasion themes: bought in the shop (price in xu) */
+  halloween: { name: 'Halloween', desc: 'Bí ngô phát sáng, dơi bay, sương tím', price: 500, sw: ['#1a0f24', '#ff7a1a', '#6b2fa0'],
+    wall: { kind: 'plaster', col: [.2, .11, .25] }, floor: { kind: 'wood', col: [.22, .14, .1], op: .92, rough: .4 }, ceil: { kind: 'dark', col: 0x0d0810 },
+    frames: ['iron', 'black'], matCol: 0x1a1414, trim: 0x0d0a0c, stone: 0x2b2230, wood: 0x2a1a14, pots: ['black', 'terracotta'], hemi: [0xb07aff, 0x1a0a10, .5], env: .3, glow: 0xff7a1a,
+    chand: 'iron', parts: ['bats', 'embers'], wash: .38, beam: .1, washCol: 0xffb070, art: .36, pals: [2, 9, 7], fog: [0x1a0a2a, .022], extras: ['pumpkins'], flowers: [0xff7a1a, 0x6b2fa0, 0x222222], trees: ['ficus'] },
+  noel: { name: 'Giáng sinh', desc: 'Cây thông, quà, tuyết rơi, đèn nháy', price: 500, sw: ['#0f3b2a', '#c8102e', '#f4e7c6'],
+    wall: { kind: 'plaster', col: [.14, .33, .22] }, floor: { kind: 'wood', col: [.45, .26, .15], op: .9, rough: .32 }, ceil: { kind: 'coffer', col: 0xf3ece0, glow: 0xffe2b0, gi: 1 },
+    frames: ['gold', 'gold'], matCol: 0xfff6e6, trim: 0x5a0f12, stone: 0xf3ece0, wood: 0x5a2a18, pots: ['red', 'white'], hemi: [0xffe6c8, 0x203a2a, .9], env: .5, glow: 0xffd27a,
+    chand: 'crystal', parts: ['snow'], wash: .5, beam: .07, washCol: 0xffe8c4, art: .32, pals: [9, 2, 1], extras: ['xmasTree', 'garland'], flowers: [0xc8102e, 0xffffff, 0x1f7a3a], trees: ['ficus'] },
+  spring: { name: 'Mùa xuân', desc: 'Xanh non, đào mai nở, cánh hoa bay', price: 300, sw: ['#e9f5d8', '#ff9cbc', '#ffd23f'],
+    wall: { kind: 'plaster', col: [.88, .95, .84] }, floor: { kind: 'wood', col: [.7, .55, .4], op: .92, rough: .3 }, ceil: { kind: 'coffer', col: 0xf6faef, glow: 0xfffbe8, gi: 1.15 },
+    frames: ['white', 'gold'], matCol: 0xffffff, trim: 0x7a9a5a, stone: 0xf7f5ee, wood: 0xc8a27a, pots: ['celadon', 'rose', 'white'], hemi: [0xfffbe8, 0x7a9a6a, 1], env: .6, glow: 0xffe6f0,
+    chand: 'crystal', parts: ['blossomFall', 'petals'], wash: .45, beam: .05, washCol: 0xfff8ea, art: .3, pals: [3, 4, 1], flowers: [0xff9cbc, 0xffd23f, 0xffffff], trees: ['dao', 'mai'] },
+  autumn: { name: 'Mùa thu', desc: 'Lá phong vàng đỏ rơi, nắng chiều ấm', price: 300, sw: ['#7a3b1a', '#e8902a', '#f2d8a8'],
+    wall: { kind: 'plaster', col: [.8, .58, .38] }, floor: { kind: 'wood', col: [.42, .25, .14], op: .92, rough: .35 }, ceil: { kind: 'coffer', col: 0xefe0c8, glow: 0xffd9a0, gi: .95 },
+    frames: ['walnut', 'gold'], matCol: 0xf6ecd8, trim: 0x3a2414, stone: 0xeadcc2, wood: 0x5a341c, pots: ['terracotta', 'black'], hemi: [0xffd9a8, 0x4a2a14, .85], env: .45, glow: 0xffb060,
+    chand: 'iron', parts: ['autumnLeaves', 'dust'], wash: .55, beam: .08, washCol: 0xffd8a0, art: .33, pals: [4, 1, 9], flowers: [0xe8902a, 0xc0392b, 0xf2d8a8], trees: ['ficus'] },
+  winter: { name: 'Mùa đông', desc: 'Tường băng, tuyết rơi, người tuyết', price: 300, sw: ['#e8f1fa', '#9cc7ea', '#ffffff'],
+    wall: { kind: 'plaster', col: [.86, .92, .98] }, floor: { kind: 'marble', base: [.92, .95, .98], vein: [.6, .72, .85], op: .84, rough: .12 }, ceil: { kind: 'coffer', col: 0xeef4fa, glow: 0xeaf4ff, gi: 1.1 },
+    frames: ['silver', 'white'], matCol: 0xffffff, trim: 0x5a7a9a, stone: 0xf2f6fa, wood: 0xa8b8c8, pots: ['white', 'navy'], hemi: [0xe6f2ff, 0x6a7a8a, .95], env: .6, glow: 0xbfe4ff,
+    chand: 'crystal', parts: ['snow'], wash: .4, beam: .06, washCol: 0xeaf4ff, art: .3, pals: [5, 8, 6], fog: [0xdfeaf5, .012], extras: ['snowmen'], flowers: [0xffffff, 0x9cc7ea, 0xc9d8ff], trees: ['ficus'] },
+  midautumn: { name: 'Trung thu', desc: 'Trăng rằm, đèn lồng, đêm hội', price: 400, sw: ['#1b1f4a', '#ffd166', '#e63946'],
+    wall: { kind: 'plaster', col: [.14, .16, .34] }, floor: { kind: 'wood', col: [.35, .2, .12], op: .9, rough: .32 }, ceil: { kind: 'dark', col: 0x0a0c20 },
+    frames: ['gold', 'gold'], matCol: 0xfff3dc, trim: 0x3a0806, stone: 0xf3e6cf, wood: 0x5a2014, pots: ['red', 'bluewhite'], hemi: [0xc8d0ff, 0x1a1020, .55], env: .35, glow: 0xffd166,
+    chand: 'lantern', parts: ['fireflies'], wash: .4, beam: .09, washCol: 0xffe0a0, art: .35, pals: [9, 8, 2], extras: ['moon', 'lanterns'], flowers: [0xffd166, 0xe63946, 0xffffff], trees: ['ficus'] },
+  birthday: { name: 'Sinh nhật', desc: 'Bóng bay, kim tuyến, tiệc vui', price: 400, sw: ['#fff0f6', '#ff6fb5', '#4cc9f0'],
+    wall: { kind: 'plaster', col: [.98, .92, .95] }, floor: { kind: 'marble', base: [.95, .93, .94], vein: [.8, .6, .75], op: .86, rough: .16 }, ceil: { kind: 'coffer', col: 0xfff4f8, glow: 0xffeef6, gi: 1.1 },
+    frames: ['rose', 'white'], matCol: 0xffffff, trim: 0xc06a9a, stone: 0xfff6fa, wood: 0xf0d6e2, pots: ['rose', 'white'], hemi: [0xfff0f6, 0x8a6a7a, 1], env: .6, glow: 0xff9ad0,
+    chand: 'crystal', parts: ['confettiFall'], wash: .45, beam: .06, washCol: 0xfff0f6, art: .3, pals: [7, 3, 5], extras: ['balloons'], flowers: [0xff6fb5, 0x4cc9f0, 0xffd166], trees: ['ficus'] }
 };
 const FRAME_STYLES = {
   gold: [0xc9a25a, 1, .32], black: [0x1a1715, .3, .38], silver: [0xc9cdd2, 1, .22], iron: [0x1c1a19, .85, .55],
@@ -905,6 +940,10 @@ const PCFG = {
   blossomFall: { n: 200, shape: 'blossom', cols: [0xffd23f, 0xff9cbc, 0xffe680], size: [.07, .11], add: false, mode: 'fall', speed: [.2, .4], alpha: 1, hdr: 1 },
   fireflies: { n: 170, shape: 'dot', cols: [0xd8ff6a, 0xfff17a], size: [.04, .07], add: true, mode: 'wander', alpha: 1, hdr: 4, blink: true },
   leaves: { n: 110, shape: 'leaf', cols: [0x7aa64a, 0xc9a43a, 0x5d8a3a, 0xd77a2a], size: [.09, .14], add: false, mode: 'fall', speed: [.3, .5], alpha: 1, hdr: 1 },
+  snow: { n: 800, shape: 'dot', cols: [0xffffff, 0xeaf4ff], size: [.03, .06], add: true, mode: 'fall', speed: [.12, .3], alpha: .95, hdr: 1.3 },
+  bats: { n: 36, shape: 'bat', cols: [0x140c18, 0x2a1236], size: [.2, .32], add: false, mode: 'wander', alpha: 1, hdr: 1 },
+  autumnLeaves: { n: 170, shape: 'leaf', cols: [0xd9501e, 0xe8902a, 0xc0392b, 0xf2b134, 0x8a4a1a], size: [.1, .16], add: false, mode: 'fall', speed: [.28, .5], alpha: 1, hdr: 1 },
+  confettiFall: { n: 280, shape: 'confetti', cols: [0xff6fb5, 0x4cc9f0, 0xffd166, 0x9b5de5, 0x00d4b4], size: [.05, .09], add: false, mode: 'fall', speed: [.2, .4], alpha: 1, hdr: 1 },
   stardust: { n: 900, shape: 'spark', cols: [0xd8ccff, 0xffffff, 0x9fc6ff], size: [.03, .07], add: true, mode: 'drift', alpha: .9, hdr: 2, blink: true }
 };
 function makeParticles(cfg) {
@@ -1694,6 +1733,90 @@ function buildRoom() {
     R.updaters.push((dt, t) => pl.forEach(p => { p.m.visible = fxOn; const a = t * p.sp + p.ph; p.m.position.set(Math.cos(a) * p.r, p.y + Math.sin(t * .3 + p.ph) * .2, Math.sin(a) * p.r * 2.4); p.m.rotation.y += dt * .3; }));
   }
 
+  if (ex.includes('pumpkins')) {
+    const [fc, fg] = canvas(256, 128); fg.fillStyle = '#000'; fg.fillRect(0, 0, 256, 128); fg.fillStyle = '#fff';
+    const cx = 64; // sphere u = .25 faces +z
+    fg.beginPath(); fg.moveTo(cx - 30, 52); fg.lineTo(cx - 15, 30); fg.lineTo(cx - 3, 52); fg.fill(); fg.beginPath(); fg.moveTo(cx + 3, 52); fg.lineTo(cx + 15, 30); fg.lineTo(cx + 30, 52); fg.fill();
+    fg.beginPath(); fg.moveTo(cx - 38, 68); for (let i = 1; i < 7; i++) fg.lineTo(cx - 38 + i * 12.6, i % 2 ? 80 : 70); fg.lineTo(cx + 38, 68); fg.quadraticCurveTo(cx, 108, cx - 38, 68); fg.fill();
+    const pg = new THREE.SphereGeometry(.3, 40, 24), pp = pg.attributes.position;
+    for (let i = 0; i < pp.count; i++) { const x = pp.getX(i), z = pp.getZ(i), k = 1 + .07 * Math.cos(Math.atan2(z, x) * 9); pp.setXYZ(i, x * k, pp.getY(i) * .78, z * k); }
+    pg.computeVertexNormals();
+    const pm = std({ color: 0xe8661a, roughness: .55, emissiveMap: tex(fc), emissive: 0xffb03a, emissiveIntensity: 2.2 }), stem = std({ color: 0x4a5a22, roughness: .8 });
+    [[-7.2, -14], [-7.2, -6.3], [-7.2, 6.3], [-7.2, 14.4], [7.2, -14], [7.2, -6.3], [7.2, 6.3], [7.2, 14.4]].forEach(([x, z], i) => {
+      const g = add(new THREE.Group()); g.position.set(x, .23, z); g.rotation.y = Math.atan2(-x, 0) + rand(-.3, .3); g.scale.setScalar(i % 3 ? 1 : 1.3);
+      g.add(new THREE.Mesh(pg, pm)); const st = new THREE.Mesh(new THREE.CylinderGeometry(.03, .045, .14, 8), stem); st.position.y = .26; st.rotation.z = .2; g.add(st);
+      R.colliders.push({ x, z, hx: .35, hz: .35 });
+    });
+  }
+  if (ex.includes('xmasTree')) {
+    const green = std({ color: 0x1d5a30, roughness: .85 }), trunkM = std({ color: 0x4a2a16, roughness: .9 }), starM = std({ color: 0xffd166, emissive: 0xffc23a, emissiveIntensity: 3, metalness: .6, roughness: .3 });
+    const orn = new THREE.SphereGeometry(.065, 12, 8), bulb = new THREE.SphereGeometry(.028, 6, 4);
+    [[-6.1, -13.4], [6.1, -13.4]].forEach(([x, z]) => {
+      const g = add(new THREE.Group()); g.position.set(x, 0, z);
+      const tr = new THREE.Mesh(new THREE.CylinderGeometry(.12, .15, .5, 10), trunkM); tr.position.y = .25; g.add(tr);
+      const tiers = [[1.2, .95], [.98, 1.55], [.74, 2.12], [.5, 2.62]];
+      tiers.forEach(([r, y]) => { const c = new THREE.Mesh(new THREE.ConeGeometry(r, 1.05, 18), green); c.position.y = y; g.add(c); });
+      const star = new THREE.Mesh(new THREE.OctahedronGeometry(.16), starM); star.position.y = 3.25; star.scale.set(1, 1.3, .5); g.add(star);
+      const onCone = (u) => { const [r, y] = tiers[(Math.random() * 4) | 0], h = Math.random() * .8, rr = r * (1 - (h + .12) / 1.05), a = Math.random() * TAU; return new THREE.Vector3(Math.cos(a) * (rr + u), y - .4 + h, Math.sin(a) * (rr + u)); };
+      const om = new THREE.InstancedMesh(orn, std({ roughness: .15, metalness: .7 }), 46); const oc = [0xc8102e, 0xffd166, 0x4cc9f0, 0xf2f2f2, 0x9b5de5];
+      for (let i = 0; i < 46; i++) { dummy.position.copy(onCone(.04)); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(rand(.8, 1.3)); dummy.updateMatrix(); om.setMatrixAt(i, dummy.matrix); om.setColorAt(i, hexC(oc[i % oc.length])); }
+      g.add(om);
+      const lm = new THREE.InstancedMesh(bulb, new THREE.MeshBasicMaterial(), 90), lc = [0xfff1b0, 0xff6a6a, 0x7ad7ff, 0x9dff8a];
+      for (let i = 0; i < 90; i++) { dummy.position.copy(onCone(.03)); dummy.scale.setScalar(1); dummy.updateMatrix(); lm.setMatrixAt(i, dummy.matrix); lm.setColorAt(i, hexC(lc[i % 4]).multiplyScalar(2)); }
+      g.add(lm);
+      const giftC = [0xc8102e, 0x1f7a3a, 0x2a6fdb, 0xffd166];
+      [[.9, .3], [-.8, .6], [.3, -.95], [-.5, -.8]].forEach(([gx, gz], i) => {
+        const sz = rand(.28, .42), b = new THREE.Mesh(new THREE.BoxGeometry(sz, sz * .8, sz), std({ color: giftC[i], roughness: .5 })); b.position.set(gx, sz * .4, gz); b.rotation.y = rand(0, 1); g.add(b);
+        const rb = new THREE.Mesh(new THREE.BoxGeometry(sz * 1.02, sz * .82, .05), std({ color: 0xffe9a8, metalness: .5, roughness: .3 })); rb.position.copy(b.position); rb.rotation.y = b.rotation.y; g.add(rb);
+      });
+      R.colliders.push({ x, z, hx: 1.2, hz: 1.2 });
+      R.updaters.push((dt, t) => { star.rotation.y += dt * .6; if (!fxOn) return; for (let i = 0; i < 90; i++) lm.setColorAt(i, hexC(lc[i % 4]).multiplyScalar(.4 + 1.8 * Math.max(0, Math.sin(t * 3 + i * 1.7)))); lm.instanceColor.needsUpdate = true; });
+    });
+  }
+  if (ex.includes('garland')) {
+    const pos = []; [-1, 1].forEach(sd => { for (let z = -HL + .5; z <= HL - .5; z += .42) pos.push([sd * (HW - .06), H - .5 - Math.abs(Math.sin(z * .75)) * .3, z]); });
+    const gm = new THREE.InstancedMesh(new THREE.SphereGeometry(.035, 6, 4), new THREE.MeshBasicMaterial(), pos.length), gc = [0xff5a5a, 0xffd166, 0x5ad1ff, 0x8aff8a];
+    pos.forEach((p, i) => { dummy.position.set(...p); dummy.scale.setScalar(1); dummy.updateMatrix(); gm.setMatrixAt(i, dummy.matrix); gm.setColorAt(i, hexC(gc[i % 4])); }); add(gm);
+    R.updaters.push((dt, t) => { gm.visible = fxOn; if (!fxOn) return; const ph = Math.floor(t * 2) % 4; for (let i = 0; i < pos.length; i++) gm.setColorAt(i, hexC(gc[i % 4]).multiplyScalar(i % 4 === ph ? 2.6 : .7)); gm.instanceColor.needsUpdate = true; });
+  }
+  if (ex.includes('snowmen')) {
+    const snowM = std({ color: 0xffffff, roughness: .9 }), coal = std({ color: 0x111111, roughness: .6 }), carrot = std({ color: 0xff7a1a, roughness: .6 }), hatM = std({ color: 0x15151a, roughness: .5 }), scarf = std({ color: 0xc8102e, roughness: .8 });
+    [[-6.3, -13.6, .5], [6.3, -13.6, -.5], [-6.6, 14.6, 2.6]].forEach(([x, z, ry]) => {
+      const g = add(new THREE.Group()); g.position.set(x, 0, z); g.rotation.y = ry;
+      [[.45, .42], [.33, 1.08], [.24, 1.55]].forEach(([r, y]) => { const b = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), snowM); b.position.y = y; g.add(b); });
+      [-1, 1].forEach(sx => { const e = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), coal); e.position.set(sx * .08, 1.62, .21); g.add(e); });
+      for (let i = 0; i < 3; i++) { const bt = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), coal); bt.position.set(0, .95 + i * .13, .31 - Math.abs(i - 1) * .02); g.add(bt); }
+      const n = new THREE.Mesh(new THREE.ConeGeometry(.035, .22, 10), carrot); n.rotation.x = PI / 2; n.position.set(0, 1.55, .33); g.add(n);
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(.27, .27, .03, 20), hatM); brim.position.y = 1.76; g.add(brim);
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .3, 20), hatM); top.position.y = 1.92; g.add(top);
+      const sc = new THREE.Mesh(new THREE.TorusGeometry(.25, .05, 8, 24), scarf); sc.rotation.x = PI / 2; sc.position.y = 1.35; g.add(sc);
+      R.colliders.push({ x, z, hx: .5, hz: .5 });
+    });
+  }
+  if (ex.includes('moon')) {
+    const [mc, mg] = canvas(512, 512), grd = mg.createRadialGradient(240, 230, 40, 256, 256, 256); grd.addColorStop(0, '#fff8de'); grd.addColorStop(1, '#f0d890'); mg.fillStyle = grd; mg.beginPath(); mg.arc(256, 256, 250, 0, TAU); mg.fill();
+    const r = mulberry32(77); for (let i = 0; i < 26; i++) { mg.fillStyle = `rgba(190,160,90,${.12 + r() * .2})`; mg.beginPath(); mg.arc(80 + r() * 350, 80 + r() * 350, 10 + r() * 46, 0, TAU); mg.fill(); }
+    const moon = add(new THREE.Mesh(new THREE.CircleGeometry(1.25, 64), new THREE.MeshBasicMaterial({ map: tex(mc, true, true), color: 0xffffff, transparent: true }))); moon.position.set(0, 5.1, -HL + .07);
+    const [hc, hg] = canvas(256, 256), hgrd = hg.createRadialGradient(128, 128, 40, 128, 128, 128); hgrd.addColorStop(0, 'rgba(255,230,160,.55)'); hgrd.addColorStop(1, 'rgba(255,230,160,0)'); hg.fillStyle = hgrd; hg.fillRect(0, 0, 256, 256);
+    const halo = add(new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.6), new THREE.MeshBasicMaterial({ map: tex(hc, true, true), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))); halo.position.set(0, 5.1, -HL + .05);
+    const ml = new THREE.PointLight(0xffe2a0, 6, 14, 2); ml.position.set(0, 5, -HL + 1.5); add(ml);
+  }
+  if (ex.includes('balloons')) {
+    const bc = [0xff6fb5, 0x4cc9f0, 0xffd166, 0x9b5de5, 0x00d4b4, 0xff5a5a], bg = new THREE.SphereGeometry(.24, 24, 16); bg.scale(1, 1.18, 1);
+    const knot = new THREE.ConeGeometry(.035, .06, 8);
+    const list = [];
+    for (let i = 0; i < 30; i++) {
+      const g = add(new THREE.Group()), col = bc[i % bc.length];
+      g.add(new THREE.Mesh(bg, std({ color: col, roughness: .18, metalness: .1, emissive: col, emissiveIntensity: .12 })));
+      const kn = new THREE.Mesh(knot, std({ color: col })); kn.position.y = -.29; kn.rotation.x = PI; g.add(kn);
+      const sg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -.31, 0), new THREE.Vector3(.04, -.8, 0), new THREE.Vector3(-.03, -1.3, 0)]);
+      g.add(new THREE.Line(sg, new THREE.LineBasicMaterial({ color: 0xdddddd })));
+      const base = new THREE.Vector3(rand(-6.6, 6.6), rand(H - 1.5, H - .5), rand(-14.5, 14.5)); g.position.copy(base);
+      list.push({ g, base, ph: Math.random() * 7 });
+    }
+    R.updaters.push((dt, t) => list.forEach(b => { b.g.position.set(b.base.x + Math.sin(t * .4 + b.ph) * .12, b.base.y + Math.sin(t * .8 + b.ph) * .1, b.base.z); b.g.rotation.z = Math.sin(t * .6 + b.ph) * .08; }));
+  }
+
   /* ---------- particles */
   th.parts.forEach(k => { const p = makeParticles(PCFG[k]); add(p); R.parts.push(p); });
 
@@ -1973,11 +2096,30 @@ addEventListener('pointerdown', e => {
   if (!e.target.closest('.pop') && !e.target.closest('#toolbar')) closePops();
   if (!e.target.closest('#acctMenu') && !e.target.closest('#acctBtn')) $('#acctMenu').classList.remove('open');
 });
+const ownedThemes = () => new Set(gallery?.settings?.themes || []);
+const themeOwned = k => !THEMES[k]?.price || ownedThemes().has(k);
+async function buyTheme(k) {
+  const t = THEMES[k]; if (themeOwned(k)) return true;
+  if (role !== 'owner') { toast('Chỉ chủ phòng mới mua được giao diện. Bạn vẫn có thể xem thử.'); return false; }
+  const xu = walletGet(); if (xu < t.price) { toast(`Chưa đủ xu: giao diện “${t.name}” cần ${t.price} xu, bạn còn ${xu} xu.`); return false; }
+  const settings = { ...(gallery.settings || {}), themes: [...ownedThemes(), k] };
+  try { await api.updateGallery(gallery.id, { settings }); } catch (e) { toast('Chưa mua được: ' + e.message); return false; }
+  gallery.settings = settings; walletSet(xu - t.price); sfxChime();
+  toast(`Đã mua giao diện “${t.name}”. Dùng được cho mọi gian trong phòng trưng bày này. Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000); return true;
+}
+function confirmBuyTheme(k, then) {
+  const t = THEMES[k];
+  modal(`<h2>Giao diện “${esc(t.name)}”</h2><p>${esc(t.desc)}. Mua một lần, dùng cho mọi gian trong phòng trưng bày này.</p><p>Giá: <b>${t.price} xu</b> · bạn đang có ${walletGet().toLocaleString('vi-VN')} xu (xu ảo dùng thử).</p>
+    <div class="row"><button class="btn" data-x>Để sau</button><button class="btn gold" id="mBuyTh">Mua · ${t.price} xu</button></div>`, box => {
+    box.querySelector('#mBuyTh').onclick = async () => { if (await buyTheme(k)) { closeModal(); then?.(); } };
+  });
+}
 function themeCards(container, cur, onPick) {
   container.innerHTML = '';
   Object.entries(THEMES).forEach(([k, t]) => {
     const b = document.createElement('button'); b.className = 'th' + (k === cur ? ' cur' : '');
-    b.innerHTML = `<div class="sw" style="background:linear-gradient(135deg,${t.sw[0]} 0 45%,${t.sw[1]} 45% 75%,${t.sw[2]} 75%)"></div><b>${t.name}</b><small>${t.desc}</small>`;
+    const tag = t.price ? (themeOwned(k) ? '<span class="badge" style="margin:0 0 0 6px">Đã mua</span>' : `<span class="badge" style="margin:0 0 0 6px">🔒 ${t.price} xu</span>`) : '';
+    b.innerHTML = `<div class="sw" style="background:linear-gradient(135deg,${t.sw[0]} 0 45%,${t.sw[1]} 45% 75%,${t.sw[2]} 75%)"></div><b>${t.name}${tag}</b><small>${t.desc}</small>`;
     b.onclick = () => onPick(k); container.appendChild(b);
   });
 }
@@ -2054,11 +2196,12 @@ let infoTimer = null;
 /* ================================================================ UI: toolbar & popovers */
 $('#tTheme').onclick = e => {
   themeCards($('#themeGrid'), room.theme, setRoomTheme);
-  $('#themeNote').textContent = canEdit() ? 'Giao diện được lưu riêng cho gian đang xem, mọi người xem link đều thấy.' : 'Bạn đang xem thử, giao diện chỉ đổi trên máy của bạn.';
+  $('#themeNote').textContent = canEdit() ? 'Giao diện được lưu riêng cho gian đang xem, mọi người xem link đều thấy. Giao diện có 🔒 mua bằng xu trong Cửa hàng.' : 'Bạn đang xem thử, giao diện chỉ đổi trên máy của bạn.';
   openPop('#themePop', e.currentTarget);
 };
 function setRoomTheme(k) {
-  if (room.theme === k) return; room.theme = k; if (THEMES[k].starsDefault) room.stars = true;
+  if (room.theme === k) return;
+  if (canEdit() && !themeOwned(k)) { confirmBuyTheme(k, () => setRoomTheme(k)); return; } room.theme = k; if (THEMES[k].starsDefault) room.stars = true;
   saveRoom({ theme: room.theme, stars: !!room.stars }); rebuildCurrent(); renderRooms(); themeCards($('#themeGrid'), k, setRoomTheme);
 }
 $('#tStars').onclick = () => { room.stars = !room.stars; saveRoom({ stars: !!room.stars }); applyStars(); };
@@ -2099,10 +2242,15 @@ async function openShop() {
   const card = (it, i) => `<div class="it"><div class="pic">${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy">` : it.icon}</div><div class="bd"><b>${esc(it.name)}</b><small>${esc(it.desc)}</small><button class="btn gold" data-buy="${i}">Mua · ${it.price ? it.price.toLocaleString('vi-VN') + ' xu' : 'Miễn phí'}</button></div></div>`;
   modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Cửa hàng trưng bày</h2><span class="wallet" id="shopXu"></span></div>
     <p style="margin-top:6px">Mua đồ rồi kéo đặt vào gian đang xem. Xu là tiền ảo để dùng thử, chưa thanh toán thật.</p>
+    <h3 style="margin:14px 0 6px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Giao diện theo mùa & dịp lễ</h3>
+    <div class="shop">${Object.entries(THEMES).filter(([, t]) => t.price).map(([k, t]) => `<div class="it"><div class="pic" style="background:linear-gradient(135deg,${t.sw[0]} 0 45%,${t.sw[1]} 45% 75%,${t.sw[2]} 75%)"></div><div class="bd"><b>${esc(t.name)}</b><small>${esc(t.desc)}</small>${themeOwned(k) ? `<button class="btn" data-th-use="${k}">Đã mua · Dùng cho gian này</button>` : `<button class="btn gold" data-th-buy="${k}">Mua · ${t.price} xu</button>`}</div></div>`).join('')}</div>
+    <h3 style="margin:16px 0 6px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Đồ trưng bày</h3>
     <div class="shop">${items.map(card).join('')}</div>
     <div class="row" style="margin-top:14px"><button class="btn" data-x>Đóng</button></div>`, box => {
     const showXu = () => box.querySelector('#shopXu').textContent = '🪙 ' + walletGet().toLocaleString('vi-VN') + ' xu';
     showXu();
+    box.querySelectorAll('[data-th-buy]').forEach(b => b.onclick = async () => { const k = b.dataset.thBuy; if (await buyTheme(k)) { closeModal(); setRoomTheme(k); } });
+    box.querySelectorAll('[data-th-use]').forEach(b => b.onclick = () => { closeModal(); setRoomTheme(b.dataset.thUse); });
     box.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
       const it = items[+b.dataset.buy], xu = walletGet();
       if (xu < it.price) { toast(`Chưa đủ xu: cần ${it.price} xu, bạn còn ${xu} xu.`); return; }
@@ -2161,7 +2309,7 @@ function openNewRoom(onCreated) {
     <input class="field" id="mName" maxlength="40" value="Gian ${rooms.length + 1}" style="margin-bottom:12px">
     <div class="themes" id="mThemes" style="margin-bottom:14px"></div>
     <div class="row"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="mCreate">Tạo gian & đi tới</button></div>`, box => {
-    const draw = () => themeCards(box.querySelector('#mThemes'), pickT, k => { pickT = k; draw(); }); draw();
+    const draw = () => themeCards(box.querySelector('#mThemes'), pickT, k => { if (!themeOwned(k)) { toast(`Giao diện “${THEMES[k].name}” cần mua trong Cửa hàng (${THEMES[k].price} xu).`); return; } pickT = k; draw(); }); draw();
     box.querySelector('#mCreate').onclick = async ev => {
       ev.target.disabled = true;
       try { const r = await createRoom(pickT, box.querySelector('#mName').value.trim() || `Gian ${rooms.length + 1}`); closeModal(); $('#rooms').classList.remove('open'); await goRoom(r.id); onCreated?.(r); }
