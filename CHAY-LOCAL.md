@@ -41,13 +41,31 @@ npx http-server -p 5173 -c-1
 
 > ⚠️ Bản chạy trên máy dùng **dữ liệu thật** trên Supabase (lấy từ `config.js`). Thứ gì bạn tạo hoặc xoá ở localhost đều thay đổi trên web thật.
 
-## 3. Đưa thay đổi lên GitHub (web tự cập nhật)
+## 3. Đẩy code mới lên GitHub (web tự cập nhật)
 
-Gõ trong Terminal của VS Code, **từng lệnh một**. PowerShell trên máy này không hiểu `&&`.
+Máy đã cài sẵn tên, email và đăng nhập GitHub cho Git (tài khoản `hoangvinh1601`), nên không cần cài đặt gì thêm.
+
+### Quy trình mỗi lần sửa
+
+```
+① git pull  →  ② sửa code + thử ở localhost  →  ③ tăng số phiên bản  →  ④ add + commit  →  ⑤ push  →  ⑥ kiểm tra web
+```
+
+**① Lấy bản mới nhất về máy, TRƯỚC khi sửa.** Việc này quan trọng khi có người khác (hoặc Claude trên cloud) vừa sửa:
 
 ```powershell
 git pull
 ```
+
+**② Sửa code**, nhấn `Ctrl+S` để lưu, rồi thử ở http://localhost:5173 (xem mục 2).
+
+**③ Tăng số phiên bản** để ai đang mở web được nhắc *“Có bản cập nhật mới”*. Phải sửa **cả hai chỗ và giống hệt nhau**:
+- `version.json`: ví dụ `{ "build": "2026-11-07.1" }`
+- `index.html`: nhấn `Ctrl+F`, tìm `const BUILD =` và đổi thành `const BUILD = '2026-11-07.1';`
+
+Cách đặt số: `năm-tháng-ngày.số lần`. Ví dụ hôm nay đưa lần thứ hai thì ghi `2026-11-07.2`.
+
+**④ Xem đã sửa những gì, rồi đóng gói thay đổi.** Gõ **từng lệnh một**, vì PowerShell trên máy này không hiểu `&&`:
 
 ```powershell
 git status
@@ -58,19 +76,42 @@ git add -A
 ```
 
 ```powershell
-git commit -m "Mô tả ngắn điều bạn đã sửa"
+git commit -m "Tivi to hơn, sửa lỗi menu trên điện thoại"
 ```
+
+Câu trong ngoặc kép là mô tả ngắn điều bạn đã sửa, gõ tiếng Việt có dấu được.
+
+**⑤ Đẩy lên GitHub:**
 
 ```powershell
 git push
 ```
 
-- `git pull`: lấy bản mới nhất về máy (nên chạy **trước khi** sửa, nhất là khi có sửa ở nơi khác, ví dụ Claude trên cloud).
-- `git status`: xem những file đã thay đổi.
-- `git add -A` rồi `git commit`: đóng gói thay đổi kèm một dòng mô tả.
-- `git push`: đẩy lên GitHub. Vài phút sau web tự cập nhật.
+**⑥ Kiểm tra web đã lên bản mới chưa:**
+- Vào https://github.com/hoangvinh1601/3D-Museum/actions. Dòng *pages build and deployment* mới nhất có **dấu tích xanh** là xong, thường mất 1–5 phút. **Dấu X đỏ** là GitHub bị lỗi: bấm vào dòng đó → **Re-run all jobs**.
+- Hoặc mở https://hoangvinh1601.github.io/3D-Museum/version.json: thấy số phiên bản mới là web đã cập nhật.
+- Mở web rồi nhấn `Ctrl+F5` để tải bản mới nhất.
 
-Làm bằng chuột cũng được: nhấn `Ctrl+Shift+G` để mở **Source Control**, ghi mô tả vào ô *Message*, bấm **Commit**, rồi bấm **Sync Changes**.
+### Làm bằng chuột trong VS Code (không cần gõ lệnh)
+
+1. Nhấn `Ctrl+Shift+G` (hoặc biểu tượng nhánh cây ở thanh bên trái) để mở **Source Control**.
+2. Bấm **⟳ Sync Changes** (hoặc biểu tượng **⋯ → Pull**) để lấy bản mới nhất về trước khi sửa.
+3. Sửa xong, danh sách **Changes** hiện các file đã đổi. Bấm vào từng file để xem trước/sau: chữ đỏ là phần bỏ đi, chữ xanh là phần thêm vào.
+4. Ghi mô tả vào ô **Message** phía trên, rồi bấm **✓ Commit**. Nếu VS Code hỏi *“There are no staged changes… stage all?”* thì chọn **Yes** (hoặc **Always**).
+5. Bấm **⟳ Sync Changes** (hoặc **Publish / Push**) để đẩy lên GitHub.
+
+### Khi gặp sự cố
+
+| Thông báo | Cách xử lý |
+|---|---|
+| `rejected … fetch first` khi `git push` | Trên GitHub đã có thay đổi mới hơn. Chạy `git pull` rồi `git push` lại. |
+| `CONFLICT (content): Merge conflict in index.html` | Hai nơi cùng sửa một chỗ. Mở file đó trong VS Code, bấm **Accept Current** (giữ bản của bạn), **Accept Incoming** (giữ bản trên GitHub) hoặc **Accept Both**. Lưu lại, rồi chạy `git add -A`, `git commit -m "Gộp thay đổi"` và `git push`. Không chắc thì nhờ Claude. |
+| `nothing to commit, working tree clean` | Chưa có gì thay đổi: kiểm tra đã `Ctrl+S` lưu file chưa. |
+| Lần đầu `git push` hiện cửa sổ đăng nhập GitHub | Chọn **Sign in with your browser** và đăng nhập tài khoản `hoangvinh1601`. |
+| Lỡ sửa hỏng, muốn bỏ hết thay đổi **chưa commit** của một file | `git restore index.html` (thay tên file). ⚠️ Thay đổi chưa commit của file đó sẽ mất. |
+| Muốn xem lịch sử các lần đẩy | `git log --oneline -10` (nhấn `q` để thoát). |
+
+> Đừng đẩy lên mật khẩu hay khoá bí mật (ví dụ khoá *service_role* của Supabase). `config.js` chỉ được chứa khoá **anon public** và khoá YouTube đã giới hạn theo tên miền.
 
 ## 4. Phím tắt VS Code hay dùng
 
