@@ -616,6 +616,9 @@ function shapeTex(kind) {
     g.beginPath(); g.arc(32, 27, 6, 0, 7); g.fill(); g.beginPath(); g.moveTo(27, 23); g.lineTo(28, 15); g.lineTo(31, 22); g.moveTo(37, 23); g.lineTo(36, 15); g.lineTo(33, 22); g.fill();
   }
   if (kind === 'confetti') g.fillRect(20, 8, 24, 48);
+  if (kind === 'lantern') { const gr = g.createRadialGradient(32, 34, 2, 32, 34, 30); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.5, 'rgba(255,255,255,.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fff'; g.beginPath(); g.roundRect(20, 14, 24, 32, 7); g.fill(); }
+  if (kind === 'clover') { [[32, 18], [19, 33], [45, 33]].forEach(([x, y]) => { g.beginPath(); g.arc(x - 5, y, 9, 0, TAU); g.arc(x + 5, y, 9, 0, TAU); g.fill(); }); g.fillRect(30, 34, 4, 26); }
+  if (kind === 'drop') { g.beginPath(); g.moveTo(32, 4); g.quadraticCurveTo(52, 38, 32, 58); g.quadraticCurveTo(12, 38, 32, 4); g.fill(); }
   const t = tex(c, true, true); SH[kind] = t; return t;
 }
 function leafTex(kind) {
@@ -733,7 +736,44 @@ const THEMES = {
   birthday: { name: 'Sinh nhật', desc: 'Bóng bay, kim tuyến, tiệc vui', price: 400, sw: ['#fff0f6', '#ff6fb5', '#4cc9f0'],
     wall: { kind: 'plaster', col: [.98, .92, .95] }, floor: { kind: 'marble', base: [.95, .93, .94], vein: [.8, .6, .75], op: .86, rough: .16 }, ceil: { kind: 'coffer', col: 0xfff4f8, glow: 0xffeef6, gi: 1.1 },
     frames: ['rose', 'white'], matCol: 0xffffff, trim: 0xc06a9a, stone: 0xfff6fa, wood: 0xf0d6e2, pots: ['rose', 'white'], hemi: [0xfff0f6, 0x8a6a7a, 1], env: .6, glow: 0xff9ad0,
-    chand: 'crystal', parts: ['confettiFall'], wash: .45, beam: .06, washCol: 0xfff0f6, art: .3, pals: [7, 3, 5], extras: ['balloons'], flowers: [0xff6fb5, 0x4cc9f0, 0xffd166], trees: ['ficus'] }
+    chand: 'crystal', parts: ['confettiFall'], wash: .45, beam: .06, washCol: 0xfff0f6, art: .3, pals: [7, 3, 5], extras: ['balloons'], flowers: [0xff6fb5, 0x4cc9f0, 0xffd166], trees: ['ficus'] },
+  /* ---- festivals around the world */
+  diwali: { name: 'Diwali', desc: 'Lễ hội ánh sáng Ấn Độ: đèn dầu diya, hoa văn rangoli, đèn trời', price: 500, sw: ['#3a0d4a', '#ff9a1a', '#ffd166'], wall: { kind: 'plaster', col: [.4, .12, .32] }, floor: { kind: 'marble', base: [.92, .88, .8], vein: [.7, .5, .3], op: .86, rough: .2 },
+    ceil: { kind: 'coffer', col: 0x5a1a4a, glow: 0xffd9a0, gi: .9 }, frames: ['gold', 'gold'], matCol: 0xfff3dc, trim: 0x2a0a2a, stone: 0xf6e7cf, wood: 0x5a2a14, pots: ['terracotta', 'red'], hemi: [0xffd9a8, 0x3a1030, .8], env: .45, glow: 0xffb347,
+    chand: 'lantern', parts: ['skyLanterns', 'dust'], wash: .5, beam: .08, washCol: 0xffe0b0, art: .33, pals: [9, 2, 1], extras: ['diyas', 'rangoli', 'stringLights'], lightCols: [0xffd166, 0xff9a1a, 0xff5a8a], lanternCol: 0xff9a1a, flowers: [0xff9a1a, 0xffd166, 0xe0234e], trees: ['ficus'] },
+  holi: { name: 'Holi', desc: 'Lễ hội sắc màu Ấn Độ: bột màu bay khắp phòng', price: 400, sw: ['#ffffff', '#ff3d7f', '#3fd0ff'], wall: { kind: 'plaster', col: [.98, .97, .95] }, floor: { kind: 'marble', base: [.95, .95, .95], vein: [.8, .7, .9], op: .86, rough: .18 },
+    ceil: { kind: 'coffer', col: 0xffffff, glow: 0xffffff, gi: 1.1 }, frames: ['white', 'gold'], matCol: 0xffffff, trim: 0xff3d7f, stone: 0xffffff, wood: 0xf0e0d0, pots: ['white', 'rose'], hemi: [0xffffff, 0x9a8a9a, 1], env: .6, glow: 0xff8ad0,
+    chand: 'crystal', parts: ['powder'], wash: .4, beam: .05, washCol: 0xffffff, art: .3, pals: [7, 3, 1, 5], extras: ['bunting'], flagCols: [0xff3d7f, 0xffd23f, 0x3fd0ff, 0x7bff5a, 0xb15cff, 0xff8a2a], flowers: [0xff3d7f, 0xffd23f, 0x3fd0ff], trees: ['ficus'] },
+  hanami: { name: 'Hanami', desc: 'Ngắm hoa anh đào Nhật Bản, cổng torii đỏ', price: 450, sw: ['#fbe8ef', '#ff9ab8', '#c8102e'], wall: { kind: 'plaster', col: [.97, .92, .92] }, floor: { kind: 'wood', col: [.55, .4, .3], op: .92, rough: .32 },
+    ceil: { kind: 'coffer', col: 0xf6efe8, glow: 0xfff4f0, gi: 1.05 }, frames: ['black', 'walnut'], matCol: 0xfffaf6, trim: 0x2a1a14, stone: 0xf4efe8, wood: 0x3a2418, pots: ['white', 'black'], hemi: [0xfff0f4, 0x6a5a5a, .95], env: .55, glow: 0xffb3cc,
+    chand: 'lantern', parts: ['sakura'], wash: .45, beam: .06, washCol: 0xfff0f4, art: .3, pals: [3, 6, 7], extras: ['torii'], flowers: [0xffb3cc, 0xffffff, 0xff7aa2], trees: ['dao'] },
+  dayofdead: { name: 'Día de Muertos', desc: 'Mexico: cúc vạn thọ, cờ giấy papel picado, nến lung linh', price: 500, sw: ['#2a0f3a', '#ff9a1a', '#ff3d7f'], wall: { kind: 'plaster', col: [.32, .13, .42] }, floor: { kind: 'wood', col: [.3, .16, .1], op: .92, rough: .38 },
+    ceil: { kind: 'dark', col: 0x120818 }, frames: ['gold', 'black'], matCol: 0xfff3dc, trim: 0x140a1a, stone: 0x3a2a40, wood: 0x3a1a10, pots: ['terracotta', 'bluewhite'], hemi: [0xffb0d0, 0x200a20, .6], env: .35, glow: 0xff9a1a,
+    chand: 'iron', parts: ['marigold', 'embers'], wash: .42, beam: .1, washCol: 0xffc890, art: .35, pals: [2, 9, 7], extras: ['bunting', 'diyas'], flagCols: [0xff3d7f, 0xffd23f, 0x3fd0ff, 0x7bff5a, 0xb15cff, 0xff8a2a], flowers: [0xff9a1a, 0xffb300, 0xff3d7f], trees: ['ficus'] },
+  ramadan: { name: 'Ramadan & Eid', desc: 'Trăng lưỡi liềm, đèn lồng fanous vàng, đêm sao', price: 450, sw: ['#0f2a3a', '#d9b56c', '#2a7a6a'], wall: { kind: 'plaster', col: [.1, .24, .28] }, floor: { kind: 'marble', base: [.9, .86, .78], vein: [.6, .5, .3], op: .86, rough: .18 },
+    ceil: { kind: 'dark', col: 0x081418 }, frames: ['gold', 'gold'], matCol: 0xfff6e6, trim: 0x061014, stone: 0xf2e9d8, wood: 0x4a3420, pots: ['celadon', 'bluewhite'], hemi: [0xffe6c0, 0x0a1a20, .6], env: .4, glow: 0xd9b56c,
+    chand: 'lantern', parts: ['dust'], wash: .45, beam: .09, washCol: 0xffe2b0, art: .34, pals: [8, 5, 1], starsDefault: true, extras: ['crescent', 'lanterns', 'stringLights'], lanternCol: 0xd9b56c, lightCols: [0xffd166, 0xfff1c8], flowers: [0xffffff, 0xd9b56c, 0x2a7a6a], trees: ['ficus'] },
+  hanukkah: { name: 'Hanukkah', desc: 'Lễ hội ánh sáng Do Thái: chân nến menorah, xanh và bạc', price: 450, sw: ['#0d2a6a', '#e8eef8', '#c9cdd2'], wall: { kind: 'plaster', col: [.16, .26, .52] }, floor: { kind: 'marble', base: [.93, .95, .98], vein: [.6, .7, .85], op: .86, rough: .14 },
+    ceil: { kind: 'coffer', col: 0xe8eef8, glow: 0xeaf2ff, gi: 1 }, frames: ['silver', 'white'], matCol: 0xffffff, trim: 0x0a1a3a, stone: 0xf2f6fa, wood: 0x8a9ab0, pots: ['white', 'navy'], hemi: [0xeaf2ff, 0x1a2a4a, .85], env: .55, glow: 0x9cc7ea,
+    chand: 'crystal', parts: ['snow'], wash: .45, beam: .06, washCol: 0xeaf4ff, art: .3, pals: [5, 8, 6], extras: ['menorah', 'stringLights'], lightCols: [0x5ab4ff, 0xffffff], flowers: [0xffffff, 0x5ab4ff, 0xc9cdd2], trees: ['ficus'] },
+  easter: { name: 'Phục sinh', desc: 'Trứng màu, hoa xuân, cờ pastel', price: 350, sw: ['#fff6d8', '#b8e0ff', '#ffc6e0'], wall: { kind: 'plaster', col: [.98, .95, .86] }, floor: { kind: 'wood', col: [.75, .6, .45], op: .92, rough: .3 },
+    ceil: { kind: 'coffer', col: 0xfffcf2, glow: 0xfffbe8, gi: 1.1 }, frames: ['white', 'gold'], matCol: 0xffffff, trim: 0x9ac0a0, stone: 0xfffaf0, wood: 0xd0b090, pots: ['celadon', 'rose'], hemi: [0xfffbe8, 0x8a8a6a, 1], env: .6, glow: 0xffe6f0,
+    chand: 'crystal', parts: ['petals'], wash: .45, beam: .05, washCol: 0xfffaf0, art: .3, pals: [3, 4, 7], extras: ['eggs', 'bunting'], flagCols: [0xffc6e0, 0xb8e0ff, 0xfff1a8, 0xc8f0c0, 0xe0c8ff], flowers: [0xffc6e0, 0xfff1a8, 0xffffff], trees: ['dao'] },
+  carnival: { name: 'Carnival Rio', desc: 'Lễ hội Brazil sôi động: cờ màu, lông vũ, kim tuyến', price: 450, sw: ['#1b1f6a', '#ffd23f', '#00d4b4'], wall: { kind: 'plaster', col: [.08, .4, .42] }, floor: { kind: 'wood', col: [.4, .22, .12], op: .9, rough: .3 },
+    ceil: { kind: 'dark', col: 0x0a0a2a }, frames: ['gold', 'gold'], matCol: 0xfff6e6, trim: 0x1b1f6a, stone: 0xf4efe0, wood: 0x5a2a14, pots: ['rose', 'navy'], hemi: [0xffe0c0, 0x1a1a3a, .75], env: .45, glow: 0x00d4b4,
+    chand: 'crystal', parts: ['feathers', 'confettiFall'], wash: .45, beam: .09, washCol: 0xfff0d0, art: .34, pals: [7, 9, 1], extras: ['bunting', 'stringLights'], flagCols: [0xffd23f, 0x00a859, 0x3e40c4, 0xff3d7f, 0xff8a2a], lightCols: [0xffd23f, 0xff3d7f, 0x00d4b4], flowers: [0xff3d7f, 0xffd23f, 0x00d4b4], trees: ['ficus'] },
+  newyear: { name: 'Đêm Giao thừa', desc: 'Đen vàng sang trọng, kim tuyến vàng bạc, đèn nháy', price: 400, sw: ['#0b0a09', '#d9b56c', '#e8e8e8'], wall: { kind: 'panel', col: [.16, .15, .14] }, floor: { kind: 'marble', base: [.06, .06, .07], vein: [.8, .65, .35], op: .8, rough: .1 },
+    ceil: { kind: 'dark', col: 0x050505 }, frames: ['gold', 'black'], matCol: 0x111111, trim: 0xd9b56c, stone: 0x1c1b1a, wood: 0x1a1612, pots: ['black', 'white'], hemi: [0xfff1d8, 0x0a0a0a, .5], env: .45, glow: 0xd9b56c,
+    chand: 'crystal', parts: ['goldConfetti', 'stardust'], wash: .3, beam: .1, washCol: 0xfff1d0, art: .38, pals: [6, 2, 9], starsDefault: true, extras: ['stringLights', 'bunting'], lightCols: [0xffd166, 0xffffff], flagCols: [0xd9b56c, 0xe8e8e8, 0x1b1b1b], flowers: [0xffffff, 0xd9b56c, 0x1b1b1b], trees: ['ficus'] },
+  stpatrick: { name: 'Thánh Patrick', desc: 'Ireland xanh lá: cỏ ba lá bay, cờ tam sắc', price: 350, sw: ['#1e6a32', '#ffffff', '#ff8a2a'], wall: { kind: 'plaster', col: [.22, .47, .28] }, floor: { kind: 'wood', col: [.45, .3, .18], op: .92, rough: .34 },
+    ceil: { kind: 'coffer', col: 0xeef4e8, glow: 0xf4ffe8, gi: 1 }, frames: ['gold', 'walnut'], matCol: 0xfffcf0, trim: 0x103a1a, stone: 0xf0f2e8, wood: 0x5a3a20, pots: ['celadon', 'white'], hemi: [0xf4ffe8, 0x203a20, .85], env: .5, glow: 0x9dff8a,
+    chand: 'iron', parts: ['shamrock'], wash: .5, beam: .07, washCol: 0xf4ffe8, art: .32, pals: [4, 1, 3], extras: ['bunting'], flagCols: [0x169b62, 0xffffff, 0xff883e], flowers: [0x169b62, 0xffffff, 0xffd23f], trees: ['ficus'] },
+  songkran: { name: 'Songkran', desc: 'Tết té nước Thái Lan: mưa nước mát lành, cờ sặc sỡ', price: 350, sw: ['#0d6a8a', '#9fe3ff', '#ffd23f'], wall: { kind: 'plaster', col: [.62, .86, .93] }, floor: { kind: 'marble', base: [.85, .93, .97], vein: [.5, .75, .85], op: .84, rough: .12 },
+    ceil: { kind: 'water' }, frames: ['silver', 'white'], matCol: 0xffffff, trim: 0x0d4a6a, stone: 0xeef8fb, wood: 0xc8b89a, pots: ['white', 'navy'], hemi: [0xbfefff, 0x1a3a4a, .9], env: .55, glow: 0x5ee8ff,
+    chand: 'none', parts: ['drops', 'bubbles'], wash: .4, beam: .06, washCol: 0xd8f6ff, art: .3, pals: [5, 8, 0], extras: ['bunting', 'caustics'], flagCols: [0xff3d7f, 0xffd23f, 0x3fd0ff, 0x7bff5a, 0xff8a2a], flowers: [0xffd23f, 0xff3d7f, 0xffffff], trees: ['ficus'] },
+  yipeng: { name: 'Yi Peng · Loy Krathong', desc: 'Thái Lan: thả đèn trời lung linh bay lên, nến hoa', price: 450, sw: ['#0a0f2a', '#ffb347', '#ffd27a'], wall: { kind: 'plaster', col: [.09, .11, .24] }, floor: { kind: 'wood', col: [.3, .2, .12], op: .9, rough: .34 },
+    ceil: { kind: 'dark', col: 0x05081a }, frames: ['gold', 'gold'], matCol: 0xfff3dc, trim: 0x05081a, stone: 0xf3e6cf, wood: 0x4a2a14, pots: ['terracotta', 'bluewhite'], hemi: [0xffd9a8, 0x0a0a1a, .5], env: .35, glow: 0xffb347,
+    chand: 'lantern', parts: ['skyLanterns', 'fireflies'], wash: .4, beam: .1, washCol: 0xffe0a0, art: .36, pals: [9, 8, 2], starsDefault: true, extras: ['stringLights', 'diyas'], lightCols: [0xffd27a, 0xffb347], lanternCol: 0xffb347, flowers: [0xffb347, 0xffd27a, 0xffffff], trees: ['ficus'] }
 };
 const FRAME_STYLES = {
   gold: [0xc9a25a, 1, .32], black: [0x1a1715, .3, .38], silver: [0xc9cdd2, 1, .22], iron: [0x1c1a19, .85, .55],
@@ -996,6 +1036,14 @@ const PCFG = {
   bats: { n: 36, shape: 'bat', cols: [0x140c18, 0x2a1236], size: [.2, .32], add: false, mode: 'wander', alpha: 1, hdr: 1 },
   autumnLeaves: { n: 170, shape: 'leaf', cols: [0xd9501e, 0xe8902a, 0xc0392b, 0xf2b134, 0x8a4a1a], size: [.1, .16], add: false, mode: 'fall', speed: [.28, .5], alpha: 1, hdr: 1 },
   confettiFall: { n: 280, shape: 'confetti', cols: [0xff6fb5, 0x4cc9f0, 0xffd166, 0x9b5de5, 0x00d4b4], size: [.05, .09], add: false, mode: 'fall', speed: [.2, .4], alpha: 1, hdr: 1 },
+  skyLanterns: { n: 70, shape: 'lantern', cols: [0xffb347, 0xffd27a, 0xff8a3a], size: [.2, .34], add: true, mode: 'rise', speed: [.1, .22], alpha: 1, hdr: 2.2 },
+  powder: { n: 240, shape: 'dot', cols: [0xff3d7f, 0xffd23f, 0x3fd0ff, 0x7bff5a, 0xb15cff, 0xff8a2a], size: [.3, .6], add: true, mode: 'drift', alpha: .32, hdr: 1.3 },
+  marigold: { n: 200, shape: 'petal', cols: [0xff9a1a, 0xffb300, 0xff6a00], size: [.07, .11], add: false, mode: 'fall', speed: [.25, .45], alpha: 1, hdr: 1 },
+  sakura: { n: 280, shape: 'petal', cols: [0xffc6d9, 0xffb3cc, 0xffe6ee], size: [.06, .1], add: false, mode: 'fall', speed: [.18, .36], alpha: 1, hdr: 1 },
+  shamrock: { n: 120, shape: 'clover', cols: [0x2fae4a, 0x46c35f, 0x1e8a36], size: [.1, .15], add: false, mode: 'fall', speed: [.25, .45], alpha: 1, hdr: 1 },
+  drops: { n: 520, shape: 'drop', cols: [0x9fe3ff, 0xd8f6ff], size: [.04, .07], add: true, mode: 'fall', speed: [1, 1.8], alpha: .75, hdr: 1.4 },
+  goldConfetti: { n: 280, shape: 'confetti', cols: [0xffd166, 0xe8e8e8, 0xc9a25a], size: [.05, .09], add: false, mode: 'fall', speed: [.2, .4], alpha: 1, hdr: 1.2 },
+  feathers: { n: 140, shape: 'leaf', cols: [0xff3d7f, 0xffd23f, 0x00d4b4, 0x9b5de5, 0x3fd0ff], size: [.12, .2], add: false, mode: 'fall', speed: [.12, .25], alpha: 1, hdr: 1.1 },
   stardust: { n: 900, shape: 'spark', cols: [0xd8ccff, 0xffffff, 0x9fc6ff], size: [.03, .07], add: true, mode: 'drift', alpha: .9, hdr: 2, blink: true }
 };
 function makeParticles(cfg) {
@@ -1772,7 +1820,7 @@ function buildRoom() {
     neon.position.set(0, 5.4, -HL + .08);
   }
   if (ex.includes('lanterns')) {
-    const lanM = std({ color: 0xd4141a, emissive: 0xff3a1a, emissiveIntensity: 1.3, roughness: .5 });
+    const lc = th.lanternCol ?? 0xd4141a, lanM = std({ color: lc, emissive: lc === 0xd4141a ? 0xff3a1a : lc, emissiveIntensity: 1.3, roughness: .5 });
     for (let i = 0; i < 12; i++) { const s = i % 2 ? -1 : 1, z = -14 + Math.floor(i / 2) * 5.6; const l = add(new THREE.Mesh(new THREE.SphereGeometry(.22, 20, 14), lanM)); l.scale.y = .85; l.position.set(s * 6.9, 5.4, z); const cord = add(new THREE.Mesh(new THREE.CylinderGeometry(.005, .005, 1.4, 4), M.rail)); cord.position.set(s * 6.9, 6.3, z); }
   }
   if (ex.includes('planets')) {
@@ -1825,11 +1873,66 @@ function buildRoom() {
       R.updaters.push((dt, t) => { star.rotation.y += dt * .6; if (!fxOn) return; for (let i = 0; i < 90; i++) lm.setColorAt(i, hexC(lc[i % 4]).multiplyScalar(.4 + 1.8 * Math.max(0, Math.sin(t * 3 + i * 1.7)))); lm.instanceColor.needsUpdate = true; });
     });
   }
-  if (ex.includes('garland')) {
+  if (ex.includes('garland') || ex.includes('stringLights')) {
     const pos = []; [-1, 1].forEach(sd => { for (let z = -HL + .5; z <= HL - .5; z += .42) pos.push([sd * (HW - .06), H - .5 - Math.abs(Math.sin(z * .75)) * .3, z]); });
-    const gm = new THREE.InstancedMesh(new THREE.SphereGeometry(.035, 6, 4), new THREE.MeshBasicMaterial(), pos.length), gc = [0xff5a5a, 0xffd166, 0x5ad1ff, 0x8aff8a];
+    const gm = new THREE.InstancedMesh(new THREE.SphereGeometry(.035, 6, 4), new THREE.MeshBasicMaterial(), pos.length), gc = (th.lightCols || [0xff5a5a, 0xffd166, 0x5ad1ff, 0x8aff8a]).concat(th.lightCols?.length === 2 ? th.lightCols : th.lightCols?.length === 3 ? [th.lightCols[0]] : []).slice(0, 4);
     pos.forEach((p, i) => { dummy.position.set(...p); dummy.scale.setScalar(1); dummy.updateMatrix(); gm.setMatrixAt(i, dummy.matrix); gm.setColorAt(i, hexC(gc[i % 4])); }); add(gm);
     R.updaters.push((dt, t) => { gm.visible = fxOn; if (!fxOn) return; const ph = Math.floor(t * 2) % 4; for (let i = 0; i < pos.length; i++) gm.setColorAt(i, hexC(gc[i % 4]).multiplyScalar(i % 4 === ph ? 2.6 : .7)); gm.instanceColor.needsUpdate = true; });
+  }
+  if (ex.includes('bunting')) { // strings of little flags across the hall (papel picado, carnival, Songkran…)
+    const fc = th.flagCols || [0xff3d7f, 0xffd23f, 0x3fd0ff, 0x7bff5a], tri = new THREE.BufferGeometry(); tri.setAttribute('position', new THREE.Float32BufferAttribute([-.13, 0, 0, .13, 0, 0, 0, -.3, 0], 3)); tri.computeVertexNormals();
+    const per = 26, zs = [-12.5, -6.5, 0, 6.5, 12.5], fm = new THREE.InstancedMesh(tri, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: .7 }), per * zs.length); let k = 0;
+    const lineM = new THREE.LineBasicMaterial({ color: 0x3a3030 });
+    zs.forEach(z => { const pts = []; for (let i = 0; i < per; i++) { const x = -HW + .3 + i * (W - .6) / (per - 1), y = H - .8 - (1 - (x / HW) ** 2) * .7; pts.push(new THREE.Vector3(x, y, z)); dummy.position.set(x, y, z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); fm.setMatrixAt(k, dummy.matrix); fm.setColorAt(k++, hexC(fc[i % fc.length])); } add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineM)); });
+    add(fm); R.updaters.push((dt, t) => { if (!fxOn) return; for (let i = 0; i < k; i++) { fm.getMatrixAt(i, dummy.matrix); dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale); dummy.rotation.set(Math.sin(t * 1.6 + i * .7) * .25, 0, 0); dummy.updateMatrix(); fm.setMatrixAt(i, dummy.matrix); } fm.instanceMatrix.needsUpdate = true; });
+  }
+  if (ex.includes('diyas')) { // little clay oil lamps along the walls
+    const cup = new THREE.LatheGeometry([[0, 0], [.07, .005], [.1, .04], [.105, .06], [.09, .055], [0, .045]].map(q => new THREE.Vector2(...q)), 18), flame = new THREE.ConeGeometry(.022, .07, 10);
+    const pos = []; [-1, 1].forEach(sd => { for (let z = -15; z <= 15; z += 1.5) if (Math.abs(z) > 1.5) pos.push([sd * 7.45, z]); });
+    const cm = new THREE.InstancedMesh(cup, std({ color: 0xb4643c, roughness: .8 }), pos.length), fm = new THREE.InstancedMesh(flame, new THREE.MeshBasicMaterial({ color: hexC(0xffb347).multiplyScalar(2.5) }), pos.length);
+    pos.forEach(([x, z], i) => { dummy.position.set(x, 0, z); dummy.rotation.set(0, 0, 0); dummy.scale.setScalar(1); dummy.updateMatrix(); cm.setMatrixAt(i, dummy.matrix); dummy.position.y = .1; dummy.updateMatrix(); fm.setMatrixAt(i, dummy.matrix); });
+    add(cm); add(fm);
+    R.updaters.push((dt, t) => { fm.visible = fxOn; if (!fxOn) return; pos.forEach(([x, z], i) => { dummy.position.set(x, .1, z); dummy.rotation.set(Math.sin(t * 9 + i) * .08, 0, Math.cos(t * 7 + i) * .08); dummy.scale.set(1, .85 + Math.sin(t * 13 + i * 2) * .2, 1); dummy.updateMatrix(); fm.setMatrixAt(i, dummy.matrix); }); fm.instanceMatrix.needsUpdate = true; });
+  }
+  if (ex.includes('rangoli')) { // colourful floor mandala near the entrance
+    const [rc, rg] = canvas(512, 512), cols = ['#ff3d7f', '#ffd23f', '#3fd0ff', '#7bff5a', '#ff8a2a', '#b15cff'];
+    rg.translate(256, 256); for (let ring = 6; ring > 0; ring--) { const r = ring * 40, n = 6 + ring * 2; rg.fillStyle = cols[ring % cols.length]; for (let i = 0; i < n; i++) { rg.save(); rg.rotate(i / n * TAU); rg.beginPath(); rg.ellipse(0, -r + 18, 14, 28, 0, 0, TAU); rg.fill(); rg.restore(); } rg.fillStyle = cols[(ring + 2) % cols.length]; rg.beginPath(); rg.arc(0, 0, r - 30, 0, TAU); rg.fill(); }
+    rg.fillStyle = '#fff'; rg.beginPath(); rg.arc(0, 0, 22, 0, TAU); rg.fill();
+    const m = add(new THREE.Mesh(new THREE.CircleGeometry(1.4, 64), new THREE.MeshStandardMaterial({ map: tex(rc, true, true), transparent: true, roughness: .9 }))); m.rotation.x = -PI / 2; m.position.set(0, .012, 11.2); m.layers.set(1); m.layers.enable(0);
+  }
+  if (ex.includes('menorah')) {
+    const gold = std({ color: 0xd9b56c, metalness: 1, roughness: .25 }), g = add(new THREE.Group()); g.position.set(-5.6, 0, -14.4);
+    const ped = new THREE.Mesh(new THREE.CylinderGeometry(.35, .42, .9, 24), R.mats.stone); ped.position.y = .45; g.add(ped);
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(.03, .05, .7, 12), gold); st.position.y = 1.25; g.add(st);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(.16, .2, .06, 20), gold); base.position.y = .93; g.add(base);
+    const flames = [];
+    for (let i = 1; i <= 4; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(i * .085, .014, 8, 24, PI), gold); arc.rotation.z = PI; arc.position.y = 1.58; g.add(arc); }
+    for (let i = -4; i <= 4; i++) { const x = i * .085, y = i === 0 ? 1.66 : 1.58; const c = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .09, 8), std({ color: 0x5ab4ff })); c.position.set(x, y + .045, 0); g.add(c); const fl = new THREE.Mesh(new THREE.ConeGeometry(.014, .045, 8), new THREE.MeshBasicMaterial({ color: hexC(0xffc46a).multiplyScalar(2.5) })); fl.position.set(x, y + .115, 0); g.add(fl); flames.push(fl); }
+    const ml = new THREE.PointLight(0xffc46a, 3, 5, 2); ml.position.set(0, 1.9, .3); g.add(ml);
+    R.colliders.push({ x: -5.6, z: -14.4, hx: .45, hz: .45 });
+    R.updaters.push((dt, t) => flames.forEach((f, i) => f.scale.y = .8 + Math.sin(t * 12 + i * 1.7) * .25));
+  }
+  if (ex.includes('crescent')) {
+    const [cc, cg] = canvas(512, 512); cg.fillStyle = '#ffe9a8'; cg.beginPath(); cg.arc(230, 256, 200, 0, TAU); cg.fill(); cg.globalCompositeOperation = 'destination-out'; cg.beginPath(); cg.arc(300, 220, 180, 0, TAU); cg.fill(); cg.globalCompositeOperation = 'source-over';
+    cg.fillStyle = '#fff3c4'; cg.beginPath(); for (let i = 0; i < 10; i++) { const a = -PI / 2 + i * PI / 5, r = i % 2 ? 24 : 58; cg.lineTo(390 + Math.cos(a) * r, 250 + Math.sin(a) * r); } cg.closePath(); cg.fill();
+    const m = add(new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshBasicMaterial({ map: tex(cc, true, true), transparent: true, color: 0xffffff }))); m.position.set(0, 5.1, -HL + .07);
+    const ml = new THREE.PointLight(0xffe2a0, 5, 12, 2); ml.position.set(0, 5, -HL + 1.5); add(ml);
+  }
+  if (ex.includes('eggs')) {
+    const eg = new THREE.SphereGeometry(.11, 20, 14); eg.scale(1, 1.35, 1);
+    const mats = [0, 1, 2, 3, 4, 5].map(i => { const [c, g] = canvas(128, 64), pal = [['#ffc6e0', '#ff7aa2'], ['#b8e0ff', '#3f8fd8'], ['#fff1a8', '#f2b134'], ['#c8f0c0', '#4b9f4a'], ['#e0c8ff', '#9b5de5'], ['#ffd8b0', '#ff8a2a']][i];
+      g.fillStyle = pal[0]; g.fillRect(0, 0, 128, 64); g.fillStyle = pal[1]; if (i % 2) for (let x = 0; x < 128; x += 16) { g.beginPath(); g.arc(x + 8, 20, 4, 0, TAU); g.arc(x, 44, 4, 0, TAU); g.fill(); } else { g.fillRect(0, 22, 128, 6); g.fillRect(0, 36, 128, 6); for (let x = 0; x < 128; x += 12) { g.beginPath(); g.moveTo(x, 32); g.lineTo(x + 6, 26); g.lineTo(x + 12, 32); g.lineTo(x + 6, 38); g.fill(); } }
+      return std({ map: tex(c), roughness: .35 }); });
+    const r = mulberry32(5);
+    for (let i = 0; i < 26; i++) { const sd = i % 2 ? 1 : -1, x = sd * (6.6 + r() * .8), z = -14.5 + r() * 29, e = add(new THREE.Mesh(eg, mats[i % 6])); e.position.set(x, .15, z); e.rotation.set(r() * .5, r() * 6, r() * .5); }
+  }
+  if (ex.includes('torii')) {
+    const red = std({ color: 0xc8102e, roughness: .55 }), blk = std({ color: 0x1b1515, roughness: .5 }), g = add(new THREE.Group()); g.position.set(0, 0, -HL + .9);
+    [-2.3, 2.3].forEach(x => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.15, .18, 4.5, 20), red); p.position.set(x, 2.25, 0); g.add(p); const b = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .3, 20), blk); b.position.set(x, .15, 0); g.add(b); R.colliders.push({ x, z: -HL + .9, hx: .22, hz: .22 }); });
+    const nuki = new THREE.Mesh(new THREE.BoxGeometry(5.6, .22, .22), red); nuki.position.y = 3.75; g.add(nuki);
+    const kasa = new THREE.Mesh(new THREE.BoxGeometry(6.6, .26, .36), red); kasa.position.y = 4.55; g.add(kasa);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(7, .18, .44), blk); top.position.y = 4.75; g.add(top);
+    const tab = new THREE.Mesh(new THREE.BoxGeometry(.4, .62, .12), blk); tab.position.set(0, 4.15, .05); g.add(tab);
   }
   if (ex.includes('snowmen')) {
     const snowM = std({ color: 0xffffff, roughness: .9 }), coal = std({ color: 0x111111, roughness: .6 }), carrot = std({ color: 0xff7a1a, roughness: .6 }), hatM = std({ color: 0x15151a, roughness: .5 }), scarf = std({ color: 0xc8102e, roughness: .8 });

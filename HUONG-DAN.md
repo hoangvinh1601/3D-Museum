@@ -72,7 +72,7 @@ Dùng Vercel hoặc GitHub Pages cũng được, vì đây chỉ là các tệp 
 - **Tham quan cùng nhau:** mỗi người vào phòng là một nhân vật LEGO. Bấm *Nhân vật* để chọn áo, quần, tóc và nét mặt. Phím **V** đổi sang góc nhìn thứ ba, **Enter** để trò chuyện, **1 / 2 / 3** để vẫy tay, nhảy, nhảy múa. Bấm vào người khác để tặng hoa, thả tim hoặc vẫy tay chào.
 - **Cảm nhận:** dưới mỗi tác phẩm và ở nút *Gian này* (góc phải) có 5 cảm xúc, chấm 1–5 sao và nút *Ủng hộ* bằng xu. Khách không cần tài khoản vẫn thả tim và chấm sao được; muốn ủng hộ xu thì cần đăng nhập.
 - **Ví xu:** mỗi tài khoản có 2.000 xu ảo lúc bắt đầu (lưu trên Supabase). Xu dùng để mua đồ và giao diện trong cửa hàng, mua vé vào phòng thu phí, và ủng hộ chủ phòng. Chưa có thanh toán bằng tiền thật.
-- **Giao diện theo mùa:** Halloween, Giáng sinh, Mùa xuân, Mùa thu, Mùa đông, Trung thu, Sinh nhật được bán trong cửa hàng. Mỗi giao diện mua một lần, dùng cho mọi gian. Tám giao diện gốc vẫn miễn phí.
+- **Giao diện theo mùa và lễ hội:** Halloween, Giáng sinh, Mùa xuân, Mùa thu, Mùa đông, Trung thu, Sinh nhật, Diwali, Holi, Hanami, Día de Muertos, Ramadan & Eid, Hanukkah, Phục sinh, Carnival Rio, Đêm Giao thừa, Thánh Patrick, Songkran, Yi Peng được bán trong cửa hàng. Mỗi giao diện mua một lần, dùng cho mọi gian. Tám giao diện gốc vẫn miễn phí.
 - **Ai được xem:** trong *Chia sẻ*, chủ phòng chọn *Ai có link*, *Có mật khẩu*, *Thu phí* (khách trả xu một lần để vào, xu chuyển cho chủ phòng) hoặc *Thành viên*.
 - **Mô hình nặng:** web tự nén `.glb` lớn hơn 2,5 MB trước khi tải lên (ví dụ 23 MB còn 2,4 MB). Mô hình đã lưu từ trước mà nặng thì nhấn vào nó rồi chọn *Tối ưu mô hình*.
 
