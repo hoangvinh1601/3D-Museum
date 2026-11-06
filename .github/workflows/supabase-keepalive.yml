@@ -1,0 +1,36 @@
+# Supabase gói miễn phí tự tạm dừng dự án sau 7 ngày không có ai dùng.
+# Tác vụ này "gõ cửa" cơ sở dữ liệu 3 ngày một lần (đọc 1 dòng, không thay đổi gì) để dự án luôn chạy.
+# Địa chỉ và khoá "anon public" lấy từ config.js (khoá này vốn được phép công khai).
+name: Giữ Supabase luôn chạy
+
+on:
+  schedule:
+    - cron: '17 3 */3 * *'   # 03:17 UTC (10:17 giờ Việt Nam), ngày 1, 4, 7… mỗi tháng
+  workflow_dispatch:          # cho phép bấm chạy tay trong tab Actions
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: config.js
+          sparse-checkout-cone-mode: false
+
+      - name: Gõ cửa Supabase
+        run: |
+          URL=$(grep -o "supabaseUrl: *'[^']*'" config.js | head -1 | sed "s/.*'\(.*\)'/\1/")
+          KEY=$(grep -o "supabaseAnonKey: *'[^']*'" config.js | head -1 | sed "s/.*'\(.*\)'/\1/")
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js chưa có supabaseUrl / supabaseAnonKey"; exit 1; fi
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL/rest/v1/galleries?select=id&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+            echo "Lần $i: HTTP $CODE"
+            [ "$CODE" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "Supabase không trả lời. Nếu dự án đã bị tạm dừng, vào supabase.com và bấm Restore."
+          exit 1
