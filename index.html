@@ -86,7 +86,8 @@ label.lb{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 5px}
 #acctMenu button:hover{background:rgba(255,255,255,.07)}
 
 /* toolbar */
-#toolbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10;display:flex;gap:2px;padding:6px;max-width:calc(100vw - 20px);overflow-x:auto;scrollbar-width:none}
+#toolbar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10;display:flex;flex-wrap:wrap;justify-content:center;gap:2px;padding:6px;width:max-content;max-width:min(calc(100vw - 20px),1180px);overflow:visible}
+#toolbar.more-l,#toolbar.more-r{-webkit-mask-image:none!important;mask-image:none!important}
 #toolbar::-webkit-scrollbar{display:none}
 .tb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:64px;padding:9px 7px 7px;border:0;border-radius:11px;background:transparent;font-size:11px;transition:background .2s,color .2s}
 .tb:hover{background:rgba(255,255,255,.07)}
@@ -95,6 +96,13 @@ label.lb{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 5px}
 .tb.accent{background:var(--gold);color:#17120a;font-weight:600}
 .sep{width:1px;margin:8px 3px;background:var(--line);flex:0 0 auto}
 /* collapsible toolbar */
+@media (max-width:620px){
+  #toolbar{display:grid;grid-template-columns:repeat(5,1fr);width:calc(100vw - 20px);max-height:calc(100dvh - 140px);overflow-y:auto}
+  #toolbar .sep{display:none}
+  #toolbar .tb{min-width:0;padding:7px 2px 6px;font-size:10px;gap:4px}
+  #toolbar .tb svg{width:19px;height:19px}
+  body.tb-min #toolbar{display:flex;width:auto}
+}
 #tMenu svg{transition:transform .3s}
 body.tb-min #toolbar>*:not(#tMenu){display:none!important}
 body.tb-min #toolbar{padding:4px}
@@ -124,12 +132,12 @@ body.can-edit .member-only{display:flex}
 .owner-only{display:none}body.is-owner .owner-only{display:flex}
 body.can-edit span.member-only{display:block}
 
-.pop{position:fixed;z-index:14;bottom:96px;left:50%;transform:translate(-50%,12px);opacity:0;pointer-events:none;transition:all .25s;padding:14px;max-width:calc(100vw - 24px);max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.pop{position:fixed;z-index:14;bottom:var(--tbB,96px);left:50%;transform:translate(-50%,12px);opacity:0;pointer-events:none;transition:all .25s;padding:14px;max-width:calc(100vw - 24px);max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #themePop{width:min(620px,calc(100vw - 24px))}
 .pop.open{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
 .pop h3,.box h3{margin:0 0 10px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500}
 .themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
-@media (max-width:620px){.themes{grid-template-columns:repeat(2,1fr)}.pop{bottom:84px;max-height:calc(100dvh - 150px)}}
+@media (max-width:620px){.themes{grid-template-columns:repeat(2,1fr)}.pop{bottom:var(--tbB,84px);max-height:calc(100dvh - 150px)}}
 .th{border:1px solid var(--line);border-radius:12px;padding:0;overflow:hidden;background:rgba(255,255,255,.04);text-align:left}
 .th.cur{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
 .th .sw{height:54px}
@@ -166,7 +174,7 @@ body.can-edit span.member-only{display:block}
 .btn.sq{flex:0 0 42px}.btn.fit{flex:0 0 auto}
 .btn.gold{background:var(--gold);color:#17120a;border-color:transparent;font-weight:600}
 .btn.danger{color:#ff9d8c}.full{width:100%}
-#rooms,#arrange{position:fixed;left:16px;top:16px;bottom:96px;z-index:13;width:330px;max-width:calc(100vw - 32px);padding:16px;display:flex;flex-direction:column;transform:translateX(calc(-100% - 30px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+#rooms,#arrange{position:fixed;left:16px;top:16px;bottom:var(--tbB,96px);z-index:13;width:330px;max-width:calc(100vw - 32px);padding:16px;display:flex;flex-direction:column;transform:translateX(calc(-100% - 30px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}
 #rooms.open,#arrange.open{transform:none}
 #roomList{flex:1;overflow:auto;margin:4px -4px 10px;padding:0 4px}
 .ri{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border-radius:12px;border:1px solid transparent;background:none;text-align:left;margin-bottom:4px}
@@ -189,17 +197,17 @@ body.can-edit span.member-only{display:block}
 #modal{position:fixed;inset:0;z-index:35;display:none;align-items:center;justify-content:center;background:rgba(5,4,3,.6);padding:16px}
 #modal.open{display:flex}
 #modal .box{width:640px;max-width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;padding:20px}
-@media (max-width:620px){#modal{padding:8px;align-items:flex-end}#modal .box{padding:16px;max-height:calc(100dvh - 16px)}#panel{top:auto;bottom:84px;right:8px;left:8px;width:auto;max-width:none;max-height:58dvh}#rooms,#arrange{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:84px;max-height:62dvh}}
+@media (max-width:620px){#modal{padding:8px;align-items:flex-end}#modal .box{padding:16px;max-height:calc(100dvh - 16px)}#panel{top:auto;bottom:var(--tbB,84px);right:8px;left:8px;width:auto;max-width:none;max-height:58dvh}#rooms,#arrange{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:var(--tbB,84px);max-height:62dvh}}
 #modal h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;margin:0 0 6px}
 #modal p{color:var(--muted);font-size:13.5px;line-height:1.6;margin:0 0 12px}
 #modal .warn{color:#f3c27a}
-#toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,20px);z-index:40;padding:10px 18px;font-size:13px;opacity:0;pointer-events:none;transition:all .35s;max-width:calc(100vw - 40px);text-align:center}
+#toast{position:fixed;left:50%;bottom:calc(var(--tbB,96px) + 6px);transform:translate(-50%,20px);z-index:40;padding:10px 18px;font-size:13px;opacity:0;pointer-events:none;transition:all .35s;max-width:calc(100vw - 40px);text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #drop{position:fixed;inset:14px;z-index:41;border:2px dashed var(--gold);border-radius:22px;display:none;align-items:center;justify-content:center;background:rgba(10,8,6,.6);font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);text-align:center;padding:20px}
 #drop.show{display:flex}
 #fade{position:fixed;inset:0;z-index:25;background:#000;opacity:0;pointer-events:none;transition:opacity .35s}
 #fade.on{opacity:1}
-#joy{position:fixed;left:22px;bottom:110px;z-index:11;width:118px;height:118px;border-radius:50%;display:none;background:rgba(16,14,12,.35);border:1px solid var(--line);backdrop-filter:blur(8px);touch-action:none}
+#joy{position:fixed;left:22px;bottom:calc(var(--tbB,96px) + 14px);z-index:11;width:118px;height:118px;border-radius:50%;display:none;background:rgba(16,14,12,.35);border:1px solid var(--line);backdrop-filter:blur(8px);touch-action:none}
 #joy i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(217,181,108,.55);box-shadow:0 0 18px rgba(217,181,108,.4)}
 @media (pointer:coarse){#joy{display:block}}
 .keys-touch{display:none}
@@ -222,28 +230,28 @@ body.can-edit span.member-only{display:block}
 .fb .stars{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .fb .stars button{background:none;border:0;font-size:21px;color:rgba(255,255,255,.25);padding:0 1px}.fb .stars button.on{color:var(--gold)}
 .fb .stars small{font-size:11.5px;color:var(--muted)}
-#roomFb{position:fixed;right:16px;bottom:96px;z-index:12;display:none;flex-direction:column;align-items:flex-end;gap:8px}
+#roomFb{position:fixed;right:16px;bottom:var(--tbB,96px);z-index:12;display:none;flex-direction:column;align-items:flex-end;gap:8px}
 body.in-gallery #roomFb{display:flex}
 body:has(#panel.open) #roomFb,body:has(#arrange.open) #roomFb{display:none!important}
 #roomFbBtn{gap:10px}#roomFbBtn span{font-size:12.5px}
 #roomFbPop{width:290px;max-width:calc(100vw - 32px);max-height:60dvh;overflow:auto;padding:14px;display:none}#roomFbPop.open{display:block}
 .floatEmoji{position:fixed;z-index:60;font-size:26px;pointer-events:none;animation:floatUp 1.5s ease-out forwards}
 @keyframes floatUp{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-160px) scale(1.25)}}
-@media (max-width:620px){#roomFb{bottom:96px;right:10px}#roomFbBtn .lbl{display:none}}
+@media (max-width:620px){#roomFb{bottom:var(--tbB,96px);right:10px}#roomFbBtn .lbl{display:none}}
 #online{font-size:11px;color:var(--gold);margin-top:3px;display:none}#online.on{display:block}
-#chat{position:fixed;left:16px;bottom:96px;z-index:11;width:min(340px,calc(100vw - 32px));display:none;flex-direction:column;gap:6px;pointer-events:none}
+#chat{position:fixed;left:16px;bottom:var(--tbB,96px);z-index:11;width:min(340px,calc(100vw - 32px));display:none;flex-direction:column;gap:6px;pointer-events:none}
 body.in-gallery #chat{display:flex}
-@media (pointer:coarse){#chat{bottom:236px}}
+@media (pointer:coarse){#chat{bottom:calc(var(--tbB,96px) + 140px)}}
 #chatLog{display:flex;flex-direction:column;gap:4px}
 #chatLog div{align-self:flex-start;max-width:100%;padding:6px 11px;border-radius:12px;background:rgba(16,14,12,.62);backdrop-filter:blur(8px);font-size:13px;line-height:1.4;transition:opacity 1s;word-wrap:break-word}
 #chatLog div b{color:var(--gold);font-weight:600;margin-right:6px}#chatLog div.sys{color:var(--muted);font-style:italic}#chatLog div.old{opacity:0}
 #chatForm{display:none;padding:6px;border-radius:14px;pointer-events:auto;gap:6px;align-items:center}#chat.typing #chatForm{display:flex}
 #chatForm{flex-wrap:wrap}#chatForm .field{flex:1 1 100%;padding:8px 10px;order:3}#chatForm .emo{display:flex;gap:2px}#chatForm .emo button{background:none;border:0;font-size:18px;padding:4px}
-#avPanel{position:fixed;right:16px;top:70px;bottom:96px;z-index:13;width:320px;max-width:calc(100vw - 32px);overflow:auto;padding:16px;transform:translateX(calc(100% + 30px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}#avPanel.open{transform:none}
+#avPanel{position:fixed;right:16px;top:70px;bottom:var(--tbB,96px);z-index:13;width:320px;max-width:calc(100vw - 32px);overflow:auto;padding:16px;transform:translateX(calc(100% + 30px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}#avPanel.open{transform:none}
 .lxrow{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:9px 10px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:rgba(255,255,255,.04)}.lxrow b{display:block;font-size:13.5px}.lxrow small{font-size:11.5px;color:var(--muted)}
 #avPanel .emo-row{display:flex;flex-wrap:wrap;gap:4px}#avPanel .emo-row button{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;font-size:18px;padding:5px 7px}
 #mirrorBtn.on{background:var(--gold-soft)!important;border-radius:8px}
-@media (max-width:620px){#avPanel{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:84px;max-height:52dvh}}
+@media (max-width:620px){#avPanel{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:var(--tbB,84px);max-height:52dvh}}
 #peerMenu{position:fixed;z-index:42;display:none;padding:8px;min-width:190px}#peerMenu.open{display:block}
 #peerMenu b{display:block;padding:4px 8px 8px;font-size:14px}#peerMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:9px;font-size:13.5px}
 #peerMenu button:hover{background:rgba(255,255,255,.08)}
@@ -279,7 +287,7 @@ body.in-gallery #chat{display:flex}
   #galleryName{font-size:19px}
   #toolbar{bottom:10px}
   .tb{min-width:58px;padding:8px 5px 6px}
-  #joy{bottom:100px}
+  #joy{bottom:calc(var(--tbB,96px) + 6px)}
   #toast{bottom:auto;top:140px}
   .card h1{font-size:clamp(34px,10vw,52px)}
 }
@@ -1627,6 +1635,10 @@ function layoutList() {
   list = list.filter(e => e && DECOR[e.type]).map(e => ({ ...e }));
   const defs = defaultLayout(R.key, R.th);
   if (!(room.layout?.v >= 2)) for (let k = 0; k < 4; k++) if (!list.some(e => e.type === 'vitrine' && e.slot === 'c' + k)) list.push(defs.find(e => e.slot === 'c' + k));
+  if (!(room.layout?.v >= 3)) { // v3 added the TV and the radio
+    if (!list.some(e => e.type === 'tv')) list.push({ id: 'tv0', type: 'tv', x: HW - .2, z: 2.1, rot: -PI / 2, s: 1, seed: 1 });
+    if (!list.some(e => e.type === 'radio')) list.push({ id: 'rd0', type: 'radio', x: 0, z: 1.5, rot: 0, s: 1.2, seed: 2 });
+  }
   return list;
 }
 /* ---------- placement rules: things stand on the floor or on the flower counter, and never overlap */
@@ -1712,7 +1724,7 @@ function renderArrange() {
 let layoutTimer = null, lastLayoutLocal = 0;
 function scheduleLayoutSave() {
   lastLayoutLocal = Date.now();
-  room.layout = { v: 2, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
+  room.layout = { v: 3, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
   clearTimeout(layoutTimer); layoutTimer = setTimeout(() => saveRoom({ layout: room.layout }), 700);
 }
 const newId = () => 'd' + Date.now().toString(36) + ((Math.random() * 1e4) | 0);
@@ -2463,7 +2475,7 @@ cvs.addEventListener('pointermove', e => {
   if (dragging === e.pointerId) {
     const dx = e.movementX ?? 0, dy = e.movementY ?? 0; moved += Math.abs(dx) + Math.abs(dy);
     if (moved > 6 && inspecting()) { selected.holder.rotation.y += dx * (e.pointerType === 'touch' ? .014 : .01); return; }
-    if (moved > 6) { const k = e.pointerType === 'touch' ? .006 : .0035; yawT += dx * k; pitchT = THREE.MathUtils.clamp(pitchT + dy * k, -1.25, 1.25); if (focus) focus.lock = false; stopTour(); }
+    if (moved > 6) { const k = e.pointerType === 'touch' ? .006 * TOUCH.look : .0035; yawT += dx * k; pitchT = THREE.MathUtils.clamp(pitchT + dy * k, -1.25, 1.25); if (focus) focus.lock = false; stopTour(); }
   } else if (dragging === null && e.pointerType === 'mouse') hoverCheck(e);
 });
 cvs.addEventListener('pointerup', e => {
@@ -3072,7 +3084,11 @@ function setToolbarMin(on) {
   if (on) closePops();
 }
 $('#tMenu').onclick = () => setToolbarMin(!document.body.classList.contains('tb-min'));
-try { setToolbarMin(!!localStorage.getItem('tbMin')); } catch { }
+try { const v = localStorage.getItem('tbMin'); setToolbarMin(v === null ? isTouch && innerWidth < 700 : !!v); } catch { }
+{ // keep panels, chat and toasts just above the toolbar, however tall it is
+  const tb = $('#toolbar'), put = () => { const r = tb.getBoundingClientRect(); document.documentElement.style.setProperty('--tbB', Math.round(innerHeight - r.top + 12) + 'px'); };
+  new ResizeObserver(put).observe(tb); addEventListener('resize', put); put();
+}
 function updateKeyHints() {
   const t = (id, txt) => { const el = $(id); if (el) el.title = txt; };
   t('#tFire', `Pháo hoa (${keyLabel(KB.fire)})`); t('#tChat', `Trò chuyện (${keyLabel(KB.chat)})`); t('#tFull', `Toàn màn hình (${keyLabel(KB.full)})`);
@@ -3093,15 +3109,16 @@ addEventListener('keydown', e => {
 }, true);
 let setTab = 'guide';
 function openSettings(tab) {
-  if (tab) setTab = tab; kbWait = null;
+  if (tab) setTab = tab; else if (!openSettings.used && isTouch) setTab = 'touch'; openSettings.used = true; kbWait = null;
   const acct = !!me && api?.mode === 'supabase';
   if (setTab === 'acct' && !acct) setTab = 'guide';
-  const tabs = [['guide', 'Hướng dẫn'], ['keys', 'Phím tắt'], ...(acct ? [['acct', 'Tài khoản & bảo mật']] : [])];
+  const tabs = [['guide', 'Hướng dẫn'], ['keys', 'Phím tắt'], ['touch', 'Điện thoại'], ...(acct ? [['acct', 'Tài khoản & bảo mật']] : [])];
   modal(`<h2 style="margin:0">Cài đặt</h2><div class="stabs">${tabs.map(([k, n]) => `<button data-st="${k}" class="${k === setTab ? 'on' : ''}">${n}</button>`).join('')}</div><div class="sbox" id="sBody"></div><div class="row" style="margin-top:12px"><button class="btn" data-x>Đóng</button></div>`, box => {
     box.querySelectorAll('[data-st]').forEach(b => b.onclick = () => openSettings(b.dataset.st));
     const body = box.querySelector('#sBody');
     if (setTab === 'guide') body.innerHTML = guideHTML();
     if (setTab === 'keys') renderKeys(body);
+    if (setTab === 'touch') renderTouch(body);
     if (setTab === 'acct') renderAcct(body);
   });
 }
@@ -3131,6 +3148,23 @@ function guideHTML() {
     <h4>Thanh menu</h4><dl><dt>${K('menu')}</dt><dd>Thu gọn / mở thanh menu (hoặc bấm nút đầu tiên)</dd>
       ${btns.map(b => `<dt>${esc(b.textContent.trim())}</dt><dd>${esc(b.title || '')}</dd>`).join('')}</dl>
     <p class="note">Đổi phím tắt ở thẻ <b>Phím tắt</b>.</p></div>`;
+}
+const TOUCH = { side: 'left', look: 1 };
+try { Object.assign(TOUCH, JSON.parse(localStorage.getItem('touchCfg') || '{}')); } catch { }
+function applyTouch() { const j = $('#joy'); j.style.left = TOUCH.side === 'right' ? 'auto' : ''; j.style.right = TOUCH.side === 'right' ? '22px' : ''; try { localStorage.setItem('touchCfg', JSON.stringify(TOUCH)); } catch { } }
+applyTouch();
+function renderTouch(body) {
+  const seg = (k, opts) => `<div class="seg" data-tc="${k}" style="margin-top:0">${opts.map(([v, n]) => `<button data-v="${v}" class="${String(TOUCH[k]) === String(v) ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  body.innerHTML = `<p class="note" style="margin-top:0">Điện thoại và máy tính bảng không có bàn phím, nên thay phím tắt bằng thao tác chạm:</p>
+    <div class="guide"><dl>
+      <dt>Cần điều khiển</dt><dd>Kéo để đi lại (đẩy hết cỡ để chạy)</dd>
+      <dt>Vuốt màn hình</dt><dd>Nhìn quanh</dd>
+      <dt>Chạm</dt><dd>Xem tác phẩm, mở tivi / radio, bắt lì xì, tặng quà cho người khác</dd>
+      <dt>Nút trên thanh menu</dt><dd>Pháo hoa, trò chuyện, nhân vật (vẫy tay, nhảy, góc nhìn thứ ba ở ô trò chuyện)</dd>
+      <dt>Nút Menu</dt><dd>Thu gọn / mở thanh menu để nhìn rõ phòng</dd></dl></div>
+    <h4>Cần điều khiển đặt bên</h4>${seg('side', [['left', 'Trái'], ['right', 'Phải']])}
+    <h4>Tốc độ vuốt nhìn</h4>${seg('look', [[.6, 'Chậm'], [1, 'Vừa'], [1.6, 'Nhanh']])}`;
+  body.querySelectorAll('[data-tc]').forEach(sg => sg.querySelectorAll('button').forEach(b => b.onclick = () => { const k = sg.dataset.tc; TOUCH[k] = k === 'look' ? +b.dataset.v : b.dataset.v; applyTouch(); renderTouch(body); }));
 }
 function renderKeys(body) {
   body.innerHTML = `<p class="note" style="margin-top:0">Nhấn vào ô phím rồi bấm phím mới (Esc để huỷ). Phím mũi tên luôn dùng được để đi và quay. Cài đặt này lưu trên trình duyệt này.</p>` +
@@ -4650,7 +4684,7 @@ $('#enter').onclick = () => {
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.3';
+const BUILD = '2026-11-06.4';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();

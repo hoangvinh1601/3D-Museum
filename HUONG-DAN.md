@@ -117,7 +117,9 @@ Mô hình cây cảnh, sofa, ghế bành, tượng, bình gốm, đèn chùm… 
 
 ## Tính năng mới (06/11/2026)
 
-- **Thu gọn thanh menu:** bấm nút đầu tiên trên thanh menu (hoặc phím **H**) để thu gọn thành một nút nhỏ, bấm lại để mở ra.
+- **Thanh menu:** luôn hiện đủ nút (máy tính: xuống hàng khi chật; điện thoại: dạng lưới). Bấm nút đầu tiên (hoặc phím **H**) để thu gọn thành một nút nhỏ. Điện thoại mặc định thu gọn.
+- **Tivi và radio có sẵn trong mỗi gian:** tivi trên tường bên phải giữa hai bức tranh, radio trên quầy hoa. Chủ phòng di chuyển hoặc cất vào kho trong *Sắp xếp*.
+- **Điện thoại:** Cài đặt → *Điện thoại* thay cho phím tắt: đổi bên đặt cần điều khiển, tốc độ vuốt nhìn.
 - **Cài đặt (nút bánh răng ⚙ góc trên):** thẻ *Hướng dẫn* giải thích mọi thao tác và nút; thẻ *Phím tắt* cho đổi phím (lưu trên từng trình duyệt); thẻ *Tài khoản & bảo mật* để đổi mật khẩu, gắn email, đăng xuất các thiết bị khác.
 - **Một tài khoản, một nhân vật:** khi cùng tài khoản vào phòng từ nơi khác, nhân vật ở thiết bị cũ rời phòng và hiện thông báo.
 - **Tivi treo tường:** thêm trong *Sắp xếp* hoặc mua trong *Cửa hàng*. Nhấn vào tivi, dán link YouTube, chọn *Loa tivi* (gần to, xa nhỏ) hoặc *Loa cả phòng*. Mỗi người xem tự phát trên máy mình.
