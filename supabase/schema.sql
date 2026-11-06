@@ -450,3 +450,26 @@ begin
   return b;
 end $$;
 grant execute on function public.buy_pass(uuid) to authenticated;
+
+-- =====================================================================
+--  Sảnh chính: danh sách phòng trưng bày công khai (miễn phí / mật khẩu / thu phí)
+-- =====================================================================
+create or replace function public.list_public_galleries(p_search text default null, p_limit int default 60) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(t order by t.hearts desc, t.created_at desc), '[]'::jsonb) from (
+    select g.slug, g.name, g.visibility, g.entry_fee, g.created_at,
+      p.username as owner_username, coalesce(p.display_name, p.username) as owner_name,
+      (select count(*) from rooms r where r.gallery_id = g.id) as rooms,
+      (select count(*) from items i where i.gallery_id = g.id) as items,
+      (select count(*) from feedback f where f.gallery_id = g.id and f.kind <> 'rate') as hearts,
+      (select round(avg(stars)::numeric, 1) from feedback f where f.gallery_id = g.id and f.kind = 'rate') as rating,
+      (select i.path from items i where i.gallery_id = g.id and i.kind = 'image' order by i.updated_at desc limit 1) as cover,
+      (select r.theme from rooms r where r.gallery_id = g.id order by r.sort, r.created_at limit 1) as theme,
+      exists (select 1 from gallery_passes gp where gp.gallery_id = g.id and gp.user_id = auth.uid()) or public.is_member(g.id) as can_enter
+    from galleries g join profiles p on p.id = g.owner_id
+    where g.visibility in ('link', 'password', 'paid')
+      and (p_search is null or p_search = '' or g.name ilike '%' || p_search || '%' or p.username ilike '%' || p_search || '%' or p.display_name ilike '%' || p_search || '%')
+    order by g.created_at desc limit least(coalesce(p_limit, 60), 200)
+  ) t;
+$$;
+grant execute on function public.list_public_galleries(text, int) to anon, authenticated;

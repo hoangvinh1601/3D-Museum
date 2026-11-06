@@ -39,6 +39,7 @@ label.lb{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 5px}
 #intro.hide{opacity:0;pointer-events:none}
 #gate{z-index:32;display:none;overflow:auto}
 #gate.open{display:flex}
+#gate:has(.lobby){align-items:flex-start;background:radial-gradient(ellipse at 50% 30%,rgba(40,32,24,.93),rgba(8,7,6,.98) 70%)}
 .card{max-width:600px;width:100%;text-align:center}
 .card h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(40px,7.5vw,68px);line-height:1.02;margin:14px 0}
 .card h1 em{font-style:italic;color:var(--gold)}
@@ -214,6 +215,21 @@ body.in-gallery #chat{display:flex}
 #peerMenu b{display:block;padding:4px 8px 8px;font-size:14px}#peerMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:9px;font-size:13.5px}
 #peerMenu button:hover{background:rgba(255,255,255,.08)}
 .swatches{display:flex;flex-wrap:wrap;gap:6px}.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;padding:0}.swatches button.on{border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
+.lobby{max-width:980px;width:100%;text-align:left}
+.lhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.lhead h2{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:600;margin:4px 0 2px}.lhead .note{margin:0}
+.doors{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;perspective:1200px}
+@media (max-width:720px){.doors{grid-template-columns:1fr;gap:14px}.door{height:170px!important}}
+.door{position:relative;height:340px;border:0;padding:0 18px 22px;border-radius:999px 999px 18px 18px;background:radial-gradient(ellipse at 50% 30%,rgba(255,240,210,.35),rgba(0,0,0,0) 60%),linear-gradient(180deg,var(--c2),var(--c1));
+  box-shadow:inset 0 0 0 6px rgba(255,238,205,.22),inset 0 0 0 9px rgba(0,0,0,.35),0 18px 50px rgba(0,0,0,.5);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;overflow:hidden;color:#fff;transition:transform .3s,box-shadow .3s}
+.door:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 6px var(--gold),inset 0 0 0 9px rgba(0,0,0,.35),0 24px 60px rgba(0,0,0,.6)}
+.door .leaf{position:absolute;inset:12px 12px 12px 12px;border-radius:999px 999px 12px 12px;background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.08) 50%,rgba(0,0,0,.28));border:1px solid rgba(255,238,205,.25);transform-origin:left center;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.door .leaf:after{content:'';position:absolute;right:16px;top:55%;width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.door.open .leaf{transform:rotateY(-100deg)}
+.door .in{position:relative;font-size:54px;margin-bottom:auto;margin-top:70px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))}
+.door b{position:relative;font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;text-shadow:0 2px 10px rgba(0,0,0,.6)}.door small{position:relative;font-size:12.5px;opacity:.85}
+@media (max-width:720px){.door .in{margin-top:18px;font-size:40px}}
+.lfilter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}.lfilter .field{flex:1;min-width:220px}.lfilter .seg{margin:0}
 /* toolbar: fade the edge that has more buttons to scroll to */
 #toolbar.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 #toolbar.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
@@ -270,7 +286,8 @@ body.in-gallery #chat{display:flex}
 </div>
 <div id="topRight">
   <button class="iconbtn" id="soundBtn" title="Âm thanh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="soundWave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
-  <button class="iconbtn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span class="lbl">Chia sẻ</span></button>
+  <button class="iconbtn" id="shareBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span class="lbl" id="shareLbl">Cài đặt phòng</span></button>
+  <button class="iconbtn" id="lobbyBtn" title="Về sảnh chính"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6M5 10v9h14v-9M10 19v-5h4v5"/></svg><span class="lbl">Sảnh chính</span></button>
   <div style="position:relative">
     <button class="iconbtn" id="acctBtn"></button>
     <div id="acctMenu" class="glass"></div>
@@ -2450,15 +2467,15 @@ function openNewRoom(onCreated) {
 /* ================================================================ UI: share & members */
 const shareLink = () => location.origin + location.pathname + '?g=' + encodeURIComponent(gallery.slug);
 $('#shareBtn').onclick = () => openShare();
-const VIS_TEXT = { link: 'Ai có link đều xem được, không cần tài khoản.', password: 'Khách cần nhập mật khẩu để vào xem.', paid: 'Khách trả xu để mua vé vào xem.', private: 'Chỉ thành viên xem được.' };
+$('#lobbyBtn').onclick = () => showDash('lobby');
+const VIS_TEXT = { link: 'Mở cửa miễn phí: hiện ở Sảnh chính, ai cũng vào xem được.', password: 'Hiện ở Sảnh chính, khách cần nhập mật khẩu để vào.', paid: 'Hiện ở Sảnh chính, khách mua vé bằng xu để vào.', private: 'Riêng tư: không hiện ở Sảnh chính, chỉ thành viên vào được.' };
 async function openShare() {
   if (!gallery) return;
   const owner = role === 'owner', demo = api.mode === 'demo';
-  modal(`<h2>Chia sẻ phòng trưng bày</h2>
+  modal(`<h2>Cài đặt phòng trưng bày</h2>
+    ${owner ? '<p>Phòng <b>miễn phí</b>, <b>có mật khẩu</b> hoặc <b>thu phí</b> sẽ hiện ở <b>Sảnh chính › Tham quan phòng khác</b> cho mọi người. Chọn <b>Thành viên</b> để giữ riêng tư.</p>' : ''}
     ${demo ? '<p class="warn">Đây là bản dùng thử chưa kết nối máy chủ, nên link chưa mở được trên máy khác. Làm theo hướng dẫn cài Supabase để chia sẻ thật.</p>' : ''}
-    <label class="lb">Link tham quan</label>
-    <div class="row"><input class="field" id="sLink" readonly value="${esc(shareLink())}"><button class="btn gold fit" id="sCopy">Sao chép</button></div>
-    ${owner ? `<label class="lb">Ai được xem?</label><div class="seg" id="sVis"><button data-v="link">Ai có link</button><button data-v="password">Có mật khẩu</button><button data-v="paid">Thu phí</button><button data-v="private">Thành viên</button></div>
+    ${owner ? `<label class="lb">Ai được vào tham quan?</label><div class="seg" id="sVis"><button data-v="link">🔓 Miễn phí</button><button data-v="password">🔒 Mật khẩu</button><button data-v="paid">🎟️ Thu phí</button><button data-v="private">👥 Thành viên</button></div>
       <div id="sAccX" style="margin-top:8px"></div>`
       : `<p class="note">${VIS_TEXT[gallery.visibility] || ''}</p>`}
     ${canEdit() ? `<h3 style="margin-top:18px">Thành viên cùng quản lý</h3><div class="members" id="sMembers"><p class="note">Đang tải…</p></div>` : ''}
@@ -2468,6 +2485,8 @@ async function openShare() {
       <h3 style="margin-top:18px">Cài đặt</h3><label class="lb">Tên phòng trưng bày</label><input class="field" id="sName" maxlength="60" value="${esc(gallery.name)}">
       <button class="btn full danger" id="sDelete" style="margin-top:12px">Xoá cả phòng trưng bày</button>` : ''}
     ${role === 'editor' ? `<button class="btn full danger" id="sLeave" style="margin-top:12px">Rời khỏi phòng trưng bày này</button>` : ''}
+    <details style="margin-top:14px"><summary class="note" style="cursor:pointer">Gửi link trực tiếp (không bắt buộc)</summary>
+      <div class="row" style="margin-top:8px"><input class="field" id="sLink" readonly value="${esc(shareLink())}"><button class="btn fit" id="sCopy">Sao chép</button></div></details>
     <div class="row" style="margin-top:14px"><button class="btn" data-x>Đóng</button></div>`, box => {
     box.querySelector('#sCopy').onclick = async () => { try { await navigator.clipboard.writeText(shareLink()); toast('Đã sao chép link.'); } catch (e) { box.querySelector('#sLink').select(); toast('Hãy bấm giữ để sao chép link.'); } };
     const vis = box.querySelector('#sVis');
@@ -2526,7 +2545,7 @@ function updateAcct() {
   if (me) b.innerHTML = `<span class="avatar">${esc((me.display || me.username)[0].toUpperCase())}</span><span>${esc(me.display || me.username)}</span>`;
   else b.innerHTML = 'Đăng nhập';
   const m = $('#acctMenu');
-  m.innerHTML = me ? `<div class="who">${esc(me.display)}<small>@${esc(me.username)}${api.mode === 'demo' ? ' · bản dùng thử' : ''}</small><small id="acctXu" style="color:var(--gold);margin-top:4px">🪙 ${walletGet().toLocaleString('vi-VN')} xu</small></div><button data-a="dash">Phòng trưng bày của tôi</button>${api.mode === 'demo' ? '' : '<button data-a="out">Đăng xuất</button>'}` : '';
+  m.innerHTML = me ? `<div class="who">${esc(me.display)}<small>@${esc(me.username)}${api.mode === 'demo' ? ' · bản dùng thử' : ''}</small><small id="acctXu" style="color:var(--gold);margin-top:4px">🪙 ${walletGet().toLocaleString('vi-VN')} xu</small></div><button data-a="dash">🏛 Sảnh chính</button>${api.mode === 'demo' ? '' : '<button data-a="out">Đăng xuất</button>'}` : '';
   m.querySelectorAll('button').forEach(x => x.onclick = () => { m.classList.remove('open'); if (x.dataset.a === 'dash') showDash(); if (x.dataset.a === 'out') doSignOut(); });
 }
 $('#acctBtn').onclick = () => { if (!me) { showGate('auth', { tab: 'in' }); return; } $('#acctMenu').classList.toggle('open'); };
@@ -2538,7 +2557,7 @@ function updateGalleryUI() {
   const owner = ownerInfo ? (ownerInfo.display_name || ownerInfo.username) : '';
   el.querySelector('span').textContent = demo ? 'Bản dùng thử · chưa kết nối máy chủ'
     : role === 'owner' ? 'Bạn là chủ phòng' : role === 'editor' ? `Thành viên · phòng của ${owner}` : `Khách tham quan · phòng của ${owner}`;
-  $('#shareBtn').style.display = gallery ? '' : 'none';
+  $('#shareBtn').style.display = gallery && canEdit() ? '' : 'none';
   if (!canEdit() && arrangeOn) setArrange(false);
   R?.slots.forEach(s => s.label()); renderRooms(); updateDoorSign(); renderPanel();
 }
@@ -2622,25 +2641,76 @@ async function doSignOut() {
   await api.signOut().catch(() => { }); me = null; updateAcct(); unsubRealtime?.(); unsubRealtime = null;
   if (gallery && gallery.visibility !== 'private') openGallery(gallery.slug); else { gallery = null; showGate('auth', { tab: 'in' }); }
 }
-async function showDash() {
-  if (!me) { showGate('auth', { tab: 'in' }); return; }
-  showGate('loading', { msg: 'Đang tải phòng trưng bày của bạn…' });
-  let list = [];
-  try { list = await api.myGalleries(); } catch (e) { showGate('error', { msg: e.message }); return; }
-  const box = $('#gateBox');
-  box.className = 'dash';
-  box.innerHTML = `<header><div><div class="eyebrow">Xin chào, ${esc(me.display)}</div><h2>Phòng trưng bày của bạn</h2></div>
-    <div class="row" style="margin:0">${gallery ? '<button class="btn fit" id="dBack">← Quay lại phòng đang xem</button>' : ''}${api.mode === 'demo' ? '' : '<button class="btn fit" id="dOut">Đăng xuất</button>'}</div></header>
-    <div class="gcards">${list.map(g => `<button class="gcard" data-s="${esc(g.slug)}"><div class="sw" style="background:linear-gradient(135deg,${['#2b2622,#c9a25a', '#0d3b56,#29c5d8', '#9e1b17,#ffcc33', '#f6d4da,#ff6f9a', '#0a0b1e,#7b5cff'][(g.name.length) % 5]})"></div><div class="bd"><b>${esc(g.name)}</b><small><span class="badge">${g.role === 'owner' ? 'Chủ phòng' : 'Thành viên'}</span>${{ private: 'Riêng tư', password: 'Có mật khẩu', paid: 'Thu phí' }[g.visibility] || 'Ai có link đều xem được'}</small></div></button>`).join('')}
+/* ================================================================ main lobby (sảnh chính) */
+const VIS_BADGE = { link: ['🔓', 'Miễn phí'], password: ['🔒', 'Mật khẩu'], paid: ['🎟️', 'Thu phí'], private: ['👥', 'Riêng tư'] };
+const themeBg = k => { const t = THEMES[k] || THEMES.classic; return `linear-gradient(135deg,${t.sw[0]} 0 40%,${t.sw[1]} 40% 72%,${t.sw[2]} 72%)`; };
+async function showDash(view = 'lobby') {
+  showGate('loading', { msg: 'Đang mở sảnh chính…' });
+  const box = $('#gateBox'); box.className = 'lobby';
+  if (me) refreshWallet();
+  const head = (title, sub, back) => `<header class="lhead"><div>${back ? '<button class="linkbtn" id="lBack">← Sảnh chính</button>' : `<div class="eyebrow">${me ? 'Xin chào, ' + esc(me.display) : 'Chào mừng bạn'}</div>`}<h2>${title}</h2>${sub ? `<p class="note">${sub}</p>` : ''}</div>
+    <div class="row" style="margin:0;gap:8px;flex-wrap:wrap">${me ? `<span class="wallet">🪙 ${walletGet().toLocaleString('vi-VN')} xu</span>` : ''}${gallery ? '<button class="btn fit" id="dBack">↩ Về phòng đang xem</button>' : ''}${me ? (api.mode === 'demo' ? '' : '<button class="btn fit" id="dOut">Đăng xuất</button>') : '<button class="btn gold fit" id="dIn">Đăng nhập</button>'}</div></header>`;
+  const bindHead = () => {
+    box.querySelector('#lBack')?.addEventListener('click', () => showDash('lobby'));
+    box.querySelector('#dBack')?.addEventListener('click', () => { box.className = 'card'; hideGate(); });
+    box.querySelector('#dOut')?.addEventListener('click', () => { box.className = 'card'; doSignOut(); });
+    box.querySelector('#dIn')?.addEventListener('click', () => { box.className = 'card'; showGate('auth', { tab: 'in' }); });
+  };
+  if (view === 'lobby') {
+    let pub = []; try { pub = api.listPublic ? await api.listPublic('') : []; } catch (e) { console.warn(e); }
+    let mine = []; if (me) try { mine = await api.myGalleries(); } catch { }
+    box.innerHTML = `${head('Sảnh chính', 'Chọn một cánh cửa để bắt đầu.')}
+      <div class="doors">
+        <button class="door" data-go="mine" style="--c1:#5a3c26;--c2:#c9a25a"><span class="leaf"></span><span class="in">🏠</span><b>Phòng của tôi</b><small>${me ? `${mine.length} phòng trưng bày` : 'Đăng nhập để tạo phòng'}</small></button>
+        <button class="door" data-go="explore" style="--c1:#0d3b56;--c2:#29c5d8"><span class="leaf"></span><span class="in">🌍</span><b>Tham quan phòng khác</b><small>${pub.length} phòng đang mở cửa</small></button>
+        <button class="door" data-go="new" style="--c1:#9e1b17;--c2:#ffcc33"><span class="leaf"></span><span class="in">✨</span><b>Tạo phòng mới</b><small>Mở một phòng trưng bày</small></button>
+      </div>`;
+    bindHead();
+    box.querySelectorAll('.door').forEach(d => d.onclick = () => {
+      d.classList.add('open'); sfxChime();
+      setTimeout(() => { const g = d.dataset.go; if (g === 'new') { if (!me) { box.className = 'card'; showGate('auth', { tab: 'up' }); return; } newGalleryModal(); d.classList.remove('open'); } else if (g === 'mine' && !me) { box.className = 'card'; showGate('auth', { tab: 'in' }); } else showDash(g); }, 480);
+    });
+    return;
+  }
+  if (view === 'mine') {
+    let list = []; try { list = await api.myGalleries(); } catch (e) { showGate('error', { msg: e.message }); return; }
+    box.innerHTML = `${head('Phòng của tôi', 'Phòng bạn là chủ hoặc được mời làm thành viên.', true)}
+      <div class="gcards">${list.map(g => `<button class="gcard" data-s="${esc(g.slug)}"><div class="sw" style="background:${themeBg(['classic', 'ocean', 'tet', 'love', 'galaxy'][g.name.length % 5])}"></div><div class="bd"><b>${esc(g.name)}</b><small><span class="badge">${g.role === 'owner' ? 'Chủ phòng' : 'Thành viên'}</span>${VIS_BADGE[g.visibility]?.join(' ') || ''}</small></div></button>`).join('')}
       <button class="gcard new" id="dNew">＋ Tạo phòng trưng bày mới</button></div>
-    ${list.length ? '' : '<p class="note" style="margin-top:14px">Bạn chưa có phòng trưng bày nào. Tạo một phòng, hoặc nhờ bạn bè mời bạn vào phòng của họ bằng tên đăng nhập <b>@' + esc(me.username) + '</b>.</p>'}`;
-  box.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { box.className = 'card'; openGallery(b.dataset.s); });
-  box.querySelector('#dBack')?.addEventListener('click', () => { box.className = 'card'; hideGate(); });
-  box.querySelector('#dOut')?.addEventListener('click', () => { box.className = 'card'; doSignOut(); });
-  box.querySelector('#dNew').onclick = () => modal(`<h2>Tạo phòng trưng bày mới</h2><p>Mỗi phòng trưng bày có link riêng, thành viên riêng và có thể có nhiều gian.</p>
+      ${list.length ? '' : '<p class="note" style="margin-top:14px">Bạn chưa có phòng trưng bày nào. Tạo một phòng, hoặc nhờ bạn bè mời bạn bằng tên đăng nhập <b>@' + esc(me.username) + '</b>.</p>'}`;
+    bindHead();
+    box.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { box.className = 'card'; openGallery(b.dataset.s); });
+    box.querySelector('#dNew').onclick = newGalleryModal;
+    return;
+  }
+  // explore: everyone's open galleries
+  let filter = 'all', q = '', list = [];
+  box.innerHTML = `${head('Tham quan phòng khác', 'Phòng miễn phí vào ngay, phòng có mật khẩu cần nhập mật khẩu, phòng thu phí cần mua vé bằng xu.', true)}
+    <div class="lfilter"><input class="field" id="lQ" placeholder="Tìm theo tên phòng hoặc chủ phòng…"><div class="seg" id="lF"><button data-f="all" class="on">Tất cả</button><button data-f="link">🔓 Miễn phí</button><button data-f="password">🔒 Mật khẩu</button><button data-f="paid">🎟️ Thu phí</button></div></div>
+    <div class="gcards" id="lList"><p class="note">Đang tải…</p></div>`;
+  bindHead();
+  const draw = () => {
+    const rows = list.filter(g => filter === 'all' || g.visibility === filter), el = box.querySelector('#lList');
+    if (!rows.length) { el.innerHTML = '<p class="note">Chưa có phòng nào phù hợp.</p>'; return; }
+    el.innerHTML = rows.map(g => {
+      const [ic, lb] = VIS_BADGE[g.visibility] || ['', ''], fee = g.visibility === 'paid' ? `${(+g.entry_fee).toLocaleString('vi-VN')} xu` : lb;
+      const cover = g.cover && api.url ? `background:url('${esc(api.url(g.cover))}') center/cover,${themeBg(g.theme)}` : `background:${themeBg(g.theme)}`;
+      return `<button class="gcard" data-s="${esc(g.slug)}"><div class="sw" style="${cover};height:110px"></div><div class="bd"><b>${esc(g.name)}</b>
+        <small>của ${esc(g.owner_name)} · ${g.rooms} gian · ${g.items} tác phẩm</small>
+        <small style="display:flex;gap:8px;margin-top:6px;align-items:center"><span class="badge">${ic} ${g.can_enter && g.visibility !== 'link' ? 'Đã có vé' : fee}</span>❤️ ${g.hearts}${g.rating ? ` · ⭐ ${g.rating}` : ''}</small></div></button>`;
+    }).join('');
+    el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { box.className = 'card'; openGallery(b.dataset.s); });
+  };
+  const load = async () => { try { list = await api.listPublic(q); } catch (e) { list = []; toast('Không tải được danh sách: ' + e.message); } draw(); };
+  box.querySelectorAll('#lF button').forEach(b => b.onclick = () => { filter = b.dataset.f; box.querySelectorAll('#lF button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
+  let qt; box.querySelector('#lQ').oninput = e => { clearTimeout(qt); qt = setTimeout(() => { q = e.target.value.trim(); load(); }, 350); };
+  load();
+}
+function newGalleryModal() {
+  modal(`<h2>Tạo phòng trưng bày mới</h2><p>Mỗi phòng trưng bày có thành viên riêng và nhiều gian. Sau khi tạo, vào <b>Cài đặt phòng</b> để chọn mở cửa miễn phí, có mật khẩu hay thu phí.</p>
     <input class="field" id="mGName" maxlength="60" placeholder="Ví dụ: Kỷ niệm của chúng mình">
     <div class="row" style="margin-top:12px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="mGo">Tạo</button></div>`, b => {
-    b.querySelector('#mGo').onclick = async ev => { ev.target.disabled = true; try { const slug = await api.createGallery(b.querySelector('#mGName').value.trim() || 'Phòng trưng bày mới'); closeModal(); box.className = 'card'; openGallery(slug); } catch (e) { ev.target.disabled = false; toast(e.message); } };
+    b.querySelector('#mGo').onclick = async ev => { ev.target.disabled = true; try { const slug = await api.createGallery(b.querySelector('#mGName').value.trim() || 'Phòng trưng bày mới'); closeModal(); $('#gateBox').className = 'card'; openGallery(slug); } catch (e) { ev.target.disabled = false; toast(e.message); } };
   });
 }
 
@@ -2671,6 +2741,7 @@ async function makeSupabaseAPI(cfg) {
       return d.filter(x => x.galleries).map(x => ({ ...x.galleries, role: x.role })).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
     },
     async createGallery(name) { return chk(await sb.rpc('create_gallery', { p_name: name })); },
+    async listPublic(q) { return chk(await sb.rpc('list_public_galleries', { p_search: q || null, p_limit: 60 })) || []; },
     async loadGallery(slug, password) { return chk(await sb.rpc('get_shared_gallery', { p_slug: slug, p_password: password || null })); },
     async setAccess(gid, visibility, password, fee) { chk(await sb.rpc('set_access', { p_gallery: gid, p_visibility: visibility, p_password: password || null, p_fee: fee || 0 })); },
     async buyPass(gid) { return chk(await sb.rpc('buy_pass', { p_gallery: gid })); },
@@ -2750,6 +2821,7 @@ function makeDemoAPI() {
       return { gallery: { ...g }, owner: { username: user.username, display_name: user.display }, role: 'owner', rooms: db.rooms.filter(r => r.gallery_id === g.id).map(r => ({ ...r })), items: db.items.filter(i => i.gallery_id === g.id).map(i => ({ ...i })) };
     },
     async updateGallery(id, patch) { Object.assign(db.galleries.find(g => g.id === id), patch); },
+    async listPublic() { return db.galleries.filter(g => g.visibility !== 'private').map(g => ({ slug: g.slug, name: g.name, visibility: g.visibility, entry_fee: g.entry_fee || 0, owner_name: user.display, rooms: db.rooms.filter(r => r.gallery_id === g.id).length, items: db.items.filter(i => i.gallery_id === g.id).length, hearts: 0, rating: null, theme: db.rooms.find(r => r.gallery_id === g.id)?.theme, can_enter: true })); },
     async setAccess(gid, visibility, password, fee) { Object.assign(db.galleries.find(g => g.id === gid), { visibility, entry_fee: fee || 0, has_password: !!password }); },
     async buyPass() { throw new Error('Bản dùng thử chưa có vé vào cửa.'); },
     async deleteGallery(id) { db.galleries = db.galleries.filter(g => g.id !== id); db.rooms = db.rooms.filter(r => r.gallery_id !== id); db.items = db.items.filter(i => i.gallery_id !== id); },
@@ -3324,8 +3396,7 @@ async function boot() {
     await openGallery(slug);
     $('#introSub').textContent += ' · Bản dùng thử: ảnh chỉ lưu trong tab này';
   } else if (pendingSlug) await openGallery(pendingSlug);
-  else if (me) showDash();
-  else showGate('auth', { tab: 'in' });
+  else showDash();
 }
 $('#enter').onclick = () => {
   started = true; $('#intro').classList.add('hide'); cvs.style.cursor = 'grab';
