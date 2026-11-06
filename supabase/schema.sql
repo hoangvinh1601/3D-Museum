@@ -321,7 +321,7 @@ language plpgsql security definer set search_path = public as $$
 declare g uuid; owner uuid; b int;
 begin
   if auth.uid() is null then raise exception 'not signed in'; end if;
-  if p_amount < 1 or p_amount > 10000 then raise exception 'invalid amount'; end if;
+  if p_amount < 1 or p_amount > 10000000 then raise exception 'invalid amount'; end if;
   select r.gallery_id, gl.owner_id into g, owner from rooms r join galleries gl on gl.id = r.gallery_id where r.id = p_room;
   if g is null or not public.can_view(g) then raise exception 'not allowed'; end if;
   if owner = auth.uid() then raise exception 'cannot donate to yourself'; end if;

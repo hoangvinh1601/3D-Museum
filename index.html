@@ -214,6 +214,10 @@ body.in-gallery #chat{display:flex}
 #chatLog div b{color:var(--gold);font-weight:600;margin-right:6px}#chatLog div.sys{color:var(--muted);font-style:italic}#chatLog div.old{opacity:0}
 #chatForm{display:none;padding:6px;border-radius:14px;pointer-events:auto;gap:6px;align-items:center}#chat.typing #chatForm{display:flex}
 #chatForm{flex-wrap:wrap}#chatForm .field{flex:1 1 100%;padding:8px 10px;order:3}#chatForm .emo{display:flex;gap:2px}#chatForm .emo button{background:none;border:0;font-size:18px;padding:4px}
+#avPanel{position:fixed;right:16px;top:70px;bottom:96px;z-index:13;width:320px;max-width:calc(100vw - 32px);overflow:auto;padding:16px;transform:translateX(calc(100% + 30px));transition:transform .45s cubic-bezier(.2,.8,.2,1)}#avPanel.open{transform:none}
+#avPanel .emo-row{display:flex;flex-wrap:wrap;gap:4px}#avPanel .emo-row button{border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:10px;font-size:18px;padding:5px 7px}
+#mirrorBtn.on{background:var(--gold-soft)!important;border-radius:8px}
+@media (max-width:620px){#avPanel{left:8px;right:8px;width:auto;max-width:none;top:auto;bottom:84px;max-height:52dvh}}
 #peerMenu{position:fixed;z-index:42;display:none;padding:8px;min-width:190px}#peerMenu.open{display:block}
 #peerMenu b{display:block;padding:4px 8px 8px;font-size:14px}#peerMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:9px;font-size:13.5px}
 #peerMenu button:hover{background:rgba(255,255,255,.08)}
@@ -388,7 +392,8 @@ body.in-gallery #chat{display:flex}
 </aside>
 
 <div id="roomFb"><div id="roomFbPop" class="glass"><h3 style="margin:0 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Cảm nhận về gian này</h3><div id="roomFbBox" class="fb"></div></div><button class="iconbtn" id="roomFbBtn" title="Thả tim, đánh giá, ủng hộ gian này"></button></div>
-<div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><div class="emo" id="exprBar"></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
+<aside id="avPanel" class="glass"></aside>
+<div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" id="mirrorBtn" title="Soi gương (M)">🪞</button><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><div class="emo" id="exprBar"></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
 <div id="peerMenu" class="glass"></div>
 <div id="modal"><div class="box glass" id="modalBox"></div></div>
 <div id="toast" class="glass"></div>
@@ -1185,40 +1190,146 @@ function addPlant(kind, x, z, s = 1, potStyle) {
   return g;
 }
 // branching Tết blossom tree (mai vàng / đào thắm)
-function addBlossomTree(kind, x, z, s = 1, potStyle) {
-  const g = new THREE.Group();
-  g.add(makePot(potStyle || (kind === 'mai' ? 'bluewhite' : 'red'), .38, .6));
-  const geos = [], tips = [], r = mulberry32((x * 100 + z * 10) | 0 + 99);
-  function branch(p, dir, len, rad, depth) {
-    const end = p.clone().addScaledVector(dir, len);
-    const mid = p.clone().lerp(end, .5).add(new THREE.Vector3((r() - .5) * len * .25, (r() - .5) * len * .15, (r() - .5) * len * .25));
-    geos.push(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(p, mid, end), 5, rad, 6));
-    if (depth === 0 || rad < .008) { tips.push(end); return; }
-    for (let i = 0; i < 4; i++) { const t = .35 + r() * .6; const pt = new THREE.QuadraticBezierCurve3(p, mid, end).getPoint(t); if (depth < 3) tips.push(pt); }
-    const kids = depth > 2 ? 2 : 3;
-    for (let k = 0; k < kids; k++) {
-      const nd = dir.clone().add(new THREE.Vector3((r() - .5) * 1.5, (r() - .2) * .7, (r() - .5) * 1.5)).normalize();
-      if (nd.y < .05) nd.y = .05 + r() * .2;
-      branch(end, nd.normalize(), len * (.62 + r() * .2), rad * .62, depth - 1);
+/* ---------- realistic trees: mai, đào, bonsai (procedural, seeded) */
+// tapered, slightly gnarled tube along a smooth curve; flare = root swelling at the base
+function taperTube(pts, r0, r1, radial, flare, rnd) {
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .5), segs = Math.max(6, Math.round(curve.getLength() / .035));
+  const fr = curve.computeFrenetFrames(segs, false), pos = [], uv = [], idx = [], len = curve.getLength(), ph = rnd() * 9;
+  for (let i = 0; i <= segs; i++) {
+    const t = i / segs, P = curve.getPointAt(t), N = fr.normals[i], B = fr.binormals[i];
+    let rad = r0 + (r1 - r0) * Math.pow(t, .75); rad *= 1 + flare * Math.pow(Math.max(0, 1 - t * 5), 2) + .05 * Math.sin(t * 31 + ph);
+    for (let j = 0; j <= radial; j++) {
+      const a = j / radial * TAU, k = 1 + .07 * Math.sin(a * 3 + t * 9 + ph) + (flare ? .12 * Math.max(0, 1 - t * 6) * Math.sin(a * 5 + ph) : 0);
+      pos.push(P.x + (N.x * Math.cos(a) + B.x * Math.sin(a)) * rad * k, P.y + (N.y * Math.cos(a) + B.y * Math.sin(a)) * rad * k, P.z + (N.z * Math.cos(a) + B.z * Math.sin(a)) * rad * k);
+      uv.push(j / radial * 2, t * len / (TAU * Math.max(r0, .01)) * .5);
     }
   }
-  branch(new THREE.Vector3(0, .55, 0), new THREE.Vector3(.1, 1, .05).normalize(), .75, .07, 4);
-  const trunk = new THREE.Mesh(mergeGeometries(geos), R.mats.bark); g.add(trunk); geos.forEach(x => x.dispose());
-  const list = [], buds = [];
-  tips.forEach(tp => {
-    const n = 8 + (r() * 7 | 0);
+  for (let i = 0; i < segs; i++) for (let j = 0; j < radial; j++) { const a0 = i * (radial + 1) + j, b0 = a0 + radial + 1; idx.push(a0, b0, a0 + 1, b0, b0 + 1, a0 + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+  return { g, curve };
+}
+function barkTex(kind) {
+  return cached('bark2-' + kind, () => {
+    const W = 256, Hh = 512, n = makeNoise(kind.length * 13 + 7), n2 = makeNoise(91), r = mulberry32(kind.length * 31);
+    const base = { mai: [.36, .31, .27], dao: [.33, .2, .17], bonsai: [.42, .26, .18] }[kind] || [.35, .28, .22];
+    const col = pix(W, (u, v, o) => { // square canvas then stretched; fissures run along the trunk
+      const f = fbm(n, u * 6, v * 1.2, 6, 1.2 * 1, 4), cr = Math.pow(Math.abs(Math.sin((u * 14 + fbm(n2, u * 3, v * 2, 3, 2, 3) * 3) * PI)), 6);
+      let k = .72 + f * .55 - cr * .45; if (kind === 'dao' && Math.abs(Math.sin(v * 70 + fbm(n2, u * 4, v * 4, 4, 4, 2) * 4)) > .97) k *= .55; // peach bark: horizontal lenticels
+      const lich = kind === 'mai' && fbm(n2, u * 5 + 3, v * 5, 5, 5, 4) > .62 ? .35 : 0;
+      o[0] = base[0] * k + lich * .25; o[1] = base[1] * k + lich * .32; o[2] = base[2] * k + lich * .18;
+    });
+    const bump = pix(W, (u, v, o) => { const f = fbm(n, u * 6, v * 1.2, 6, 1.2, 4), cr = Math.pow(Math.abs(Math.sin((u * 14 + fbm(n2, u * 3, v * 2, 3, 2, 3) * 3) * PI)), 6); o[0] = o[1] = o[2] = .5 + f * .4 - cr * .5; });
+    void Hh; void r; return { map: tex(col), bump: tex(bump, false) };
+  });
+}
+// one blossom: 5 cupped petals facing +z with vertex-colour shading, plus stamens
+function blossomGeo(kind) {
+  return cached('blossom3d-' + kind, () => {
+    const parts = [], pr = kind === 'mai' ? .021 : .019;
+    const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(-pr * .55, pr * .25, -pr * .62, pr * .95, 0, pr); sh.bezierCurveTo(pr * .62, pr * .95, pr * .55, pr * .25, 0, 0);
+    for (let i = 0; i < 5; i++) {
+      const pg = new THREE.ShapeGeometry(sh, 5), p = pg.attributes.position, c = [];
+      for (let k = 0; k < p.count; k++) { const x = p.getX(k), y = p.getY(k), d = Math.hypot(x, y) / pr; p.setZ(k, d * d * pr * .55 + Math.abs(x) * .25); const sh2 = kind === 'mai' ? .86 + d * .14 : .78 + d * .22; c.push(sh2, kind === 'dao' ? sh2 * (.82 + d * .18) : sh2, sh2); }
+      pg.setAttribute('color', new THREE.Float32BufferAttribute(c, 3)); pg.rotateZ(i / 5 * TAU + (kind === 'mai' ? 0 : .3)); pg.deleteAttribute('uv'); parts.push(pg);
+    }
+    const cg = new THREE.SphereGeometry(pr * .28, 8, 6); cg.scale(1, 1, .5); cg.translate(0, 0, pr * .12); cg.deleteAttribute('uv');
+    cg.setAttribute('color', new THREE.Float32BufferAttribute(new Array(cg.attributes.position.count * 3).fill(0).map((_, i) => [kind === 'mai' ? .55 : .5, kind === 'mai' ? .38 : .2, .1][i % 3]), 3)); parts.push(cg);
+    for (let i = 0; i < 12; i++) { // stamens
+      const a = i / 12 * TAU, st = new THREE.CylinderGeometry(.0007, .0007, pr * .7, 3); st.rotateX(PI / 2); st.translate(0, 0, pr * .35); st.rotateY(Math.cos(a) * .45); st.rotateX(Math.sin(a) * .45);
+      const tip = new THREE.SphereGeometry(.0022, 5, 3); tip.translate(Math.sin(Math.cos(a) * .45) * pr * .7, -Math.sin(Math.sin(a) * .45) * pr * .7, pr * .7);
+      [st, tip].forEach((g, j) => { g.deleteAttribute('uv'); g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(g.attributes.position.count * 3).fill(0).map((_, q) => (j ? [.95, .55, .1] : [.95, .85, .45])[q % 3]), 3)); parts.push(g); });
+    }
+    return keepGeo(mergeGeometries(parts.map(g => g.index ? g.toNonIndexed() : g)));
+  });
+}
+function leafGeo(len, wid, key) {
+  return cached('leaf3d-' + key, () => {
+    const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(-wid, len * .25, -wid * .7, len * .8, 0, len); sh.bezierCurveTo(wid * .7, len * .8, wid, len * .25, 0, 0);
+    const g = new THREE.ShapeGeometry(sh, 4), p = g.attributes.position, c = [];
+    for (let k = 0; k < p.count; k++) { const x = p.getX(k), y = p.getY(k) / len; p.setZ(k, Math.abs(x) * .6 - y * y * len * .25); const v = .75 + y * .3 - Math.abs(x) / wid * .15; c.push(v, v, v); }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(c, 3)); g.deleteAttribute('uv'); return keepGeo(g.toNonIndexed());
+  });
+}
+function mossTop(g, r, y, rnd, col = 0x3f5a22) { // mossy soil with pebbles
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(r, 28), std({ color: 0x2b2117, roughness: 1 })); soil.rotation.x = -PI / 2; soil.position.y = y; g.add(soil);
+  const moss = [], peb = [];
+  for (let i = 0; i < 220; i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()) * r * .96; moss.push({ p: new THREE.Vector3(Math.cos(a) * d, y, Math.sin(a) * d), q: new THREE.Quaternion(), sv: new THREE.Vector3(1 + rnd(), .25 + rnd() * .25, 1 + rnd()).multiplyScalar(r * .045) }); }
+  for (let i = 0; i < 14; i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()) * r * .9; peb.push({ p: new THREE.Vector3(Math.cos(a) * d, y + .004, Math.sin(a) * d), q: new THREE.Quaternion().setFromEuler(new THREE.Euler(rnd(), rnd() * 6, rnd())), sv: new THREE.Vector3(1.4, .7, 1).multiplyScalar(r * (.03 + rnd() * .03)) }); }
+  const mg = keepGeo(cached('mossGeo', () => new THREE.SphereGeometry(1, 7, 5)));
+  g.add(inst(mg, std({ color: col, roughness: .95 }), moss, [hexC(0xffffff), hexC(0xd8e8b0), hexC(0xb8c890)]));
+  g.add(inst(mg, std({ color: 0x8a8378, roughness: .8 }), peb, [hexC(0xffffff), hexC(0xc8c0b0), hexC(0x9a9488)]));
+}
+function bonsaiPot(rnd) {
+  const g = new THREE.Group(), glaze = std({ color: [0x3a5a7a, 0x6a3a2a, 0x2f4a3a][(rnd() * 3) | 0], roughness: .22, metalness: .05 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.56, .12, .38), glaze); body.position.y = .1; g.add(body);
+  const rim = new THREE.Mesh(new THREE.BoxGeometry(.6, .025, .42), glaze); rim.position.y = .165; g.add(rim);
+  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => { const f = new THREE.Mesh(new THREE.BoxGeometry(.06, .04, .05), glaze); f.position.set(a * .22, .02, b * .14); g.add(f); });
+  return g;
+}
+function makeRealTree(kind, seed, potStyle) {
+  const rnd = mulberry32(seed * 7919 + kind.length), g = new THREE.Group(), tubes = [], tips = [], twigs = [];
+  const bonsai = kind === 'bonsai';
+  let baseY;
+  if (bonsai) {
+    const stand = new THREE.Group(), wood = R.mats.wood; // low wooden display stand
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(.36, .36, .04, 28), wood); top.position.y = .62; stand.add(top);
+    for (let i = 0; i < 4; i++) { const a = i / 4 * TAU + PI / 4, l = new THREE.Mesh(new THREE.CylinderGeometry(.025, .02, .6, 8), wood); l.position.set(Math.cos(a) * .27, .3, Math.sin(a) * .27); stand.add(l); }
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.27, .012, 6, 28), wood); ring.rotation.x = PI / 2; ring.position.y = .14; stand.add(ring);
+    g.add(stand); const pot = bonsaiPot(rnd); pot.position.y = .64; g.add(pot); mossTop(g, .2, .64 + .175, rnd); baseY = .64 + .17;
+  } else { g.add(makePot(potStyle || (kind === 'mai' ? 'bluewhite' : 'red'), .4, .58)); mossTop(g, .37, .58 * .955, rnd); baseY = .55; }
+  // trunk: an S-curve with a swollen base
+  const H0 = bonsai ? .42 : 1.05, lean = rnd() * TAU, tp = [];
+  for (let i = 0; i <= 5; i++) { const t = i / 5, sway = Math.sin(t * PI * (bonsai ? 1.6 : 1.2) + lean) * (bonsai ? .12 : .1) * (1 - t * .3); tp.push(new THREE.Vector3(Math.cos(lean) * sway + (bonsai ? Math.sin(t * 2.2) * .05 : 0), baseY + t * H0, Math.sin(lean) * sway)); }
+  const trunk = taperTube(tp, bonsai ? .07 : .075, bonsai ? .025 : .03, 14, bonsai ? 1.1 : .7, rnd); tubes.push(trunk.g);
+  // branches: primaries from the upper trunk, then secondaries and twigs
+  const grow = (P, dir, len, r0, depth) => {
+    const pts = [P.clone()], d = dir.clone();
+    for (let i = 1; i <= 3; i++) { d.add(new THREE.Vector3((rnd() - .5) * .5, (bonsai ? -.12 : .1) + (rnd() - .5) * .3, (rnd() - .5) * .5)).normalize(); pts.push(pts[i - 1].clone().addScaledVector(d, len / 3)); }
+    if (bonsai && depth === 2) pts[3].y += len * .25; // juniper branches dip then rise at the tips
+    const tb = taperTube(pts, Math.max(r0, .0035), Math.max(r0 * .45, .002), depth > 1 ? 8 : 4, 0, rnd); tubes.push(tb.g);
+    if (depth === 0) { tips.push({ p: pts[3], dir: d.clone(), curve: tb.curve }); twigs.push(tb.curve); return; }
+    const n = depth >= 2 ? 2 + ((rnd() * 2) | 0) : 2 + ((rnd() * 3) | 0);
+    for (let k = 0; k < n; k++) {
+      const t = .35 + rnd() * .6, Q = tb.curve.getPointAt(t), side = new THREE.Vector3(rnd() - .5, (bonsai ? 0 : .5) + rnd() * .5, rnd() - .5).normalize();
+      grow(Q, d.clone().lerp(side, .65).normalize(), len * (.45 + rnd() * .2), r0 * .55, depth - 1);
+    }
+    if (depth === 1) { tips.push({ p: pts[3], dir: d.clone(), curve: tb.curve }); twigs.push(tb.curve); }
+  };
+  const nPrim = bonsai ? 6 + ((rnd() * 3) | 0) : 7 + ((rnd() * 3) | 0);
+  for (let i = 0; i < nPrim; i++) {
+    const t = (bonsai ? .35 : .45) + (i / nPrim) * (bonsai ? .6 : .52) + rnd() * .05, P = trunk.curve.getPointAt(Math.min(.98, t));
+    const a = i * 2.4 + lean + rnd() * .6, dir = new THREE.Vector3(Math.cos(a), bonsai ? .05 + rnd() * .15 : .55 + rnd() * .5 - t * .2, Math.sin(a)).normalize();
+    grow(P, dir, (bonsai ? .32 : .78) * (1.15 - t * .45) * (.8 + rnd() * .4), (bonsai ? .03 : .036) * (1.1 - t * .5), bonsai ? 2 : 3);
+  }
+  const tex2 = barkTex(bonsai ? 'bonsai' : kind), barkM = std({ map: tex2.map, bumpMap: tex2.bump, bumpScale: 2.5, roughness: .92, color: 0xffffff });
+  const wood = new THREE.Mesh(mergeGeometries(tubes), barkM); tubes.forEach(x => x.dispose()); wood.castShadow = true; g.add(wood);
+  if (bonsai) { // foliage pads: dense needle clusters shaped like flattened clouds
+    const pads = [], cols = [hexC(0x3f6b2a), hexC(0x4f7d32), hexC(0x5d8a3a), hexC(0x34592a)], ng = leafGeo(.026, .0035, 'needle2');
+    tips.forEach(tp => { const c = tp.p, R0 = .085 + rnd() * .045; for (let i = 0; i < 420; i++) { const a = rnd() * TAU, d = Math.sqrt(rnd()) * R0, h = (rnd() - .15) * .05 * Math.sqrt(1 - d / R0); const p = new THREE.Vector3(c.x + Math.cos(a) * d, c.y + h + .02, c.z + Math.sin(a) * d); pads.push({ p, q: qLook(new THREE.Vector3(Math.cos(a) * .4, 1, Math.sin(a) * .4).normalize(), rnd() * TAU), s: .8 + rnd() * .7 }); } });
+    const fm = inst(ng, std({ vertexColors: true, side: THREE.DoubleSide, roughness: .75 }), pads, cols); fm.castShadow = true; g.add(fm);
+    return g;
+  }
+  // blossoms along the twigs and branch ends; mai = yellow 5 petals, đào = pink with a darker heart
+  const fl = [], buds = [], leaves = [], up = new THREE.Vector3(0, 1, 0);
+  const fcols = kind === 'mai' ? [hexC(0xffd21f), hexC(0xffc61a), hexC(0xffe14d), hexC(0xf8c400)] : [hexC(0xff8fb2), hexC(0xff9fc0), hexC(0xf47aa3), hexC(0xffb3cb)];
+  twigs.forEach(cv => {
+    const n = 9 + ((rnd() * 8) | 0);
     for (let i = 0; i < n; i++) {
-      const p = tp.clone().add(new THREE.Vector3((r() - .5) * .3, (r() - .5) * .2, (r() - .5) * .3));
-      const dir = new THREE.Vector3(r() - .5, r() - .2, r() - .5).normalize();
-      (r() < .12 ? buds : list).push({ p, q: qLook(dir, r() * TAU), s: .7 + r() * .6, cm: .85 + r() * .3 });
+      const t = .15 + rnd() * .85, p = cv.getPointAt(t), tg = cv.getTangentAt(t), out = new THREE.Vector3(rnd() - .5, rnd() * .8 - .1, rnd() - .5).normalize().addScaledVector(tg, .3).normalize();
+      p.addScaledVector(out, .012);
+      const r0 = rnd(); if (r0 < .14) buds.push({ p, q: qLook(out), s: .8 + rnd() * .5 }); else if (r0 < (kind === 'mai' ? .24 : .3)) leaves.push({ p, q: qLook(out.clone().lerp(up, .3).normalize(), rnd() * TAU), s: .7 + rnd() * .5 });
+      else fl.push({ p, q: qLook(out, rnd() * TAU), s: .95 + rnd() * .6 });
     }
   });
-  const col = kind === 'mai' ? [hexC(0xffd21f), hexC(0xffc400), hexC(0xffe066)] : [hexC(0xff7fa8), hexC(0xff9cbc), hexC(0xf25c8c)];
-  g.add(inst(G.blossom, std({ map: shapeTex('blossom'), alphaTest: .45, side: THREE.DoubleSide, roughness: .55, emissive: col[0], emissiveIntensity: .12 }), list, col));
-  if (buds.length) g.add(inst(keepGeo(cached('budGeo', () => new THREE.SphereGeometry(.015, 6, 4))), std({ color: kind === 'mai' ? 0x6b8a2a : 0xc2185b, roughness: .5 }), buds));
-  // little green leaves
-  const lv = tips.filter((_, i) => i % 3 === 0).map(tp => ({ p: tp.clone().add(new THREE.Vector3((r() - .5) * .1, 0, (r() - .5) * .1)), q: qLook(new THREE.Vector3(r() - .5, r(), r() - .5).normalize(), r() * 6), s: .9 }));
-  g.add(inst(G.smallLeaf, std({ map: leafTex('broad'), alphaTest: .5, side: THREE.DoubleSide, roughness: .6, color: 0x9ccf6a }), lv));
+  const fm = inst(blossomGeo(kind), std({ vertexColors: true, side: THREE.DoubleSide, roughness: .5, emissive: fcols[0], emissiveIntensity: .06 }), fl, fcols); fm.castShadow = true; g.add(fm);
+  const bg = keepGeo(cached('budGeo2', () => { const b = new THREE.SphereGeometry(.009, 8, 6); b.scale(1, 1, 1.5); return b; }));
+  if (buds.length) g.add(inst(bg, std({ color: kind === 'mai' ? 0x8a9a2a : 0xd02a64, roughness: .5 }), buds));
+  if (leaves.length) g.add(inst(leafGeo(.05, .016, kind === 'mai' ? 'mai' : 'dao'), std({ vertexColors: true, side: THREE.DoubleSide, roughness: .6 }), leaves, kind === 'mai' ? [hexC(0x9db84a), hexC(0xb8a040), hexC(0x7fa43a)] : [hexC(0x6fae4a), hexC(0x5d9a3e)]));
+  g.userData.tips = tips.map(t => t.p);
+  return g;
+}
+function addBlossomTree(kind, x, z, s = 1, potStyle) {
+  const g = makeRealTree(kind, (x * 100 + z * 10 + 99) | 0, potStyle), r = mulberry32((x * 100 + z * 10) | 0 + 7), tips = g.userData.tips;
   if (R.th.extras?.includes('lanterns')) { // lì xì envelopes
     const env = [];
     for (let i = 0; i < 9; i++) { const tp = tips[(r() * tips.length) | 0]; env.push({ p: tp.clone().add(new THREE.Vector3(0, -.12, 0)), q: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, r() * TAU, (r() - .5) * .2)), s: 1 }); }
@@ -1436,6 +1547,7 @@ const DECOR = {
   palm: { name: 'Cây môn lá to', icon: '🌿', r: .42, make: realDecor('potted-plant-02', 1.05) },
   snake: { name: 'Chậu lô hội', icon: '🪴', r: .24, make: realDecor('potted-plant-04', .6) },
   mai: { name: 'Cây mai vàng', icon: '🌼', r: .5, make: e => addBlossomTree('mai', e.seed % 97, e.seed % 31) },
+  bonsai: { name: 'Bonsai tùng', icon: '🌲', r: .38, make: e => makeRealTree('bonsai', e.seed % 997) },
   dao: { name: 'Cây đào', icon: '🌸', r: .5, make: e => addBlossomTree('dao', e.seed % 97, e.seed % 31) },
   bouquet: { name: 'Bình hoa trên bệ', icon: '💐', r: .3, make: makeBouquetStand },
   bench: { name: 'Sofa da', icon: '🛋️', box: [.42, .95], make: realDecor('sofa-02', .78, PI / 2) },
@@ -1446,7 +1558,7 @@ const DECOR = {
   vitrine: { name: 'Tủ kính trưng bày', icon: '🧸', r: .44, make: makeVitrine },
   glb: { name: 'Vật phẩm', icon: '📦', r: .45, make: makeGlbDecor }
 };
-const ADDABLE = ['ficus', 'palm', 'snake', 'mai', 'dao', 'bouquet', 'bench', 'beanbag', 'lamp', 'sculpture', 'rug'];
+const ADDABLE = ['ficus', 'palm', 'snake', 'mai', 'dao', 'bonsai', 'bouquet', 'bench', 'beanbag', 'lamp', 'sculpture', 'rug'];
 function defaultLayout(key, th) {
   const out = [], r = mulberry32(key.length * 31 + 7); let n = 0;
   const add = (type, x, z, ex = {}) => out.push({ id: ex.id || 'd' + (n++), type, x, z, rot: ex.rot ?? +(r() * TAU).toFixed(2), s: ex.s ?? 1, seed: (r() * 1e6) | 0, ...(ex.slot ? { slot: ex.slot } : {}) });
@@ -2304,7 +2416,8 @@ addEventListener('keydown', e => {
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { focus = null; stopTour(); e.preventDefault(); }
   if (e.code === 'Space' && started) { e.preventDefault(); volley(true); }
   if (started && (e.code === 'Enter' || e.code === 'NumpadEnter') && NET.ch) { e.preventDefault(); openChat(true); }
-  if (started && e.code === 'KeyV') setThirdPerson(!NET.tp);
+  if (started && e.code === 'KeyV') { if (NET.tp) NET.mirror = false; setThirdPerson(!NET.tp); }
+  if (started && e.code === 'KeyM') setMirror(!NET.mirror);
   if (started && NET.ch) { if (e.code === 'Digit1') doEmote('wave'); if (e.code === 'Digit2') doEmote('jump'); if (e.code === 'Digit3') doEmote('dance'); }
   if (arrangeOn && selDecor) { if (e.code === 'KeyQ') rotSel(PI / 12); if (e.code === 'KeyE') rotSel(-PI / 12); if (e.code === 'Delete' || e.code === 'Backspace') { e.preventDefault(); delSel(false); } }
   if (e.code === 'Escape' && pendingCase) { pendingCase = null; toast('Đã huỷ đặt vào tủ kính.'); }
@@ -2447,17 +2560,43 @@ async function doRate(roomId, slot, stars) {
 function openDonate(roomId, slot) {
   if (api.mode === 'supabase' && !me) { toast('Hãy đăng nhập để ủng hộ xu.'); showGate('auth', { tab: 'in' }); return; }
   const target = slot ? (R?.map[slot]?.info?.title || 'tác phẩm này') : (room?.name || 'gian này');
-  modal(`<h2>Ủng hộ “${esc(target)}”</h2><p>Xu được chuyển cho chủ phòng ${esc(ownerInfo?.display_name || ownerInfo?.username || '')}. Bạn đang có <b>${walletGet().toLocaleString('vi-VN')} xu</b> (xu ảo dùng thử).</p>
-    <div class="seg" id="dAmt">${[10, 50, 100, 500].map((n, i) => `<button data-n="${n}" class="${i === 1 ? 'on' : ''}">${n} xu</button>`).join('')}</div>
+  modal(`<h2>Ủng hộ “${esc(target)}”</h2><p>Xu được chuyển ngay vào ví của chủ phòng <b>${esc(ownerInfo?.display_name || ownerInfo?.username || '')}</b>. Bạn đang có <b>${walletGet().toLocaleString('vi-VN')} xu</b> (xu ảo dùng thử).</p>
+    <div class="seg" id="dAmt">${[10, 50, 100, 500, 1000].map(n => `<button data-n="${n}" class="${n === 50 ? 'on' : ''}">${n.toLocaleString('vi-VN')}</button>`).join('')}</div>
+    <label class="lb" for="dNum">Hoặc nhập số xu muốn ủng hộ</label><input class="field" id="dNum" type="number" min="1" max="10000000" step="1" value="50" inputmode="numeric">
     <label class="lb" for="dMsg">Lời nhắn (không bắt buộc)</label><input class="field" id="dMsg" maxlength="200" placeholder="Tác phẩm đẹp quá!">
-    <div class="row" style="margin-top:14px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="dGo">Ủng hộ</button></div>`, box => {
-    let amt = 50; box.querySelectorAll('#dAmt button').forEach(b => b.onclick = () => { amt = +b.dataset.n; box.querySelectorAll('#dAmt button').forEach(x => x.classList.toggle('on', x === b)); });
-    box.querySelector('#dGo').onclick = async ev => {
+    <div class="row" style="margin-top:14px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="dGo">Ủng hộ 50 xu</button></div>`, box => {
+    const num = box.querySelector('#dNum'), go = box.querySelector('#dGo');
+    const sync = () => { const v = Math.floor(+num.value) || 0; go.textContent = v > 0 ? `Ủng hộ ${v.toLocaleString('vi-VN')} xu` : 'Ủng hộ'; box.querySelectorAll('#dAmt button').forEach(x => x.classList.toggle('on', +x.dataset.n === v)); };
+    box.querySelectorAll('#dAmt button').forEach(b => b.onclick = () => { num.value = b.dataset.n; sync(); });
+    num.oninput = sync;
+    go.onclick = async ev => {
+      const amt = Math.floor(+num.value), msg = box.querySelector('#dMsg').value.trim();
+      if (!(amt >= 1)) { toast('Hãy nhập số xu muốn ủng hộ (từ 1 xu).'); num.focus(); return; }
+      if (amt > walletGet() && api.mode === 'supabase') { toast(`Chưa đủ xu: bạn còn ${walletGet().toLocaleString('vi-VN')} xu.`); return; }
+      if (amt > 10000000) { toast('Mỗi lần ủng hộ tối đa 10.000.000 xu.'); return; }
       ev.target.disabled = true;
-      try { xuCache = await api.donate(roomId, slot, amt, box.querySelector('#dMsg').value.trim()); closeModal(); sfxChime(); if (slot) burstAt(slot, 'clap'); toast(`Cảm ơn bạn đã ủng hộ ${amt} xu! Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000); loadFeedback(); updateAcct(); }
+      try {
+        xuCache = await api.donate(roomId, slot, amt, msg); closeModal(); sfxChime(); if (slot) burstAt(slot, 'clap');
+        toast(`Cảm ơn bạn đã ủng hộ ${amt.toLocaleString('vi-VN')} xu! Còn ${walletGet().toLocaleString('vi-VN')} xu.`, 5000); loadFeedback(); updateAcct();
+        NET.ch?.send({ t: 'dn', id: NET.id, to: ownerInfo?.username || '', amt, from: myName(), what: target, msg: msg.slice(0, 200) });
+        chatLine(null, `Bạn đã ủng hộ ${amt.toLocaleString('vi-VN')} xu cho “${target}” 🪙`);
+      }
       catch (e) { ev.target.disabled = false; toast(/not enough/.test(e.message) ? 'Chưa đủ xu để ủng hộ.' : /yourself/.test(e.message) ? 'Bạn không thể tự ủng hộ phòng của mình.' : 'Chưa ủng hộ được: ' + e.message, 6000); }
     };
   });
+}
+// the owner: show donations that arrived while you were away (and refresh the wallet)
+async function checkDonations() {
+  if (api?.mode !== 'supabase' || !me || !api.receivedDonations) return;
+  const key = 'dnSeen:' + me.id; let since = null; try { since = localStorage.getItem(key); } catch { }
+  if (!since) { try { localStorage.setItem(key, new Date().toISOString()); } catch { } return; }
+  try {
+    const list = await api.receivedDonations(since); if (!list.length) return;
+    const total = list.reduce((n, d) => n + d.amount, 0); refreshWallet();
+    list.slice(0, 5).reverse().forEach(d => chatLine(null, `🪙 ${d.from?.display_name || d.from?.username || 'Ai đó'} đã ủng hộ bạn ${d.amount.toLocaleString('vi-VN')} xu${d.message ? `: “${d.message}”` : ''}`));
+    toast(`🪙 Bạn nhận được ${list.length} lượt ủng hộ, tổng ${total.toLocaleString('vi-VN')} xu!`, 7000); sfxChime();
+    try { localStorage.setItem(key, list[0].created_at); } catch { }
+  } catch (e) { console.warn('donations', e); }
 }
 $('#roomFbBtn').onclick = () => { renderFb($('#roomFbBox'), room.id, ''); $('#roomFbPop').classList.toggle('open'); };
 
@@ -2628,7 +2767,7 @@ $('#tKho').onclick = () => openKho(null);
 /* ---------- shop: buy decor with virtual coins ("xu"). Real payment can replace the wallet later. */
 const SHOP_BUILTIN = [
   ['sculpture', 400, 'Tượng trắng trên bệ đá'], ['mai', 350, 'Mai vàng ngày Tết'], ['dao', 350, 'Đào hồng thắm'], ['ficus', 120, 'Cây xanh trong chậu sứ'],
-  ['palm', 120, 'Cau cảnh lá dài'], ['snake', 80, 'Lưỡi hổ dễ chăm'], ['bouquet', 90, 'Bình hoa tươi trên bệ'], ['lamp', 140, 'Đèn cây ánh vàng'],
+  ['bonsai', 600, 'Bonsai dáng tùng trên kệ gỗ'], ['palm', 120, 'Chậu môn lá to'], ['snake', 80, 'Lưỡi hổ dễ chăm'], ['bouquet', 90, 'Bình hoa tươi trên bệ'], ['lamp', 140, 'Đèn cây ánh vàng'],
   ['bench', 150, 'Ghế băng gỗ cho khách ngồi'], ['beanbag', 180, 'Ghế lười êm ái'], ['rug', 100, 'Thảm hoa văn']
 ];
 const WALLET_START = 2000;
@@ -3066,6 +3205,7 @@ async function makeSupabaseAPI(cfg) {
     },
     async removeMember(gid, uid) { chk(await sb.from('gallery_members').delete().eq('gallery_id', gid).eq('user_id', uid)); },
     async wallet() { return chk(await sb.rpc('my_wallet')); },
+    async receivedDonations(since) { return chk(await sb.from('donations').select('amount, message, created_at, from:profiles!donations_from_user_fkey(username, display_name)').eq('to_user', me.id).gt('created_at', since).order('created_at', { ascending: false }).limit(50)) || []; },
     async spend(n) { return chk(await sb.rpc('spend_xu', { p_amount: n })); },
     async react(roomId, slot, kind) { return chk(await sb.rpc('react', { p_room: roomId, p_slot: slot, p_kind: kind, p_rater: raterId() })); },
     async rate(roomId, slot, stars) { chk(await sb.rpc('rate', { p_room: roomId, p_slot: slot, p_stars: stars, p_rater: raterId() })); },
@@ -3358,7 +3498,7 @@ async function openGallery(slug) {
   buildRoom(); applyRoomItems(); resetCamera();
   if (canEdit()) unsubRealtime = api.subscribe(gallery.id, onRealtime);
   updateGalleryUI(); hideGate();
-  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback(); netStart(); lixiLoad();
+  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback(); netStart(); lixiLoad(); checkDonations();
   $('#introEyebrow').textContent = role === 'viewer' ? 'Mời bạn tham quan' : role === 'owner' ? 'Phòng trưng bày của bạn' : 'Bạn là thành viên';
   $('#introTitle').textContent = gallery.name;
   $('#introSub').textContent = `${ownerInfo ? 'Chủ phòng: ' + (ownerInfo.display_name || ownerInfo.username) + ' · ' : ''}${rooms.length} gian · ${Object.values(itemsByRoom).reduce((n, m) => n + Object.keys(m).length, 0)} tác phẩm`;
@@ -3615,6 +3755,11 @@ function onNet(m) {
   if (!m || m.id === NET.id) return;
   if (m.t === 'hi') { sendState(true); return; }
   if (m.t === 'lx') { if (m.drop && (api.mode === 'demo' ? m.r === roomKey() : true)) { const d = { ...m.drop, room_id: api.mode === 'demo' ? room.id : m.drop.room_id }; lixiSpawn(d); if (d.room_id === room.id) { chatLine(null, `🧧 ${String(d.owner_name || 'Chủ phòng').slice(0, 24)} phát ${d.count} bao lì xì: “${String(d.message || '').slice(0, 120)}”. Bấm vào bao đỏ để bắt!`); toast('🧧 Lì xì đang bay khắp gian, bấm để bắt!', 5000); sfxChime(); } } return; }
+  if (m.t === 'dn') {
+    if (me && m.to && m.to === me.username) { refreshWallet(); const amt = +m.amt || 0; toast(`🪙 ${String(m.from || 'Ai đó').slice(0, 24)} vừa ủng hộ bạn ${amt.toLocaleString('vi-VN')} xu cho “${String(m.what || '').slice(0, 60)}”${m.msg ? `: “${String(m.msg).slice(0, 120)}”` : ''}`, 8000); floatEmoji('🪙', innerWidth / 2, innerHeight / 2); sfxChime(); setExpr('love', 4000); try { localStorage.setItem('dnSeen:' + me.id, new Date().toISOString()); } catch { } loadFeedback(); }
+    else chatLine(null, `${String(m.from || 'Ai đó').slice(0, 24)} đã ủng hộ ${(+m.amt || 0).toLocaleString('vi-VN')} xu cho “${String(m.what || '').slice(0, 60)}” 🪙`);
+    return;
+  }
   if (m.t === 'lxc') { lixiRemove(m.drop, m.idx, true); chatLine(null, `${String(m.n || 'Ai đó').slice(0, 24)} bắt được lì xì ${+m.amt || 0} xu 🧧`); return; }
   if (m.t === 'gi') { if (me && m.toUser === me.username) { toast(`${String(m.from || 'Ai đó').slice(0, 24)} vừa tặng bạn “${String(m.name || 'một món đồ').slice(0, 60)}” 🎁 Xem trong Kho đồ.`, 7000); sfxChime(); setExpr?.('love', 4000); INV = null; } return; }
   if (m.t === 'bye') { const pr = NET.peers.get(m.id); if (pr) { disposeFig(pr.fig); NET.peers.delete(m.id); chatLine(null, `${pr.n} đã rời phòng`); updateOnline(); } return; }
@@ -3684,27 +3829,36 @@ function openPeerMenu(pr, x, y) {
   });
 }
 addEventListener('pointerdown', e => { if (!e.target.closest('#peerMenu')) $('#peerMenu').classList.remove('open'); });
-$('#tAvatar').onclick = () => {
-  const a = { ...myAvatar() };
+function setMirror(on) {
+  if (on && !NET.tp) setThirdPerson(true);
+  NET.mirror = on; $('#mirrorBtn')?.classList.toggle('on', on);
+  if (on) toast('🪞 Soi gương: kéo chuột để xoay quanh nhân vật · M để tắt', 3500);
+}
+function openAvatarPanel() {
+  const a = { ...myAvatar() }, prev = { tp: NET.tp, mirror: NET.mirror }, P = $('#avPanel');
   const sw = (key, list) => `<div class="swatches" data-k="${key}">${list.map(c => `<button style="background:${c}" data-v="${c}" class="${a[key] === c ? 'on' : ''}"></button>`).join('')}</div>`;
-  modal(`<h2>Nhân vật LEGO của bạn</h2><p>Mọi người trong phòng trưng bày sẽ thấy bạn với dáng vẻ này. Bấm vào người khác để tặng hoa, thả tim hoặc vẫy tay.</p>
-    <label class="lb">Áo</label>${sw('shirt', AV_SHIRT)}<label class="lb">Quần</label>${sw('pants', AV_PANTS)}
-    <label class="lb">Tóc / mũ</label><div class="seg" data-seg="hair" style="flex-wrap:wrap">${AV_HAIR.map(([k, n]) => `<button data-v="${k}" class="${a.hair === k ? 'on' : ''}">${n}</button>`).join('')}</div>
-    <label class="lb">Màu tóc / mũ</label>${sw('hairCol', AV_HAIRC)}
-    <label class="lb">Hình in trên áo</label><div class="seg" data-seg="print" style="flex-wrap:wrap">${AV_PRINT.map(([k, n]) => `<button data-v="${k}" class="${(a.print || 'plain') === k ? 'on' : ''}">${n}</button>`).join('')}</div>
-    <label class="lb">Nét mặt thường ngày</label><div class="seg" data-seg="face">${AV_FACE.map(([k, e]) => `<button data-v="${k}" class="${({ smile: 'happy' }[a.face] || a.face) === k ? 'on' : ''}" style="font-size:18px">${e}</button>`).join('')}</div>
-    <div class="tg ${NET.tp ? 'on' : ''}" id="avTp" style="margin-top:12px">Góc nhìn thứ ba (thấy nhân vật của bạn · phím V)<span class="sw2"></span></div>
-    <p class="note">Phím tắt: Enter trò chuyện · 1 vẫy tay · 2 nhảy · 3 nhảy múa.</p>
-    <div class="row" style="margin-top:12px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="avSave">Lưu nhân vật</button></div>`, box => {
-    box.querySelectorAll('.swatches').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => { a[g.dataset.k] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }));
-    box.querySelectorAll('[data-seg]').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => { a[g.dataset.seg] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }));
-    box.querySelector('#avTp').onclick = e => e.currentTarget.classList.toggle('on');
-    box.querySelector('#avSave').onclick = () => {
-      try { localStorage.setItem('avatar', JSON.stringify(a)); } catch { }
-      const tp = box.querySelector('#avTp').classList.contains('on'); closeModal(); rebuildMe(); if (tp !== NET.tp) setThirdPerson(tp); sendState(true); toast('Đã lưu nhân vật ✓');
-    };
-  });
-};
+  const seg = (key, list, cur) => `<div class="seg" data-seg="${key}" style="flex-wrap:wrap">${list.map(([k, n]) => `<button data-v="${k}" class="${cur === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  P.innerHTML = `<div class="ph"><span>Nhân vật của bạn</span><button id="avClose" title="Đóng">✕</button></div>
+    <p class="note" style="margin:0 0 6px">Đang soi gương: mọi thay đổi hiện ngay trên nhân vật. Kéo chuột trên màn hình để xoay xem các phía.</p>
+    <label class="lb">Áo</label>${sw('shirt', AV_SHIRT)}<label class="lb">Hình in trên áo</label>${seg('print', AV_PRINT, a.print || 'plain')}
+    <label class="lb">Quần</label>${sw('pants', AV_PANTS)}
+    <label class="lb">Tóc / mũ</label>${seg('hair', AV_HAIR, a.hair)}<label class="lb">Màu tóc / mũ</label>${sw('hairCol', AV_HAIRC)}
+    <label class="lb">Nét mặt thường ngày</label>${seg('face', AV_FACE.map(([k, e]) => [k, e]), { smile: 'happy' }[a.face] || a.face)}
+    <label class="lb">Thử biểu cảm và động tác</label><div class="emo-row">${EXPR.map(([k, e, n]) => `<button data-ex="${k}" title="${n}">${e}</button>`).join('')}<button data-emo="wave" title="Vẫy tay">👋</button><button data-emo="jump" title="Nhảy">⤴️</button><button data-emo="dance" title="Nhảy múa">🕺</button></div>
+    <div class="tg ${prev.tp ? 'on' : ''}" id="avTp" style="margin-top:10px">Giữ góc nhìn thứ ba khi đóng (phím V)<span class="sw2"></span></div>
+    <button class="btn gold full" id="avDone" style="margin-top:10px">Xong</button>`;
+  const apply = () => { try { localStorage.setItem('avatar', JSON.stringify(a)); } catch { } rebuildMe(); sendState(true); };
+  P.querySelectorAll('.swatches').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => { a[g.dataset.k] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); apply(); }));
+  P.querySelectorAll('[data-seg]').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => { a[g.dataset.seg] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); apply(); }));
+  P.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => setExpr(b.dataset.ex));
+  P.querySelectorAll('[data-emo]').forEach(b => b.onclick = () => doEmote(b.dataset.emo));
+  P.querySelector('#avTp').onclick = e => e.currentTarget.classList.toggle('on');
+  const close = () => { const keep = P.querySelector('#avTp').classList.contains('on'); P.classList.remove('open'); NET.mirror = false; $('#mirrorBtn')?.classList.remove('on'); setThirdPerson(keep); toast('Đã lưu nhân vật ✓', 1500); };
+  P.querySelector('#avClose').onclick = close; P.querySelector('#avDone').onclick = close;
+  closePanel(); if (arrangeOn) setArrange(false); P.classList.add('open'); setMirror(true);
+}
+$('#tAvatar').onclick = () => { if (!started) return; $('#avPanel').classList.contains('open') ? $('#avDone')?.click() : openAvatarPanel(); };
+$('#mirrorBtn').onclick = () => setMirror(!NET.mirror);
 function netTick(dt, t) {
   if (started) sendState(false);
   const now = performance.now(), rk = roomKey();
@@ -3857,7 +4011,11 @@ function tick() {
   }
   const sc = pointScale(); pointMats.forEach(m => { if (m.uniforms?.uScale) m.uniforms.uScale.value = sc; });
   netTick(dt, t); lixiTick(dt, t);
-  if (NET.tp && started && !(focus && focus.lock)) { // third person: pull the camera back behind your minifig
+  if (NET.tp && NET.mirror && started && !(focus && focus.lock)) { // mirror: look at yourself from the front
+    NET.tpSaved = camera.position.clone(); const p = NET.tpSaved, d = 2.1;
+    camera.position.set(THREE.MathUtils.clamp(p.x - Math.sin(yaw) * d, -HW + .3, HW - .3), 1.55, THREE.MathUtils.clamp(p.z - Math.cos(yaw) * d, -HL + .3, HL - .3));
+    camera.lookAt(p.x, 1.15, p.z);
+  } else if (NET.tp && started && !(focus && focus.lock)) { // third person: pull the camera back behind your minifig
     NET.tpSaved = camera.position.clone();
     camera.position.x = THREE.MathUtils.clamp(camera.position.x + Math.sin(yaw) * 2.6, -HW + .3, HW - .3);
     camera.position.z = THREE.MathUtils.clamp(camera.position.z + Math.cos(yaw) * 2.6, -HL + .3, HL - .3); camera.position.y += .55;
