@@ -64,6 +64,86 @@
   "height": 0.55
  },
  {
+  "file": "xe-tuan-loc.glb",
+  "thumb": "xe-tuan-loc.jpg",
+  "name": "Xe tuần lộc ông già Noel",
+  "desc": "Ông già Noel cưỡi xe trượt kéo bởi tuần lộc · Pixabay, tác giả tiny_planet_friends",
+  "price": 700,
+  "height": 0.9
+ },
+ {
+  "file": "lau-dai-bang.glb",
+  "thumb": "lau-dai-bang.jpg",
+  "name": "Lâu đài băng",
+  "desc": "Lâu đài cổ tích trên đảo băng lơ lửng · Pixabay, tác giả tiny_planet_friends",
+  "price": 700,
+  "height": 1.4
+ },
+ {
+  "file": "rong-den-con.glb",
+  "thumb": "rong-den-con.jpg",
+  "name": "Rồng đen con",
+  "desc": "Chú rồng con cánh dơi đáng yêu · Pixabay, tác giả tiny_planet_friends",
+  "price": 550,
+  "height": 0.9
+ },
+ {
+  "file": "ong-gia-noel-om-qua.glb",
+  "thumb": "ong-gia-noel-om-qua.jpg",
+  "name": "Ông già Noel ôm quà",
+  "desc": "Ông già Noel ôm hộp quà đỏ · Pixabay, tác giả tiny_planet_friends",
+  "price": 500,
+  "height": 1.0
+ },
+ {
+  "file": "ong-gia-noel.glb",
+  "thumb": "ong-gia-noel.jpg",
+  "name": "Ông già Noel",
+  "desc": "Ông già Noel râu trắng mũ đỏ · Pixabay, tác giả tiny_planet_friends",
+  "price": 450,
+  "height": 0.95
+ },
+ {
+  "file": "be-noel.glb",
+  "thumb": "be-noel.jpg",
+  "name": "Bé Noel",
+  "desc": "Em bé mặc đồ Giáng sinh · Pixabay, tác giả tiny_planet_friends",
+  "price": 450,
+  "height": 0.9
+ },
+ {
+  "file": "meo-map.glb",
+  "thumb": "meo-map.jpg",
+  "name": "Mèo mập",
+  "desc": "Chú mèo vàng mũm mĩm · Pixabay, tác giả tiny_planet_friends",
+  "price": 400,
+  "height": 0.85
+ },
+ {
+  "file": "chuot-hamster.glb",
+  "thumb": "chuot-hamster.jpg",
+  "name": "Chuột hamster",
+  "desc": "Hamster ôm hạt lạc · Pixabay, tác giả tiny_planet_friends",
+  "price": 380,
+  "height": 0.75
+ },
+ {
+  "file": "kangaroo-con.glb",
+  "thumb": "kangaroo-con.jpg",
+  "name": "Kangaroo con",
+  "desc": "Chú kangaroo đứng ngoan · Pixabay, tác giả tiny_planet_friends",
+  "price": 400,
+  "height": 0.95
+ },
+ {
+  "file": "dai-bang-con.glb",
+  "thumb": "dai-bang-con.jpg",
+  "name": "Đại bàng con",
+  "desc": "Đại bàng đầu trắng hoạt hình · Pixabay, tác giả tiny_planet_friends",
+  "price": 400,
+  "height": 0.8
+ },
+ {
   "file": "can-dia-co.glb",
   "thumb": "can-dia-co.jpg",
   "name": "Cân đĩa cổ",
