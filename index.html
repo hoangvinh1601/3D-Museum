@@ -201,6 +201,19 @@ body:has(#panel.open) #roomFb,body:has(#arrange.open) #roomFb{display:none!impor
 .floatEmoji{position:fixed;z-index:60;font-size:26px;pointer-events:none;animation:floatUp 1.5s ease-out forwards}
 @keyframes floatUp{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-160px) scale(1.25)}}
 @media (max-width:620px){#roomFb{bottom:96px;right:10px}#roomFbBtn .lbl{display:none}}
+#online{font-size:11px;color:var(--gold);margin-top:3px;display:none}#online.on{display:block}
+#chat{position:fixed;left:16px;bottom:96px;z-index:11;width:min(340px,calc(100vw - 32px));display:none;flex-direction:column;gap:6px;pointer-events:none}
+body.in-gallery #chat{display:flex}
+@media (pointer:coarse){#chat{bottom:236px}}
+#chatLog{display:flex;flex-direction:column;gap:4px}
+#chatLog div{align-self:flex-start;max-width:100%;padding:6px 11px;border-radius:12px;background:rgba(16,14,12,.62);backdrop-filter:blur(8px);font-size:13px;line-height:1.4;transition:opacity 1s;word-wrap:break-word}
+#chatLog div b{color:var(--gold);font-weight:600;margin-right:6px}#chatLog div.sys{color:var(--muted);font-style:italic}#chatLog div.old{opacity:0}
+#chatForm{display:none;padding:6px;border-radius:14px;pointer-events:auto;gap:6px;align-items:center}#chat.typing #chatForm{display:flex}
+#chatForm .field{flex:1;padding:8px 10px}#chatForm .emo{display:flex;gap:2px}#chatForm .emo button{background:none;border:0;font-size:18px;padding:4px}
+#peerMenu{position:fixed;z-index:42;display:none;padding:8px;min-width:190px}#peerMenu.open{display:block}
+#peerMenu b{display:block;padding:4px 8px 8px;font-size:14px}#peerMenu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:9px;font-size:13.5px}
+#peerMenu button:hover{background:rgba(255,255,255,.08)}
+.swatches{display:flex;flex-wrap:wrap;gap:6px}.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;padding:0}.swatches button.on{border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
 /* toolbar: fade the edge that has more buttons to scroll to */
 #toolbar.more-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 #toolbar.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
@@ -253,6 +266,7 @@ body:has(#panel.open) #roomFb,body:has(#arrange.open) #roomFb{display:none!impor
   <div id="galleryName">Phòng Trưng Bày</div>
   <div id="roomLine"></div>
   <div id="mode"><i></i><span></span></div>
+  <div id="online"></div>
 </div>
 <div id="topRight">
   <button class="iconbtn" id="soundBtn" title="Âm thanh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="soundWave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
@@ -276,6 +290,8 @@ body:has(#panel.open) #roomFb,body:has(#arrange.open) #roomFb{display:none!impor
   <button class="tb" id="tConfetti" title="Kim tuyến"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20 9 7l8 8z"/><path d="M14 4l1 2M19 5l-2 1M20 10h-2M12 2v1"/></svg>Kim tuyến</button>
   <button class="tb" id="tLight" title="Ánh sáng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span id="lightLabel">Hoàng hôn</span></button>
   <span class="sep"></span>
+  <button class="tb" id="tAvatar" title="Nhân vật LEGO của bạn (phím V: góc nhìn thứ ba)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2.5" width="8" height="7" rx="2"/><path d="M10.5 2.5V1.5h3v1"/><path d="M7 11h10l1.5 6H5.5z"/><path d="M8 17v5M16 17v5"/></svg>Nhân vật</button>
+  <button class="tb" id="tChat" title="Trò chuyện (Enter)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>Trò chuyện</button>
   <button class="tb" id="tTour" title="Tự động tham quan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>Tham quan</button>
   <button class="tb on" id="tQuality" title="Chất lượng hình ảnh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg><span id="qLabel">Cao</span></button>
   <button class="tb" id="tFull" title="Toàn màn hình"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Toàn màn hình</button>
@@ -349,6 +365,8 @@ body:has(#panel.open) #roomFb,body:has(#arrange.open) #roomFb{display:none!impor
 </aside>
 
 <div id="roomFb"><div id="roomFbPop" class="glass"><h3 style="margin:0 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Cảm nhận về gian này</h3><div id="roomFbBox" class="fb"></div></div><button class="iconbtn" id="roomFbBtn" title="Thả tim, đánh giá, ủng hộ gian này"></button></div>
+<div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
+<div id="peerMenu" class="glass"></div>
 <div id="modal"><div class="box glass" id="modalBox"></div></div>
 <div id="toast" class="glass"></div>
 <div id="drop">Thả ảnh, video hoặc mô hình .glb vào đây</div>
@@ -2058,11 +2076,14 @@ cvs.addEventListener('wheel', e => { e.preventDefault();
   if (inspecting()) { const c = selected.focusInfo().center, d = focus.pos.clone().sub(c), len = THREE.MathUtils.clamp((d.length() || 1.2) * (e.deltaY > 0 ? 1.12 : .89), .75, 3.2); focus.pos.copy(c).addScaledVector(d.normalize(), len); return; } vel.addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -Math.sign(e.deltaY) * 1.6); focus = null; stopTour(); }, { passive: false });
 let hoverT = 0;
 function hoverCheck(e) { const now = performance.now(); if (now - hoverT < 70) return; hoverT = now; if (!started) return; cvs.style.cursor = (arrangeOn && pickDecor(e.clientX, e.clientY)) ? 'move' : pick(e.clientX, e.clientY) ? 'pointer' : 'grab'; }
-function clickAt(x, y) { const s = pick(x, y); if (!s) return; stopTour(); if (s.lightSwitch) { setAllLights(!spotsOn); sfxPop(); toast(spotsOn ? 'Đã bật đèn chiếu tranh' : 'Đã tắt đèn chiếu tranh'); } else if (s.door) useDoor(); else if (!arrangeOn) selectSlot(s, true); }
+function clickAt(x, y) { const pr = !arrangeOn && pickPeer(x, y); if (pr) { openPeerMenu(pr, x, y); return; } const s = pick(x, y); if (!s) return; stopTour(); if (s.lightSwitch) { setAllLights(!spotsOn); sfxPop(); toast(spotsOn ? 'Đã bật đèn chiếu tranh' : 'Đã tắt đèn chiếu tranh'); } else if (s.door) useDoor(); else if (!arrangeOn) selectSlot(s, true); }
 addEventListener('keydown', e => {
   if (e.target.matches('input,textarea,[contenteditable="true"]')) return; keys[e.code] = true;
   if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) { focus = null; stopTour(); e.preventDefault(); }
   if (e.code === 'Space' && started) { e.preventDefault(); volley(true); }
+  if (started && (e.code === 'Enter' || e.code === 'NumpadEnter') && NET.ch) { e.preventDefault(); openChat(true); }
+  if (started && e.code === 'KeyV') setThirdPerson(!NET.tp);
+  if (started && NET.ch) { if (e.code === 'Digit1') doEmote('wave'); if (e.code === 'Digit2') doEmote('jump'); if (e.code === 'Digit3') doEmote('dance'); }
   if (arrangeOn && selDecor) { if (e.code === 'KeyQ') rotSel(PI / 12); if (e.code === 'KeyE') rotSel(-PI / 12); if (e.code === 'Delete' || e.code === 'Backspace') { e.preventDefault(); delSel(); } }
   if (e.code === 'Escape') { if (arrangeOn) setArrange(false); closePanel(); closePops(); closeModal(); $('#rooms').classList.remove('open'); focus = null; }
 });
@@ -2429,6 +2450,7 @@ function openNewRoom(onCreated) {
 /* ================================================================ UI: share & members */
 const shareLink = () => location.origin + location.pathname + '?g=' + encodeURIComponent(gallery.slug);
 $('#shareBtn').onclick = () => openShare();
+const VIS_TEXT = { link: 'Ai có link đều xem được, không cần tài khoản.', password: 'Khách cần nhập mật khẩu để vào xem.', paid: 'Khách trả xu để mua vé vào xem.', private: 'Chỉ thành viên xem được.' };
 async function openShare() {
   if (!gallery) return;
   const owner = role === 'owner', demo = api.mode === 'demo';
@@ -2436,8 +2458,9 @@ async function openShare() {
     ${demo ? '<p class="warn">Đây là bản dùng thử chưa kết nối máy chủ, nên link chưa mở được trên máy khác. Làm theo hướng dẫn cài Supabase để chia sẻ thật.</p>' : ''}
     <label class="lb">Link tham quan</label>
     <div class="row"><input class="field" id="sLink" readonly value="${esc(shareLink())}"><button class="btn gold fit" id="sCopy">Sao chép</button></div>
-    ${owner ? `<label class="lb">Ai được xem?</label><div class="seg" id="sVis"><button data-v="link">Ai có link đều xem được</button><button data-v="private">Chỉ thành viên</button></div>`
-      : `<p class="note">${gallery.visibility === 'private' ? 'Chỉ thành viên xem được phòng trưng bày này.' : 'Ai có link đều xem được, không cần tài khoản.'}</p>`}
+    ${owner ? `<label class="lb">Ai được xem?</label><div class="seg" id="sVis"><button data-v="link">Ai có link</button><button data-v="password">Có mật khẩu</button><button data-v="paid">Thu phí</button><button data-v="private">Thành viên</button></div>
+      <div id="sAccX" style="margin-top:8px"></div>`
+      : `<p class="note">${VIS_TEXT[gallery.visibility] || ''}</p>`}
     ${canEdit() ? `<h3 style="margin-top:18px">Thành viên cùng quản lý</h3><div class="members" id="sMembers"><p class="note">Đang tải…</p></div>` : ''}
     ${owner ? `<label class="lb">Mời thêm người bằng tên đăng nhập của họ</label>
       <div class="row"><input class="field" id="sUser" placeholder="tên đăng nhập" autocapitalize="off"><button class="btn gold fit" id="sAdd">Mời</button></div>
@@ -2448,8 +2471,22 @@ async function openShare() {
     <div class="row" style="margin-top:14px"><button class="btn" data-x>Đóng</button></div>`, box => {
     box.querySelector('#sCopy').onclick = async () => { try { await navigator.clipboard.writeText(shareLink()); toast('Đã sao chép link.'); } catch (e) { box.querySelector('#sLink').select(); toast('Hãy bấm giữ để sao chép link.'); } };
     const vis = box.querySelector('#sVis');
-    if (vis) { const paint = () => vis.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === gallery.visibility)); paint();
-      vis.querySelectorAll('button').forEach(b => b.onclick = async () => { const old = gallery.visibility; gallery.visibility = b.dataset.v; paint(); try { await api.updateGallery(gallery.id, { visibility: gallery.visibility }); toast(gallery.visibility === 'private' ? 'Chỉ thành viên mới xem được.' : 'Ai có link đều xem được.'); } catch (e) { gallery.visibility = old; paint(); toast('Không lưu được: ' + e.message); } }); }
+    if (vis) {
+      let pick = gallery.visibility;
+      const save = async (v, pw, fee) => {
+        try { await api.setAccess(gallery.id, v, pw, fee); gallery.visibility = v; if (v === 'paid') gallery.entry_fee = fee; if (v === 'password' && pw) gallery.has_password = true; toast(VIS_TEXT[v]); paint(); }
+        catch (e) { toast(/too short/.test(e.message) ? 'Mật khẩu cần ít nhất 4 ký tự.' : /bad fee/.test(e.message) ? 'Phí vào cửa từ 1 đến 100.000 xu.' : 'Không lưu được: ' + e.message, 6000); }
+      };
+      const paint = () => {
+        vis.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === pick));
+        const x = box.querySelector('#sAccX'), cur = pick === gallery.visibility;
+        if (pick === 'password') x.innerHTML = `<div class="row"><input class="field" id="sPw" type="text" placeholder="${gallery.has_password && cur ? 'Đổi mật khẩu (để trống nếu giữ nguyên)' : 'Mật khẩu, ít nhất 4 ký tự'}" maxlength="40"><button class="btn gold fit" id="sAccSave">Lưu</button></div><p class="note">Gửi mật khẩu cho người bạn muốn mời. Thành viên không cần nhập.</p>`;
+        else if (pick === 'paid') x.innerHTML = `<div class="row"><input class="field" id="sFee" type="number" min="1" max="100000" value="${gallery.entry_fee || 50}"><button class="btn gold fit" id="sAccSave">Lưu</button></div><p class="note">Khách đăng nhập và trả số xu này một lần để vào xem. Xu được chuyển vào ví của bạn.</p>`;
+        else x.innerHTML = cur ? `<p class="note">${VIS_TEXT[pick]}</p>` : `<button class="btn gold full" id="sAccSave">Áp dụng: ${VIS_TEXT[pick]}</button>`;
+        x.querySelector('#sAccSave')?.addEventListener('click', () => save(pick, x.querySelector('#sPw')?.value.trim(), +(x.querySelector('#sFee')?.value || 0)));
+      };
+      vis.querySelectorAll('button').forEach(b => b.onclick = () => { pick = b.dataset.v; paint(); }); paint();
+    }
     if (canEdit()) loadMembers(box);
     box.querySelector('#sAdd')?.addEventListener('click', async () => {
       const u = box.querySelector('#sUser').value.trim().toLowerCase(); if (!u) return;
@@ -2533,6 +2570,24 @@ function showGate(kind, data = {}) {
   }
   if (kind === 'notfound') box.innerHTML = `<div class="eyebrow">Không tìm thấy</div><h1>Phòng trưng bày<br><em>không tồn tại</em></h1><p>Link có thể đã sai hoặc phòng đã bị xoá.</p><button class="primary" id="gHome">${me ? 'Về phòng của tôi' : 'Đăng nhập'}</button>`;
   if (kind === 'private') box.innerHTML = `<div class="eyebrow">Riêng tư</div><h1>${esc(data.name)}</h1><p>Phòng trưng bày này chỉ dành cho thành viên. ${me ? 'Tài khoản của bạn chưa được mời, hãy nhờ chủ phòng thêm tên đăng nhập <b>@' + esc(me.username) + '</b>.' : 'Hãy đăng nhập bằng tài khoản đã được mời.'}</p><button class="primary" id="gHome">${me ? 'Về phòng của tôi' : 'Đăng nhập'}</button>`;
+  if (kind === 'locked' && data.locked === 'password') {
+    box.innerHTML = `<div class="eyebrow">Phòng có mật khẩu</div><h1>${esc(data.name)}</h1><p>Chủ phòng đã đặt mật khẩu cho phòng trưng bày này.</p>
+      <form class="authbox glass" id="pwForm"><input class="field" id="pwIn" type="password" placeholder="Nhập mật khẩu" autocomplete="off" required>
+      <div class="err">${data.wrong ? 'Mật khẩu chưa đúng, thử lại nhé.' : ''}</div><button class="primary" type="submit">Vào tham quan</button></form>`;
+    box.querySelector('#pwForm').onsubmit = ev => { ev.preventDefault(); try { sessionStorage.setItem('pw:' + data.slug, box.querySelector('#pwIn').value); } catch { } openGallery(data.slug); };
+    setTimeout(() => box.querySelector('#pwIn')?.focus(), 50);
+  }
+  if (kind === 'locked' && data.locked === 'paid') {
+    box.innerHTML = `<div class="eyebrow">Vé vào cửa</div><h1>${esc(data.name)}</h1><p>Phòng trưng bày này thu phí <b>${(+data.fee).toLocaleString('vi-VN')} xu</b> mỗi người, mua một lần xem mãi. Xu được chuyển cho chủ phòng.</p>
+      ${data.signed_in ? `<p class="note">Bạn đang có ${walletGet().toLocaleString('vi-VN')} xu.</p><button class="primary" id="gPass">Mua vé · ${(+data.fee).toLocaleString('vi-VN')} xu</button>` : `<button class="primary" id="gLogin">Đăng nhập để mua vé</button>`}`;
+    box.querySelector('#gLogin')?.addEventListener('click', () => showGate('auth', { tab: 'in' }));
+    if (data.signed_in) refreshWallet().then(() => { const n = box.querySelector('.note'); if (n) n.textContent = `Bạn đang có ${walletGet().toLocaleString('vi-VN')} xu.`; });
+    box.querySelector('#gPass')?.addEventListener('click', async ev => {
+      ev.target.disabled = true;
+      try { xuCache = await api.buyPass(data.id); toast('Đã mua vé, chúc bạn tham quan vui vẻ!'); openGallery(data.slug); }
+      catch (e) { ev.target.disabled = false; toast(/not enough/.test(e.message) ? 'Chưa đủ xu để mua vé.' : 'Chưa mua được vé: ' + e.message, 6000); }
+    });
+  }
   if (kind === 'error') box.innerHTML = `<div class="eyebrow">Có lỗi</div><h1>Chưa kết nối được</h1><p>${esc(data.msg)}</p><button class="primary" id="gRetry">Thử lại</button>`;
   box.querySelector('#gHome')?.addEventListener('click', () => me ? showDash() : showGate('auth', { tab: 'in' }));
   box.querySelector('#gRetry')?.addEventListener('click', () => location.reload());
@@ -2576,7 +2631,7 @@ async function showDash() {
   box.className = 'dash';
   box.innerHTML = `<header><div><div class="eyebrow">Xin chào, ${esc(me.display)}</div><h2>Phòng trưng bày của bạn</h2></div>
     <div class="row" style="margin:0">${gallery ? '<button class="btn fit" id="dBack">← Quay lại phòng đang xem</button>' : ''}${api.mode === 'demo' ? '' : '<button class="btn fit" id="dOut">Đăng xuất</button>'}</div></header>
-    <div class="gcards">${list.map(g => `<button class="gcard" data-s="${esc(g.slug)}"><div class="sw" style="background:linear-gradient(135deg,${['#2b2622,#c9a25a', '#0d3b56,#29c5d8', '#9e1b17,#ffcc33', '#f6d4da,#ff6f9a', '#0a0b1e,#7b5cff'][(g.name.length) % 5]})"></div><div class="bd"><b>${esc(g.name)}</b><small><span class="badge">${g.role === 'owner' ? 'Chủ phòng' : 'Thành viên'}</span>${g.visibility === 'private' ? 'Riêng tư' : 'Ai có link đều xem được'}</small></div></button>`).join('')}
+    <div class="gcards">${list.map(g => `<button class="gcard" data-s="${esc(g.slug)}"><div class="sw" style="background:linear-gradient(135deg,${['#2b2622,#c9a25a', '#0d3b56,#29c5d8', '#9e1b17,#ffcc33', '#f6d4da,#ff6f9a', '#0a0b1e,#7b5cff'][(g.name.length) % 5]})"></div><div class="bd"><b>${esc(g.name)}</b><small><span class="badge">${g.role === 'owner' ? 'Chủ phòng' : 'Thành viên'}</span>${{ private: 'Riêng tư', password: 'Có mật khẩu', paid: 'Thu phí' }[g.visibility] || 'Ai có link đều xem được'}</small></div></button>`).join('')}
       <button class="gcard new" id="dNew">＋ Tạo phòng trưng bày mới</button></div>
     ${list.length ? '' : '<p class="note" style="margin-top:14px">Bạn chưa có phòng trưng bày nào. Tạo một phòng, hoặc nhờ bạn bè mời bạn vào phòng của họ bằng tên đăng nhập <b>@' + esc(me.username) + '</b>.</p>'}`;
   box.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { box.className = 'card'; openGallery(b.dataset.s); });
@@ -2616,7 +2671,9 @@ async function makeSupabaseAPI(cfg) {
       return d.filter(x => x.galleries).map(x => ({ ...x.galleries, role: x.role })).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
     },
     async createGallery(name) { return chk(await sb.rpc('create_gallery', { p_name: name })); },
-    async loadGallery(slug) { return chk(await sb.rpc('get_shared_gallery', { p_slug: slug })); },
+    async loadGallery(slug, password) { return chk(await sb.rpc('get_shared_gallery', { p_slug: slug, p_password: password || null })); },
+    async setAccess(gid, visibility, password, fee) { chk(await sb.rpc('set_access', { p_gallery: gid, p_visibility: visibility, p_password: password || null, p_fee: fee || 0 })); },
+    async buyPass(gid) { return chk(await sb.rpc('buy_pass', { p_gallery: gid })); },
     async updateGallery(id, patch) { chk(await sb.from('galleries').update(patch).eq('id', id)); },
     async deleteGallery(id) { chk(await sb.from('galleries').delete().eq('id', id)); },
     async createRoom(row) { return chk(await sb.from('rooms').insert(row).select().single()); },
@@ -2650,6 +2707,11 @@ async function makeSupabaseAPI(cfg) {
     async rate(roomId, slot, stars) { chk(await sb.rpc('rate', { p_room: roomId, p_slot: slot, p_stars: stars, p_rater: raterId() })); },
     async donate(roomId, slot, amount, message) { return chk(await sb.rpc('donate', { p_room: roomId, p_slot: slot, p_amount: amount, p_message: message })); },
     async feedback(gid) { return chk(await sb.rpc('get_feedback', { p_gallery: gid, p_rater: raterId() })) || []; },
+    // live channel for visitors in the same gallery (positions, chat, gifts)
+    channel(name, onMsg) {
+      const ch = sb.channel(name, { config: { broadcast: { self: false, ack: false } } }).on('broadcast', { event: 'm' }, ({ payload }) => onMsg(payload)).subscribe();
+      return { send: p => ch.send({ type: 'broadcast', event: 'm', payload: p }), close: () => sb.removeChannel(ch) };
+    },
     subscribe(gid, cb) {
       const ch = sb.channel('g-' + gid)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'items', filter: `gallery_id=eq.${gid}` }, p => cb('items', p))
@@ -2688,6 +2750,8 @@ function makeDemoAPI() {
       return { gallery: { ...g }, owner: { username: user.username, display_name: user.display }, role: 'owner', rooms: db.rooms.filter(r => r.gallery_id === g.id).map(r => ({ ...r })), items: db.items.filter(i => i.gallery_id === g.id).map(i => ({ ...i })) };
     },
     async updateGallery(id, patch) { Object.assign(db.galleries.find(g => g.id === id), patch); },
+    async setAccess(gid, visibility, password, fee) { Object.assign(db.galleries.find(g => g.id === gid), { visibility, entry_fee: fee || 0, has_password: !!password }); },
+    async buyPass() { throw new Error('Bản dùng thử chưa có vé vào cửa.'); },
     async deleteGallery(id) { db.galleries = db.galleries.filter(g => g.id !== id); db.rooms = db.rooms.filter(r => r.gallery_id !== id); db.items = db.items.filter(i => i.gallery_id !== id); },
     async createRoom(row) { const r = { id: uid(), stars: false, layout: null, created_at: new Date().toISOString(), ...row }; db.rooms.push(r); return { ...r }; },
     async updateRoom(id, patch) { const r = db.rooms.find(x => x.id === id); if (r) Object.assign(r, JSON.parse(JSON.stringify(patch))); },
@@ -2700,7 +2764,11 @@ function makeDemoAPI() {
     async members() { return [{ user_id: user.id, role: 'owner', username: user.username, display_name: user.display }]; },
     async addMember() { throw new Error('Bản dùng thử chưa kết nối máy chủ nên chưa mời được thành viên.'); },
     async removeMember() { },
-    subscribe() { return () => { }; }
+    subscribe() { return () => { }; },
+    channel(name, onMsg) { // demo: other tabs of this browser
+      if (!('BroadcastChannel' in window)) return { send() { }, close() { } };
+      const bc = new BroadcastChannel(name); bc.onmessage = e => onMsg(e.data); return { send: p => bc.postMessage(p), close: () => bc.close() };
+    }
   };
 }
 
@@ -2882,7 +2950,7 @@ async function goRoom(id) {
   const r = rooms.find(x => x.id === id); if (!r || switching) return; switching = true;
   closePanel(); stopTour(); if (arrangeOn) setArrange(false); $('#fade').classList.add('on'); await wait(360);
   room = r; try { localStorage.setItem('lastRoom:' + gallery.id, r.id); } catch { }
-  buildRoom(); applyRoomItems(); resetCamera(); renderRooms(); renderRoomFbBadge(); $('#roomFbPop').classList.remove('open');
+  buildRoom(); applyRoomItems(); resetCamera(); renderRooms(); renderRoomFbBadge(); $('#roomFbPop').classList.remove('open'); sendState(true); updateOnline();
   await wait(80); $('#fade').classList.remove('on'); switching = false; sfxChime();
   toast(`${r.name} · ${(THEMES[r.theme] || THEMES.classic).name}`);
 }
@@ -2893,9 +2961,11 @@ let unsubRealtime = null;
 async function openGallery(slug) {
   showGate('loading', { msg: 'Đang mở phòng trưng bày…' }); pendingSlug = slug;
   let data;
-  try { data = await api.loadGallery(slug); } catch (e) { showGate('error', { msg: e.message }); return; }
+  const pw = (() => { try { return sessionStorage.getItem('pw:' + slug); } catch { return null; } })();
+  try { data = await api.loadGallery(slug, pw); } catch (e) { showGate('error', { msg: e.message }); return; }
   if (!data) { showGate('notfound'); return; }
   if (data.private) { showGate('private', data); return; }
+  if (data.locked) { showGate('locked', { ...data, slug }); return; }
   unsubRealtime?.(); unsubRealtime = null;
   gallery = data.gallery; ownerInfo = data.owner; role = data.role || 'viewer';
   for (const k in itemsByRoom) delete itemsByRoom[k];
@@ -2912,7 +2982,7 @@ async function openGallery(slug) {
   buildRoom(); applyRoomItems(); resetCamera();
   if (canEdit()) unsubRealtime = api.subscribe(gallery.id, onRealtime);
   updateGalleryUI(); hideGate();
-  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback();
+  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback(); netStart();
   $('#introEyebrow').textContent = role === 'viewer' ? 'Mời bạn tham quan' : role === 'owner' ? 'Phòng trưng bày của bạn' : 'Bạn là thành viên';
   $('#introTitle').textContent = gallery.name;
   $('#introSub').textContent = `${ownerInfo ? 'Chủ phòng: ' + (ownerInfo.display_name || ownerInfo.username) + ' · ' : ''}${rooms.length} gian · ${Object.values(itemsByRoom).reduce((n, m) => n + Object.keys(m).length, 0)} tác phẩm`;
@@ -2955,6 +3025,226 @@ addEventListener('drop', e => {
   handleFiles(fl, slot ? slot.type : null, slot || null);
 });
 
+/* ================================================================ visitors as LEGO minifigures (live) */
+const SKIN = 0xf2cd37;
+const AV_SHIRT = ['#c91a09', '#0055bf', '#237841', '#f2cd37', '#ffffff', '#1b2a34', '#a0a5a9', '#fe8a18', '#c870a0', '#4b9f4a', '#6c2a7d', '#00a3da'];
+const AV_PANTS = ['#1b2a34', '#0055bf', '#6c6e68', '#582a12', '#ffffff', '#c91a09', '#237841', '#a0a5a9'];
+const AV_HAIRC = ['#582a12', '#1b2a34', '#f2cd37', '#c91a09', '#a0a5a9', '#e4cd9e', '#0055bf', '#c870a0'];
+const AV_HAIR = [['short', 'Tóc ngắn'], ['long', 'Tóc dài'], ['cap', 'Mũ lưỡi trai'], ['tophat', 'Mũ chóp'], ['none', 'Đầu trọc']];
+const AV_FACE = [['smile', '🙂'], ['grin', '😁'], ['wink', '😉'], ['cool', '😎']];
+const pickOf = a => a[(Math.random() * a.length) | 0];
+function myAvatar() {
+  try { const a = JSON.parse(localStorage.getItem('avatar') || 'null'); if (a?.shirt) return a; } catch { }
+  const a = { shirt: pickOf(AV_SHIRT), pants: pickOf(AV_PANTS), hair: pickOf(['short', 'long', 'cap', 'short']), hairCol: pickOf(AV_HAIRC), face: pickOf(['smile', 'grin', 'wink']) };
+  try { localStorage.setItem('avatar', JSON.stringify(a)); } catch { } return a;
+}
+function faceTex(kind) {
+  return cached('face-' + kind, () => {
+    const [c, g] = canvas(512, 256); g.fillStyle = '#f2cd37'; g.fillRect(0, 0, 512, 256); g.fillStyle = '#1b1b1b'; g.strokeStyle = '#1b1b1b'; g.lineCap = 'round';
+    const eye = (x, wink) => { if (wink) { g.lineWidth = 7; g.beginPath(); g.moveTo(x - 13, 104); g.quadraticCurveTo(x, 94, x + 13, 104); g.stroke(); return; } g.beginPath(); g.ellipse(x, 102, 10, 13, 0, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(x + 3, 97, 3.5, 0, TAU); g.fill(); g.fillStyle = '#1b1b1b'; };
+    if (kind === 'cool') { g.fillRect(206, 88, 44, 26); g.fillRect(262, 88, 44, 26); g.fillRect(244, 92, 24, 6); }
+    else { eye(228, false); eye(284, kind === 'wink'); }
+    g.lineWidth = 7; g.beginPath();
+    if (kind === 'grin') { g.moveTo(222, 140); g.quadraticCurveTo(256, 182, 290, 140); g.closePath(); g.fill(); g.fillStyle = '#fff'; g.fillRect(232, 141, 48, 9); }
+    else { g.moveTo(226, 142); g.quadraticCurveTo(256, 170, 286, 142); g.stroke(); }
+    return tex(c, true, true);
+  });
+}
+function textSprite(text, { size = 34, bg = 'rgba(16,14,12,.72)', color = '#f4ede1', maxW = 460, bold = true } = {}) {
+  const [c, g] = canvas(512, 128); g.font = `${bold ? 600 : 400} ${size}px "Be Vietnam Pro", Arial`;
+  let t = String(text); while (g.measureText(t).width > maxW && t.length > 2) t = t.slice(0, -2) + '…';
+  const w = Math.min(500, g.measureText(t).width + 40); g.fillStyle = bg; g.beginPath(); g.roundRect(256 - w / 2, 64 - size * .85, w, size * 1.7, size * .85); g.fill();
+  g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 256, 66);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c, true, true), transparent: true, depthWrite: false })); sp.scale.set(1.3, .325, 1); sp.renderOrder = 20; return sp;
+}
+function makeFlower() {
+  const g = new THREE.Group(); const stem = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .32, 6), std({ color: 0x2f7a2a })); stem.position.y = .16; g.add(stem);
+  const pet = std({ color: 0xe0234e, roughness: .5 }); for (let i = 0; i < 6; i++) { const p = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), pet); p.position.set(Math.cos(i) * .035, .34, Math.sin(i) * .035); g.add(p); }
+  const ct = new THREE.Mesh(new THREE.SphereGeometry(.025, 8, 6), std({ color: 0xffd23f })); ct.position.y = .35; g.add(ct); return g;
+}
+function makeMinifig(cfg, name) {
+  const root = new THREE.Group(), skin = std({ color: SKIN, roughness: .35 }), shirt = std({ color: cfg.shirt, roughness: .4 }), pants = std({ color: cfg.pants, roughness: .4 }), hairM = std({ color: cfg.hairCol, roughness: .45 });
+  const P = {};
+  [-1, 1].forEach(sd => {
+    const hip = new THREE.Group(); hip.position.set(sd * .11, .62, 0); root.add(hip);
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(.2, .56, .26), pants); leg.position.y = -.3; hip.add(leg);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(.2, .08, .32), pants); foot.position.set(0, -.58, .03); hip.add(foot);
+    P[sd < 0 ? 'legL' : 'legR'] = hip;
+  });
+  const hips = new THREE.Mesh(new THREE.BoxGeometry(.46, .1, .26), pants); hips.position.y = .67; root.add(hips);
+  const tg = new THREE.BoxGeometry(.46, .56, .26), tp = tg.attributes.position; for (let i = 0; i < tp.count; i++) if (tp.getY(i) > 0) tp.setX(i, tp.getX(i) * .76); tg.computeVertexNormals();
+  const torso = new THREE.Mesh(tg, shirt); torso.position.y = 1; root.add(torso);
+  [-1, 1].forEach(sd => {
+    const sh = new THREE.Group(); sh.position.set(sd * .215, 1.2, 0); root.add(sh);
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(.062, .07, .4, 12), shirt); arm.position.set(sd * .05, -.18, .02); arm.rotation.z = sd * .2; sh.add(arm);
+    const hand = new THREE.Mesh(new THREE.TorusGeometry(.05, .022, 8, 16, 4.6), skin); hand.position.set(sd * .09, -.4, .07); hand.rotation.set(PI / 2, 0, PI * .75); sh.add(hand);
+    P[sd < 0 ? 'armL' : 'armR'] = sh; if (sd > 0) P.hand = hand;
+  });
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .05, 12), skin); neck.position.y = 1.3; root.add(neck);
+  const head = new THREE.Group(); head.position.y = 1.47; root.add(head); P.head = head;
+  head.add(new THREE.Mesh(new THREE.CylinderGeometry(.155, .155, .3, 28, 1, false, PI), [std({ color: 0xffffff, map: faceTex(cfg.face || 'smile'), roughness: .35 }), skin, skin]));
+  const stud = new THREE.Mesh(new THREE.CylinderGeometry(.085, .085, .07, 20), skin); stud.position.y = .18; head.add(stud);
+  if (cfg.hair === 'short' || cfg.hair === 'long') {
+    const hr = new THREE.Mesh(new THREE.SphereGeometry(.175, 24, 12, 0, TAU, 0, PI * .55), hairM); hr.position.set(0, .04, -.01); hr.scale.set(1, .95, 1.02); head.add(hr);
+    if (cfg.hair === 'long') { const bk = new THREE.Mesh(new THREE.BoxGeometry(.34, .36, .1), hairM); bk.position.set(0, -.1, -.12); head.add(bk); }
+  } else if (cfg.hair === 'cap') {
+    const cp = new THREE.Mesh(new THREE.CylinderGeometry(.165, .17, .12, 24), hairM); cp.position.y = .17; head.add(cp);
+    const br = new THREE.Mesh(new THREE.BoxGeometry(.3, .025, .2), hairM); br.position.set(0, .12, .2); head.add(br);
+  } else if (cfg.hair === 'tophat') {
+    const br = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .025, 28), hairM); br.position.y = .16; head.add(br);
+    const tp2 = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .3, 24), hairM); tp2.position.y = .32; head.add(tp2);
+  }
+  const flower = makeFlower(); flower.position.set(.31, .8, .12); flower.rotation.x = .3; flower.visible = false; root.add(flower); P.flower = flower;
+  root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  if (name) { const tag = textSprite(name); tag.position.y = 2.05; root.add(tag); P.tag = tag; }
+  return { root, P, cfgKey: JSON.stringify(cfg), name };
+}
+function animFig(f, dt, t, speed, emote, emoteT) {
+  f.phase = (f.phase || 0) + dt * speed * 4.2; const sw = Math.sin(f.phase) * Math.min(1, speed / 1.5) * .7;
+  f.P.legL.rotation.x = sw; f.P.legR.rotation.x = -sw; f.P.armL.rotation.x = -sw * .8; f.P.armR.rotation.x = sw * .8; f.P.armR.rotation.z = 0; f.P.head.rotation.y = 0;
+  let y = 0; const et = t - (emoteT || 0);
+  if (emote === 'wave' && et < 2.5) { f.P.armR.rotation.x = -2.7; f.P.armR.rotation.z = Math.sin(t * 12) * .35; }
+  if (emote === 'jump' && et < .8) y = Math.sin(et / .8 * PI) * .6;
+  if (emote === 'dance' && et < 4) { f.P.armL.rotation.x = -2.4 + Math.sin(t * 8) * .5; f.P.armR.rotation.x = -2.4 - Math.sin(t * 8) * .5; f.P.legL.rotation.x = Math.sin(t * 8) * .4; f.P.legR.rotation.x = -Math.sin(t * 8) * .4; y = Math.abs(Math.sin(t * 8)) * .12; f.P.head.rotation.y = Math.sin(t * 4) * .4; }
+  f.root.position.y = y;
+}
+function disposeFig(f) { scene.remove(f.root); f.root.traverse(o => { o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map && o.isSprite) m.map.dispose(); m.dispose(); }); }); }
+
+const NET = { ch: null, id: raterId() + '-' + Math.random().toString(36).slice(2, 6), peers: new Map(), lastSend: 0, sentKey: '', emote: null, emoteT: 0, held: 0, me: null, tp: false, tpSaved: null, picks: [] };
+const myName = () => (me?.display || me?.username || 'Khách ' + NET.id.slice(-4)).slice(0, 24);
+const roomKey = () => !room || !api ? '' : api.mode === 'demo' ? 'i' + rooms.indexOf(room) : room.id;
+function netStart() {
+  netStop(); if (!api.channel || !gallery) return;
+  NET.ch = api.channel(api.mode === 'demo' ? 'phong-trung-bay-demo' : 'gal:' + gallery.id, onNet);
+  NET.ch.send({ t: 'hi', id: NET.id }); sendState(true);
+}
+function netStop() {
+  if (NET.ch) { try { NET.ch.send({ t: 'bye', id: NET.id }); NET.ch.close(); } catch { } NET.ch = null; }
+  NET.peers.forEach(p => disposeFig(p.fig)); NET.peers.clear(); updateOnline();
+}
+addEventListener('pagehide', () => { try { NET.ch?.send({ t: 'bye', id: NET.id }); } catch { } });
+function sendState(force) {
+  if (!NET.ch || !room) return;
+  const now = performance.now(), p = NET.tpSaved || camera.position;
+  const st = { t: 's', id: NET.id, n: myName(), a: myAvatar(), r: roomKey(), x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +yaw.toFixed(2), e: NET.emote, eid: NET.emoteT, et: NET.emoteT ? Date.now() - NET.emoteT : 0, h: NET.held > Date.now() ? 1 : 0 };
+  const key = `${st.r}|${st.x}|${st.z}|${st.y}|${st.e}|${st.h}`, moving = key !== NET.sentKey;
+  if (!force && now - NET.lastSend < (moving ? 110 : 1500)) return;
+  NET.lastSend = now; NET.sentKey = key; NET.ch.send(st);
+}
+function peerFig(pr) {
+  const k = JSON.stringify(pr.a);
+  if (pr.fig && pr.fig.cfgKey === k && pr.fig.name === pr.n) return;
+  const pos = pr.fig?.root.position.clone(); if (pr.fig) disposeFig(pr.fig);
+  pr.fig = makeMinifig(pr.a, pr.n); scene.add(pr.fig.root); if (pos) pr.fig.root.position.copy(pos); else pr.fig.root.position.set(pr.x, 0, pr.z);
+  pr.fig.root.traverse(o => { if (o.isMesh) o.userData.peer = pr.id; }); NET.picks = []; NET.peers.forEach(q => q.fig?.root.traverse(o => o.isMesh && NET.picks.push(o)));
+}
+function onNet(m) {
+  if (!m || m.id === NET.id) return;
+  if (m.t === 'hi') { sendState(true); return; }
+  if (m.t === 'bye') { const pr = NET.peers.get(m.id); if (pr) { disposeFig(pr.fig); NET.peers.delete(m.id); chatLine(null, `${pr.n} đã rời phòng`); updateOnline(); } return; }
+  if (m.t === 's') {
+    let pr = NET.peers.get(m.id); const isNew = !pr;
+    if (!pr) { pr = { id: m.id }; NET.peers.set(m.id, pr); }
+    Object.assign(pr, { n: String(m.n || 'Khách').slice(0, 24), a: m.a || {}, r: m.r, x: +m.x || 0, z: +m.z || 0, yaw: +m.y || 0, last: performance.now(), held: !!m.h });
+    if (m.e && m.eid && m.eid !== pr.eid && m.et < 4000) { pr.eid = m.eid; pr.e = m.e; pr.eT = clock.elapsedTime - m.et / 1000; }
+    peerFig(pr); if (isNew && pr.r === roomKey()) chatLine(null, `${pr.n} vừa vào gian này 👋`);
+    updateOnline(); return;
+  }
+  const pr = NET.peers.get(m.id); if (!pr) return;
+  if (m.t === 'c') { const txt = String(m.text || '').slice(0, 200); if (!txt || pr.r !== roomKey()) return; chatLine(pr.n, txt); showBubble(pr, txt); sfxPop(); }
+  if (m.t === 'g') {
+    const to = m.to === NET.id ? null : NET.peers.get(m.to), what = { flower: 'một bông hoa 🌹', heart: 'một trái tim ❤️', wave: 'một cái vẫy tay 👋' }[m.k] || 'một món quà';
+    if (m.to === NET.id) { toast(`${pr.n} tặng bạn ${what}`, 5000); floatEmoji({ flower: '🌹', heart: '❤️', wave: '👋' }[m.k] || '🎁', innerWidth / 2, innerHeight / 2); sfxChime(); if (m.k === 'flower') NET.held = Date.now() + 60000; sendState(true); }
+    else if (to) chatLine(null, `${pr.n} tặng ${to.n} ${what}`);
+    const tgt = m.to === NET.id ? (NET.tpSaved || camera.position) : to?.fig?.root.position;
+    if (tgt) { const col = m.k === 'flower' ? [1, .3, .4] : m.k === 'heart' ? [1, .2, .5] : [1, .85, .3]; for (let i = 0; i < 30; i++) spawn(tgt.x, 1.6, tgt.z, rand(-1, 1), rand(.5, 2), rand(-1, 1), ...col, rand(.8, 1.4), .06, 1.2, -.3); }
+  }
+}
+function updateOnline() {
+  const here = [...NET.peers.values()].filter(p => p.r === roomKey()).length, all = NET.peers.size, el = $('#online');
+  el.classList.toggle('on', all > 0); el.textContent = all ? `👥 ${here} người khác trong gian này${all > here ? ` · ${all} trong phòng trưng bày` : ''}` : '';
+}
+function showBubble(pr, text) {
+  if (!pr.fig) return; if (pr.fig.bubble) { pr.fig.root.remove(pr.fig.bubble); pr.fig.bubble.material.map.dispose(); pr.fig.bubble.material.dispose(); }
+  const b = textSprite(text, { size: 30, bg: 'rgba(255,255,255,.92)', color: '#17120a', bold: false }); b.position.y = 2.42; b.scale.set(1.9, .475, 1); pr.fig.root.add(b); pr.fig.bubble = b; pr.bubbleUntil = performance.now() + 7000;
+}
+function chatLine(name, text) {
+  const log = $('#chatLog'), d = document.createElement('div');
+  if (name) { const b = document.createElement('b'); b.textContent = name; d.append(b, document.createTextNode(text)); } else { d.className = 'sys'; d.textContent = text; }
+  log.appendChild(d); while (log.children.length > 7) log.firstChild.remove();
+  setTimeout(() => d.classList.add('old'), 14000); setTimeout(() => d.remove(), 15500);
+}
+function openChat(on = true) { $('#chat').classList.toggle('typing', on); if (on) setTimeout(() => $('#chatIn').focus(), 20); else $('#chatIn').blur(); }
+$('#tChat').onclick = () => { if (!NET.ch) { toast('Mở một phòng trưng bày để trò chuyện.'); return; } openChat(!$('#chat').classList.contains('typing')); };
+$('#chatForm').onsubmit = e => {
+  e.preventDefault(); const txt = $('#chatIn').value.trim(); if (!txt) { openChat(false); return; }
+  $('#chatIn').value = ''; NET.ch?.send({ t: 'c', id: NET.id, text: txt.slice(0, 200) }); chatLine(myName() + ' (bạn)', txt.slice(0, 200));
+  if (NET.me) showBubble({ fig: NET.me }, txt);
+};
+$('#chatIn').addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); openChat(false); } });
+function doEmote(k) { NET.emote = k; NET.emoteT = Date.now(); NET.myEmoteT = clock.elapsedTime; sendState(true); if (!NET.tp) toast({ wave: 'Bạn đang vẫy tay 👋', jump: 'Hop! ⤴️', dance: 'Nhảy nào 🕺' }[k] + ' · bấm V để thấy nhân vật của bạn', 2000); }
+document.querySelectorAll('#chatForm [data-emo]').forEach(b => b.onclick = () => doEmote(b.dataset.emo));
+function setThirdPerson(on) {
+  NET.tp = on;
+  if (on && !NET.me) { NET.me = makeMinifig(myAvatar(), null); scene.add(NET.me.root); }
+  if (NET.me) NET.me.root.visible = on; toast(on ? 'Góc nhìn thứ ba: bạn thấy nhân vật của mình (V để đổi lại)' : 'Góc nhìn thứ nhất');
+}
+function rebuildMe() { if (!NET.me) return; const v = NET.me.root.visible; disposeFig(NET.me); NET.me = makeMinifig(myAvatar(), null); NET.me.root.visible = v; scene.add(NET.me.root); }
+function pickPeer(x, y) { if (!NET.picks.length) return null; setRay(x, y); const h = ray.intersectObjects(NET.picks, false)[0]; return h && h.distance < 25 ? NET.peers.get(h.object.userData.peer) : null; }
+function openPeerMenu(pr, x, y) {
+  const m = $('#peerMenu');
+  m.innerHTML = `<b>${esc(pr.n)}</b><button data-g="flower">🌹 Tặng hoa</button><button data-g="heart">❤️ Thả tim</button><button data-g="wave">👋 Vẫy tay chào</button><button data-g="chat">💬 Nhắn tin trong gian</button>`;
+  m.style.left = Math.min(innerWidth - 210, x + 8) + 'px'; m.style.top = Math.min(innerHeight - 220, y + 8) + 'px'; m.classList.add('open');
+  m.querySelectorAll('button').forEach(b => b.onclick = () => {
+    m.classList.remove('open'); const k = b.dataset.g;
+    if (k === 'chat') { openChat(true); $('#chatIn').value = '@' + pr.n + ' '; return; }
+    NET.ch?.send({ t: 'g', id: NET.id, to: pr.id, k }); if (k === 'wave') doEmote('wave');
+    chatLine(null, `Bạn đã tặng ${pr.n} ${{ flower: 'một bông hoa 🌹', heart: 'một trái tim ❤️', wave: 'một cái vẫy tay 👋' }[k]}`);
+    const p = pr.fig.root.position; for (let i = 0; i < 30; i++) spawn(p.x, 1.6, p.z, rand(-1, 1), rand(.5, 2), rand(-1, 1), 1, .35, .5, rand(.8, 1.4), .06, 1.2, -.3); sfxChime();
+  });
+}
+addEventListener('pointerdown', e => { if (!e.target.closest('#peerMenu')) $('#peerMenu').classList.remove('open'); });
+$('#tAvatar').onclick = () => {
+  const a = { ...myAvatar() };
+  const sw = (key, list) => `<div class="swatches" data-k="${key}">${list.map(c => `<button style="background:${c}" data-v="${c}" class="${a[key] === c ? 'on' : ''}"></button>`).join('')}</div>`;
+  modal(`<h2>Nhân vật LEGO của bạn</h2><p>Mọi người trong phòng trưng bày sẽ thấy bạn với dáng vẻ này. Bấm vào người khác để tặng hoa, thả tim hoặc vẫy tay.</p>
+    <label class="lb">Áo</label>${sw('shirt', AV_SHIRT)}<label class="lb">Quần</label>${sw('pants', AV_PANTS)}
+    <label class="lb">Tóc / mũ</label><div class="seg" data-seg="hair" style="flex-wrap:wrap">${AV_HAIR.map(([k, n]) => `<button data-v="${k}" class="${a.hair === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <label class="lb">Màu tóc / mũ</label>${sw('hairCol', AV_HAIRC)}
+    <label class="lb">Nét mặt</label><div class="seg" data-seg="face">${AV_FACE.map(([k, e]) => `<button data-v="${k}" class="${a.face === k ? 'on' : ''}" style="font-size:18px">${e}</button>`).join('')}</div>
+    <div class="tg ${NET.tp ? 'on' : ''}" id="avTp" style="margin-top:12px">Góc nhìn thứ ba (thấy nhân vật của bạn · phím V)<span class="sw2"></span></div>
+    <p class="note">Phím tắt: Enter trò chuyện · 1 vẫy tay · 2 nhảy · 3 nhảy múa.</p>
+    <div class="row" style="margin-top:12px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="avSave">Lưu nhân vật</button></div>`, box => {
+    box.querySelectorAll('.swatches').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => { a[g.dataset.k] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }));
+    box.querySelectorAll('[data-seg]').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => { a[g.dataset.seg] = b.dataset.v; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }));
+    box.querySelector('#avTp').onclick = e => e.currentTarget.classList.toggle('on');
+    box.querySelector('#avSave').onclick = () => {
+      try { localStorage.setItem('avatar', JSON.stringify(a)); } catch { }
+      const tp = box.querySelector('#avTp').classList.contains('on'); closeModal(); rebuildMe(); if (tp !== NET.tp) setThirdPerson(tp); sendState(true); toast('Đã lưu nhân vật ✓');
+    };
+  });
+};
+function netTick(dt, t) {
+  if (started) sendState(false);
+  const now = performance.now(), rk = roomKey();
+  NET.peers.forEach((pr, id) => {
+    if (now - pr.last > 8000) { disposeFig(pr.fig); NET.peers.delete(id); updateOnline(); return; }
+    const f = pr.fig; if (!f) return; f.root.visible = pr.r === rk;
+    if (!f.root.visible) return;
+    const ox = f.root.position.x, oz = f.root.position.z, k = 1 - Math.exp(-dt * 9);
+    f.root.position.x += (pr.x - ox) * k; f.root.position.z += (pr.z - oz) * k;
+    f.root.rotation.y = angleLerp(f.root.rotation.y, pr.yaw + PI, 1 - Math.exp(-dt * 10));
+    const sp = Math.hypot(f.root.position.x - ox, f.root.position.z - oz) / Math.max(dt, 1e-3);
+    animFig(f, dt, t, sp, pr.e, pr.eT); f.P.flower.visible = pr.held;
+    if (f.bubble && now > pr.bubbleUntil) { f.root.remove(f.bubble); f.bubble.material.map.dispose(); f.bubble.material.dispose(); f.bubble = null; }
+  });
+  if (NET.me && NET.tp) {
+    const p = NET.tpSaved || camera.position, f = NET.me; f.root.position.x = p.x; f.root.position.z = p.z; f.root.rotation.y = yaw + PI;
+    animFig(f, dt, t, Math.hypot(vel.x, vel.z), NET.emote, NET.myEmoteT); f.P.flower.visible = NET.held > Date.now();
+    if (f.bubble && performance.now() > (f.bubbleUntil ||= performance.now() + 7000)) { f.root.remove(f.bubble); f.bubble = null; f.bubbleUntil = 0; }
+  }
+}
+
 /* ================================================================ loop */
 const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), want = new THREE.Vector3();
 // If the visitor's device can't keep up on "Cao", switch to "Nhẹ" once, automatically.
@@ -2968,6 +3258,7 @@ function watchFps(raw) {
   if (perf.slow >= 2) { quality = 0; applyQuality(); toast('Máy hơi chậm nên đã chuyển sang chất lượng Nhẹ cho mượt hơn. Bấm "Nhẹ" để đổi lại.', 5000); }
 }
 function tick() {
+  if (NET.tpSaved) { camera.position.copy(NET.tpSaved); NET.tpSaved = null; }
   const raw = clock.getDelta(), dt = Math.min(raw, .05), t = clock.elapsedTime;
   watchFps(raw);
   let f = 0, s = 0;
@@ -3002,6 +3293,12 @@ function tick() {
     if (selRing.visible) selRing.material.opacity = .65 + Math.sin(t * 4) * .3;
   }
   const sc = pointScale(); pointMats.forEach(m => { if (m.uniforms?.uScale) m.uniforms.uScale.value = sc; });
+  netTick(dt, t);
+  if (NET.tp && started && !(focus && focus.lock)) { // third person: pull the camera back behind your minifig
+    NET.tpSaved = camera.position.clone();
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x + Math.sin(yaw) * 2.6, -HW + .3, HW - .3);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z + Math.cos(yaw) * 2.6, -HL + .3, HL - .3); camera.position.y += .55;
+  }
   if (quality) composer.render(dt); else renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }

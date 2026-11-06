@@ -362,3 +362,91 @@ grant execute on function public.donate(uuid, text, int, text) to authenticated;
 revoke execute on function public.my_wallet() from anon;
 revoke execute on function public.spend_xu(int) from anon;
 revoke execute on function public.donate(uuid, text, int, text) from anon;
+
+-- =====================================================================
+--  Phòng có mật khẩu / thu phí vào cửa (chạy lại cả file vẫn an toàn)
+-- =====================================================================
+alter table public.galleries drop constraint if exists galleries_visibility_check;
+alter table public.galleries add constraint galleries_visibility_check check (visibility in ('link', 'private', 'password', 'paid'));
+alter table public.galleries add column if not exists pass_hash text;
+alter table public.galleries add column if not exists entry_fee int not null default 0 check (entry_fee between 0 and 100000);
+
+create table if not exists public.gallery_passes (
+  gallery_id uuid not null references public.galleries(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (gallery_id, user_id)
+);
+alter table public.gallery_passes enable row level security;
+drop policy if exists "passes self read" on public.gallery_passes;
+create policy "passes self read" on public.gallery_passes for select to authenticated using (user_id = auth.uid());
+
+create or replace function public.can_view(g uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from galleries where id = g and (visibility in ('link', 'password', 'paid') or public.is_member(g)));
+$$;
+
+drop function if exists public.get_shared_gallery(text);
+create or replace function public.get_shared_gallery(p_slug text, p_password text default null) returns jsonb
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare
+  g galleries;
+  r text;
+begin
+  select * into g from galleries where slug = p_slug;
+  if not found then return null; end if;
+  select role into r from gallery_members where gallery_id = g.id and user_id = auth.uid();
+  if r is null then
+    if g.visibility = 'private' then return jsonb_build_object('private', true, 'name', g.name); end if;
+    if g.visibility = 'password' and (p_password is null or g.pass_hash is null or crypt(p_password, g.pass_hash) <> g.pass_hash) then
+      return jsonb_build_object('locked', 'password', 'name', g.name, 'wrong', p_password is not null);
+    end if;
+    if g.visibility = 'paid' and not exists (select 1 from gallery_passes where gallery_id = g.id and user_id = auth.uid()) then
+      return jsonb_build_object('locked', 'paid', 'name', g.name, 'id', g.id, 'fee', g.entry_fee, 'signed_in', auth.uid() is not null);
+    end if;
+  end if;
+  return jsonb_build_object(
+    'gallery', jsonb_build_object('id', g.id, 'name', g.name, 'slug', g.slug, 'visibility', g.visibility, 'entry_fee', g.entry_fee,
+                                  'has_password', g.pass_hash is not null, 'owner_id', g.owner_id, 'settings', g.settings),
+    'owner', (select jsonb_build_object('username', p.username, 'display_name', p.display_name) from profiles p where p.id = g.owner_id),
+    'role', coalesce(r, 'viewer'),
+    'rooms', coalesce((select jsonb_agg(to_jsonb(x) order by x.sort, x.created_at) from rooms x where x.gallery_id = g.id), '[]'::jsonb),
+    'items', coalesce((select jsonb_agg(to_jsonb(i)) from items i where i.gallery_id = g.id), '[]'::jsonb)
+  );
+end $$;
+grant execute on function public.get_shared_gallery(text, text) to anon, authenticated;
+
+-- chủ phòng đặt chế độ xem: link / private / password (kèm mật khẩu) / paid (kèm số xu)
+create or replace function public.set_access(p_gallery uuid, p_visibility text, p_password text, p_fee int) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.is_owner(p_gallery) then raise exception 'only the owner can do this'; end if;
+  if p_visibility not in ('link', 'private', 'password', 'paid') then raise exception 'bad visibility'; end if;
+  if p_visibility = 'password' and coalesce(length(p_password), 0) < 4 and (select pass_hash from galleries where id = p_gallery) is null then
+    raise exception 'password too short';
+  end if;
+  if p_visibility = 'paid' and (p_fee is null or p_fee < 1 or p_fee > 100000) then raise exception 'bad fee'; end if;
+  update galleries set visibility = p_visibility,
+    pass_hash = case when p_visibility = 'password' and coalesce(length(p_password), 0) >= 4 then crypt(p_password, gen_salt('bf')) else pass_hash end,
+    entry_fee = case when p_visibility = 'paid' then p_fee else entry_fee end
+  where id = p_gallery;
+end $$;
+grant execute on function public.set_access(uuid, text, text, int) to authenticated;
+
+-- khách mua vé vào phòng thu phí: xu chuyển cho chủ phòng
+create or replace function public.buy_pass(p_gallery uuid) returns int
+language plpgsql security definer set search_path = public as $$
+declare g galleries; b int;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  select * into g from galleries where id = p_gallery;
+  if not found or g.visibility <> 'paid' then raise exception 'not a paid gallery'; end if;
+  if exists (select 1 from gallery_passes where gallery_id = g.id and user_id = auth.uid()) or public.is_member(g.id) then return public.my_wallet(); end if;
+  b := public.spend_xu(g.entry_fee);
+  insert into wallets (user_id) values (g.owner_id) on conflict do nothing;
+  update wallets set balance = balance + g.entry_fee, updated_at = now() where user_id = g.owner_id;
+  insert into gallery_passes (gallery_id, user_id) values (g.id, auth.uid());
+  insert into donations (gallery_id, from_user, to_user, amount, message) values (g.id, auth.uid(), g.owner_id, g.entry_fee, 'Vé vào cửa');
+  return b;
+end $$;
+grant execute on function public.buy_pass(uuid) to authenticated;
