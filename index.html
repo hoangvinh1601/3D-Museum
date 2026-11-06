@@ -1681,8 +1681,8 @@ function layoutList() {
   list = list.filter(e => e && DECOR[e.type]).map(e => ({ ...e }));
   const defs = defaultLayout(R.key, R.th);
   if (!(room.layout?.v >= 2)) for (let k = 0; k < 4; k++) if (!list.some(e => e.type === 'vitrine' && e.slot === 'c' + k)) list.push(defs.find(e => e.slot === 'c' + k));
-  const bigTV = { id: 'tv0', type: 'tv', x: +(4.05 - .19 * 2.4).toFixed(3), z: 9, rot: -PI / 2, s: 2.4, y: 2.0, slot: 'w14', seed: 1 };
-  if (!(room.layout?.v >= 5)) { // v4 moved the TV to the entrance partition, v5 made it partition-wide
+  const bigTV = { id: 'tv0', type: 'tv', x: +(4.05 - .025 * 2.2).toFixed(3), z: 9, rot: -PI / 2, s: 2.2, y: 2.0, slot: 'w14', seed: 1 };
+  if (!(room.layout?.v >= 6)) { // v6: a little smaller (2.9 m) and flat on the partition // v4 moved the TV to the entrance partition, v5 made it partition-wide
     const old = list.findIndex(e => e.id === 'tv0'); if (old >= 0) list[old] = { ...list[old], ...bigTV };
   }
   if (!(room.layout?.v >= 3)) { // v3 added the TV and the radio
@@ -1774,7 +1774,7 @@ function renderArrange() {
 let layoutTimer = null, lastLayoutLocal = 0;
 function scheduleLayoutSave() {
   lastLayoutLocal = Date.now();
-  room.layout = { v: 5, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
+  room.layout = { v: 6, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
   clearTimeout(layoutTimer); layoutTimer = setTimeout(() => saveRoom({ layout: room.layout }), 700);
 }
 const newId = () => 'd' + Date.now().toString(36) + ((Math.random() * 1e4) | 0);
@@ -4438,7 +4438,7 @@ function makeTV(e) {
   inner.position.y = ((e.y ?? TV_Y) - TV_Y) / (e.s || 1); // parts below are built around TV_Y; this moves the screen to e.y at any size
   const frame = std({ color: 0x0b0b0c, roughness: .3, metalness: .6 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(TV_W + .05, TV_H + .05, .045), frame); body.position.set(0, TV_Y, .03);
-  const mount = new THREE.Mesh(new THREE.BoxGeometry(.22, .16, .2), std({ color: 0x1b1b1d, roughness: .5, metalness: .5 })); mount.position.set(0, TV_Y, -.09);
+  const flat = !!e.slot, mount = new THREE.Mesh(new THREE.BoxGeometry(.22, .16, flat ? .03 : .2), std({ color: 0x1b1b1d, roughness: .5, metalness: .5 })); mount.position.set(0, TV_Y, flat ? -.007 : -.09);
   const scr = new THREE.Mesh(new THREE.PlaneGeometry(TV_W, TV_H), new THREE.MeshStandardMaterial({ color: 0x000000, roughness: .12, metalness: .1, emissive: 0xffffff, emissiveMap: idleScreenTex('off'), emissiveIntensity: .55 }));
   scr.position.set(0, TV_Y, .0535);
   const led = new THREE.Mesh(new THREE.SphereGeometry(.008, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3a2a })); led.position.set(TV_W / 2 - .06, TV_Y - TV_H / 2 - .012, .055);
@@ -4572,7 +4572,7 @@ function mediaTick(dt) {
   mediaT -= dt; occT -= dt; const slow = mediaT <= 0, occ = occT <= 0; if (slow) mediaT = .2; if (occ) occT = .25;
   if (slow) { // paintings behind a partition TV are hidden (their art stays saved, and shows again if the TV moves)
     const claimed = new Set(); for (const id in R.decor) { const e = R.decor[id].e; if (e.type === 'tv' && e.slot) claimed.add(e.slot); }
-    R.slots.forEach(sl => { if (sl.type !== 'wall') return; const v = !claimed.has(sl.id); if (sl.group.visible !== v) { sl.group.visible = v; if (sl.cone) sl.cone.userData.lit = v; } });
+    R.slots.forEach(sl => { if (sl.type !== 'wall') return; const v = !claimed.has(sl.id); if (sl.group.visible !== v) sl.group.visible = v; if (!v && sl.cone) sl.cone.userData.lit = false; });
   }
   let anyCss = false;
   MEDIA.forEach(st => {
@@ -4592,7 +4592,7 @@ function mediaTick(dt) {
     if (occ) { // hide the video when you look at the back of the TV, are far away, or a wall is in the way
       _mn.set(0, 0, 1).applyQuaternion(_mq); _mv.copy(camera.position).sub(st.pos); const dist = _mv.length();
       let vis = _mn.dot(_mv) > 0 && dist < 22;
-      if (vis) { ray.set(camera.position, _mv.multiplyScalar(-1 / dist)); ray.far = dist - .15; const hit = ray.intersectObjects(R.group.children, true).find(h => h.object.visible && !h.object.isPoints && !h.object.isSprite && !(h.object.material?.transparent && h.object.material.opacity < .5) && !st.g.getObjectById(h.object.id)); vis = !hit; ray.far = Infinity; }
+      if (vis) { ray.set(camera.position, _mv.multiplyScalar(-1 / dist)); ray.far = dist - .15; const hit = ray.intersectObjects(R.group.children, true).find(h => { const o = h.object, m = o.material; if (!o.visible || o.isPoints || o.isSprite || o.isLine || st.g.getObjectById(o.id)) return false; if (m && (m.depthWrite === false || m.blending === THREE.AdditiveBlending || (m.transparent && m.opacity < .5))) return false; let p = o.parent; while (p) { if (!p.visible) return false; p = p.parent; } return true; }); vis = !hit; ray.far = Infinity; }
       st.wrap.style.visibility = vis ? 'visible' : 'hidden'; st.vis = vis;
     }
     if (st.vis !== false) anyCss = true;
@@ -4884,7 +4884,7 @@ $('#enter').onclick = () => {
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.7';
+const BUILD = '2026-11-06.8';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
