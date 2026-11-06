@@ -1,8 +1,89 @@
 [
-  { "file": "thap-phu-thuy.glb", "thumb": "thap-phu-thuy.jpg", "name": "Tháp phù thủy", "desc": "Tháp lâu đài cổ tích phủ rêu · Pixabay, tác giả pixellabs", "price": 600, "height": 1.6 },
-  { "file": "su-tu-con.glb", "thumb": "su-tu-con.jpg", "name": "Sư tử con", "desc": "Chú sư tử hoạt hình đáng yêu · Pixabay, tác giả tiny_planet_friends", "price": 450, "height": 0.8 },
-  { "file": "khi-dot-con.glb", "thumb": "khi-dot-con.jpg", "name": "Khỉ đột con", "desc": "Bé khỉ đột lông xù · Pixabay, tác giả tiny_planet_friends", "price": 450, "height": 0.85 },
-  { "file": "can-dia-co.glb", "thumb": "can-dia-co.jpg", "name": "Cân đĩa cổ", "desc": "Cân đồng thau treo móc · Pixabay, tác giả gal-b", "price": 220, "height": 1.0 },
-  { "file": "den-long-sat.glb", "thumb": "den-long-sat.jpg", "name": "Đèn lồng sắt", "desc": "Đèn lồng sắt kiểu cổ, đặt sàn · Pixabay, tác giả gal-b", "price": 160, "height": 0.6 },
-  { "file": "binh-gom-lam.glb", "name": "Bình gốm hoa lam", "desc": "Bình gốm men trắng vẽ hoa sen xanh lam", "price": 250, "height": 0.9 }
+ {
+  "file": "thap-phu-thuy.glb",
+  "thumb": "thap-phu-thuy.jpg",
+  "name": "Tháp phù thủy",
+  "desc": "Tháp lâu đài cổ tích phủ rêu · Pixabay, tác giả pixellabs",
+  "price": 600,
+  "height": 1.6
+ },
+ {
+  "file": "su-tu-con.glb",
+  "thumb": "su-tu-con.jpg",
+  "name": "Sư tử con",
+  "desc": "Chú sư tử hoạt hình đáng yêu · Pixabay, tác giả tiny_planet_friends",
+  "price": 450,
+  "height": 0.8
+ },
+ {
+  "file": "khi-dot-con.glb",
+  "thumb": "khi-dot-con.jpg",
+  "name": "Khỉ đột con",
+  "desc": "Bé khỉ đột lông xù · Pixabay, tác giả tiny_planet_friends",
+  "price": 450,
+  "height": 0.85
+ },
+ {
+  "file": "tuan-loc-noel.glb",
+  "thumb": "tuan-loc-noel.jpg",
+  "name": "Tuần lộc mũi đỏ",
+  "desc": "Chú tuần lộc Giáng sinh · Pixabay, tác giả wings_of_freedom",
+  "price": 450,
+  "height": 0.95
+ },
+ {
+  "file": "gau-bac-cuc.glb",
+  "thumb": "gau-bac-cuc.jpg",
+  "name": "Gấu Bắc Cực",
+  "desc": "Gấu trắng quàng khăn đỏ · Pixabay, tác giả wings_of_freedom",
+  "price": 450,
+  "height": 0.9
+ },
+ {
+  "file": "ho-con.glb",
+  "thumb": "ho-con.jpg",
+  "name": "Hổ con",
+  "desc": "Bé hổ vằn má hồng · Pixabay, tác giả tiny_planet_friends",
+  "price": 450,
+  "height": 0.8
+ },
+ {
+  "file": "luoi-con.glb",
+  "thumb": "luoi-con.jpg",
+  "name": "Lười con",
+  "desc": "Chú lười hiền lành ngồi ôm gối · Pixabay, tác giả tiny_planet_friends",
+  "price": 400,
+  "height": 0.75
+ },
+ {
+  "file": "ca-map-con.glb",
+  "thumb": "ca-map-con.jpg",
+  "name": "Cá mập con",
+  "desc": "Cá mập hoạt hình tươi cười · Pixabay, tác giả wings_of_freedom",
+  "price": 400,
+  "height": 0.55
+ },
+ {
+  "file": "can-dia-co.glb",
+  "thumb": "can-dia-co.jpg",
+  "name": "Cân đĩa cổ",
+  "desc": "Cân đồng thau treo móc · Pixabay, tác giả gal-b",
+  "price": 220,
+  "height": 1.0
+ },
+ {
+  "file": "den-long-sat.glb",
+  "thumb": "den-long-sat.jpg",
+  "name": "Đèn lồng sắt",
+  "desc": "Đèn lồng sắt kiểu cổ, đặt sàn · Pixabay, tác giả gal-b",
+  "price": 160,
+  "height": 0.6
+ },
+ {
+  "file": "binh-gom-lam.glb",
+  "name": "Bình gốm hoa lam",
+  "desc": "Bình gốm men trắng vẽ hoa sen xanh lam",
+  "price": 250,
+  "height": 0.9
+ }
 ]
