@@ -2429,7 +2429,21 @@ async function createMedia(src) {
   const base = { kind: src.kind, url: src.url, blobUrl: src.blobUrl || null, path: src.path || null };
   if (src.kind === 'model') {
     let buf = src.buf; if (!buf && src.file) buf = await src.file.arrayBuffer();
-    if (!buf) { const r = await fetch(src.url); if (!r.ok) throw new Error(`máy chủ trả về lỗi ${r.status}`); buf = await r.arrayBuffer(); }
+    if (!buf) {
+      const r = await fetch(src.url); if (!r.ok) throw new Error(`máy chủ trả về lỗi ${r.status}`);
+      const total = +r.headers.get('content-length') || 0;
+      if (!total || !r.body || total < 3e6) buf = await r.arrayBuffer();
+      else { // big model: show how far the download is
+        const rd = r.body.getReader(), out = new Uint8Array(total); let got = 0, last = 0;
+        for (;;) {
+          const { done, value } = await rd.read(); if (done) break;
+          if (got + value.length > out.length) throw new Error('tệp tải về không đúng kích thước');
+          out.set(value, got); got += value.length;
+          const now = performance.now(); if (now - last > 400) { last = now; toast(`Đang tải mô hình 3D ${Math.round(got / total * 100)}% (${(total / 1048576).toFixed(0)} MB)…`, 3000); }
+        }
+        buf = out.buffer.slice(0, got); toast('Đã tải xong mô hình 3D', 1500);
+      }
+    }
     const gltf = await new Promise((res, rej) => gltfLoader.parse(buf.slice(0), '', res, rej));
     return { ...base, scene: gltf.scene, clips: gltf.animations, buf };
   }
@@ -2563,7 +2577,8 @@ function resetCamera() { camera.position.set(0, EYE, 13); yaw = yawT = 0; pitch 
 async function goRoom(id) {
   const r = rooms.find(x => x.id === id); if (!r || switching) return; switching = true;
   closePanel(); stopTour(); if (arrangeOn) setArrange(false); $('#fade').classList.add('on'); await wait(360);
-  room = r; buildRoom(); applyRoomItems(); resetCamera(); renderRooms();
+  room = r; try { localStorage.setItem('lastRoom:' + gallery.id, r.id); } catch { }
+  buildRoom(); applyRoomItems(); resetCamera(); renderRooms();
   await wait(80); $('#fade').classList.remove('on'); switching = false; sfxChime();
   toast(`${r.name} · ${(THEMES[r.theme] || THEMES.classic).name}`);
 }
@@ -2588,7 +2603,9 @@ async function openGallery(slug) {
   }
   if (api.mode === 'supabase' && new URLSearchParams(location.search).get('g') !== slug) history.replaceState(null, '', '?g=' + encodeURIComponent(slug));
   if (arrangeOn) setArrange(false); closePanel();
-  room = rooms[0]; buildRoom(); applyRoomItems(); resetCamera();
+  const lastId = (() => { try { return localStorage.getItem('lastRoom:' + gallery.id); } catch { return null; } })();
+  room = rooms.find(r => r.id === lastId) || rooms.find(r => Object.keys(itemsByRoom[r.id] || {}).length) || rooms[0];
+  buildRoom(); applyRoomItems(); resetCamera();
   if (canEdit()) unsubRealtime = api.subscribe(gallery.id, onRealtime);
   updateGalleryUI(); hideGate();
   $('#introEyebrow').textContent = role === 'viewer' ? 'Mời bạn tham quan' : role === 'owner' ? 'Phòng trưng bày của bạn' : 'Bạn là thành viên';
