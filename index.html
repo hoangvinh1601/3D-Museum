@@ -4118,6 +4118,19 @@ $('#enter').onclick = () => {
 };
 boot();
 
+// tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
+const BUILD = '2026-11-06.2';
+async function checkUpdate() {
+  try {
+    const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    if (v.build && v.build !== BUILD && !checkUpdate.shown) {
+      checkUpdate.shown = true;
+      modal(`<h2>Có bản cập nhật mới</h2><p>Phòng trưng bày vừa được cập nhật. Tải lại trang để dùng bản mới nhất (nhân vật, cây cảnh, tính năng mới…).</p><div class="row"><button class="btn" data-x>Để sau</button><button class="btn gold" id="mReload">Tải lại ngay</button></div>`, b => { b.querySelector('#mReload').onclick = () => location.reload(); });
+    }
+  } catch { }
+}
+setTimeout(checkUpdate, 8000); setInterval(checkUpdate, 5 * 60 * 1000); addEventListener('focus', () => checkUpdate());
+
 </script>
 </body>
 </html>
