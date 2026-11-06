@@ -283,7 +283,7 @@ language plpgsql security definer set search_path = public as $$
 declare b int;
 begin
   if auth.uid() is null then raise exception 'not signed in'; end if;
-  if p_amount < 0 or p_amount > 100000 then raise exception 'invalid amount'; end if;
+  if p_amount < 0 or p_amount > 100000000 then raise exception 'invalid amount'; end if;
   perform public.my_wallet();
   update wallets set balance = balance - p_amount, updated_at = now()
     where user_id = auth.uid() and balance >= p_amount returning balance into b;
@@ -528,3 +528,90 @@ end $$;
 grant execute on function public.inv_add(text, text, text, text, real, int) to authenticated;
 grant execute on function public.inv_take(uuid) to authenticated;
 grant execute on function public.inv_gift(uuid, text) to authenticated;
+
+-- =====================================================================
+--  Lì xì: chủ phòng phát bao lì xì, khách bấm bắt để nhận xu ngẫu nhiên
+-- =====================================================================
+create table if not exists public.lixi_drops (
+  id uuid primary key default gen_random_uuid(),
+  gallery_id uuid not null references public.galleries(id) on delete cascade,
+  room_id uuid not null references public.rooms(id) on delete cascade,
+  owner uuid not null references public.profiles(id) on delete cascade,
+  total int not null check (total > 0),
+  count int not null check (count between 1 and 50),
+  left_xu int not null, left_count int not null,
+  message text not null default '',
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '30 minutes'
+);
+create index if not exists lixi_gallery_idx on public.lixi_drops (gallery_id);
+create table if not exists public.lixi_claims (
+  drop_id uuid not null references public.lixi_drops(id) on delete cascade,
+  idx int not null, user_id uuid not null references public.profiles(id) on delete cascade,
+  amount int not null, created_at timestamptz not null default now(),
+  primary key (drop_id, idx), unique (drop_id, user_id)
+);
+alter table public.lixi_drops enable row level security;
+alter table public.lixi_claims enable row level security;
+
+-- trả lại xu của các đợt lì xì đã hết hạn mà chưa ai bắt hết
+create or replace function public.lixi_refund() returns int
+language plpgsql security definer set search_path = public as $$
+declare d record; n int := 0;
+begin
+  for d in select * from lixi_drops where owner = auth.uid() and expires_at < now() and left_xu > 0 for update loop
+    insert into wallets (user_id) values (d.owner) on conflict do nothing;
+    update wallets set balance = balance + d.left_xu, updated_at = now() where user_id = d.owner;
+    update lixi_drops set left_xu = 0, left_count = 0 where id = d.id; n := n + d.left_xu;
+  end loop;
+  return n;
+end $$;
+
+create or replace function public.lixi_create(p_room uuid, p_total int, p_count int, p_message text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare g uuid; b int; r lixi_drops;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  select gallery_id into g from rooms where id = p_room;
+  if g is null or not public.is_owner(g) then raise exception 'only the owner can do this'; end if;
+  if p_count < 1 or p_count > 50 then raise exception 'bad count'; end if;
+  if p_total < p_count or p_total > 10000000 then raise exception 'bad total'; end if;
+  perform public.lixi_refund();
+  b := public.spend_xu(p_total);
+  insert into lixi_drops (gallery_id, room_id, owner, total, count, left_xu, left_count, message)
+    values (g, p_room, auth.uid(), p_total, p_count, p_total, p_count, left(coalesce(p_message, ''), 120)) returning * into r;
+  return jsonb_build_object('drop', to_jsonb(r), 'balance', b);
+end $$;
+
+create or replace function public.lixi_claim(p_drop uuid, p_idx int) returns int
+language plpgsql security definer set search_path = public as $$
+declare d lixi_drops; amt int; cap int;
+begin
+  if auth.uid() is null then raise exception 'not signed in'; end if;
+  select * into d from lixi_drops where id = p_drop for update;
+  if d.id is null or d.expires_at < now() or d.left_count <= 0 then raise exception 'gone'; end if;
+  if d.owner = auth.uid() then raise exception 'own drop'; end if;
+  if p_idx < 0 or p_idx >= d.count then raise exception 'bad index'; end if;
+  if exists (select 1 from lixi_claims where drop_id = d.id and user_id = auth.uid()) then raise exception 'already claimed'; end if;
+  if exists (select 1 from lixi_claims where drop_id = d.id and idx = p_idx) then raise exception 'taken'; end if;
+  if d.left_count = 1 then amt := d.left_xu;
+  else cap := greatest(1, least(d.left_xu - (d.left_count - 1), (2 * d.left_xu) / d.left_count)); amt := 1 + floor(random() * cap)::int; amt := least(amt, d.left_xu - (d.left_count - 1)); end if;
+  insert into lixi_claims (drop_id, idx, user_id, amount) values (d.id, p_idx, auth.uid(), amt);
+  update lixi_drops set left_xu = left_xu - amt, left_count = left_count - 1 where id = d.id;
+  insert into wallets (user_id) values (auth.uid()) on conflict do nothing;
+  update wallets set balance = balance + amt, updated_at = now() where user_id = auth.uid();
+  return amt;
+end $$;
+
+create or replace function public.lixi_active(p_gallery uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', d.id, 'room_id', d.room_id, 'count', d.count, 'left_count', d.left_count, 'message', d.message, 'expires_at', d.expires_at,
+    'owner_name', (select coalesce(display_name, username) from profiles where id = d.owner),
+    'taken', (select coalesce(jsonb_agg(idx), '[]'::jsonb) from lixi_claims c where c.drop_id = d.id),
+    'mine', exists (select 1 from lixi_claims c where c.drop_id = d.id and c.user_id = auth.uid()))), '[]'::jsonb)
+  from lixi_drops d where d.gallery_id = p_gallery and d.expires_at > now() and d.left_count > 0 and public.can_view(p_gallery);
+$$;
+grant execute on function public.lixi_create(uuid, int, int, text) to authenticated;
+grant execute on function public.lixi_claim(uuid, int) to authenticated;
+grant execute on function public.lixi_refund() to authenticated;
+grant execute on function public.lixi_active(uuid) to anon, authenticated;

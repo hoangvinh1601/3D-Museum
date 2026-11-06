@@ -96,6 +96,7 @@ label.lb{display:block;font-size:11.5px;color:var(--muted);margin:10px 0 5px}
 .sep{width:1px;margin:8px 3px;background:var(--line);flex:0 0 auto}
 .member-only{display:none}
 body.can-edit .member-only{display:flex}
+.owner-only{display:none}body.is-owner .owner-only{display:flex}
 body.can-edit span.member-only{display:block}
 
 .pop{position:fixed;z-index:14;bottom:96px;left:50%;transform:translate(-50%,12px);opacity:0;pointer-events:none;transition:all .25s;padding:14px;max-width:calc(100vw - 24px);max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -299,6 +300,7 @@ body.in-gallery #chat{display:flex}
 <nav id="toolbar" class="glass">
   <button class="tb accent member-only" id="tUpload" title="Tải ảnh, video, mô hình 3D"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>Tải lên</button>
   <button class="tb member-only" id="tArrange" title="Di chuyển, thêm, xoá cây cảnh và đồ trưng bày"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3"/></svg>Sắp xếp</button>
+  <button class="tb owner-only" id="tLixi" title="Phát lì xì cho khách trong gian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 6l7 5 7-5"/><circle cx="12" cy="14" r="2.5"/></svg>Lì xì</button>
   <button class="tb member-only" id="tKho" title="Kho đồ: đồ đã mua chưa trưng bày"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5v10l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v10"/></svg>Kho đồ</button>
   <button class="tb member-only" id="tShop" title="Mua đồ trưng bày, cây cảnh, nội thất"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Cửa hàng</button>
   <span class="sep member-only"></span>
@@ -2249,8 +2251,9 @@ const inspecting = () => !!(focus?.lock && selected?.type === 'case' && selected
 cvs.addEventListener('wheel', e => { e.preventDefault();
   if (inspecting()) { const c = selected.focusInfo().center, d = focus.pos.clone().sub(c), len = THREE.MathUtils.clamp((d.length() || 1.2) * (e.deltaY > 0 ? 1.12 : .89), .75, 3.2); focus.pos.copy(c).addScaledVector(d.normalize(), len); return; } vel.addScaledVector(new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)), -Math.sign(e.deltaY) * 1.6); focus = null; stopTour(); }, { passive: false });
 let hoverT = 0;
-function hoverCheck(e) { const now = performance.now(); if (now - hoverT < 70) return; hoverT = now; if (!started) return; cvs.style.cursor = (arrangeOn && pickDecor(e.clientX, e.clientY)) ? 'move' : pick(e.clientX, e.clientY) ? 'pointer' : 'grab'; }
+function hoverCheck(e) { const now = performance.now(); if (now - hoverT < 70) return; hoverT = now; if (!started) return; cvs.style.cursor = (arrangeOn && pickDecor(e.clientX, e.clientY)) ? 'move' : (pickLixi(e.clientX, e.clientY) || pickPeer(e.clientX, e.clientY) || pick(e.clientX, e.clientY)) ? 'pointer' : 'grab'; }
 function clickAt(x, y) {
+  const lx = !arrangeOn && pickLixi(x, y); if (lx) { catchLixi(lx, x, y); return; }
   const pr = !arrangeOn && pickPeer(x, y); if (pr) { openPeerMenu(pr, x, y); return; }
   if (pendingCase) { const sl = pick(x, y); if (sl && sl.type === 'case') { const it = pendingCase; pendingCase = null; putShopModel(sl, it); } else toast('Hãy nhấn vào một tủ kính hoặc hốc trưng bày (Esc để huỷ).'); return; }
   if (!arrangeOn && canEdit()) { const d = pickDecor(x, y), sl0 = pick(x, y); if (d && !(sl0 && !sl0.door && !sl0.lightSwitch)) { setArrange(true); selectDecor(d.e); return; } }
@@ -2792,7 +2795,7 @@ function updateAcct() {
 }
 $('#acctBtn').onclick = () => { if (!me) { showGate('auth', { tab: 'in' }); return; } $('#acctMenu').classList.toggle('open'); };
 function updateGalleryUI() {
-  document.body.classList.toggle('can-edit', canEdit());
+  document.body.classList.toggle('can-edit', canEdit()); document.body.classList.toggle('is-owner', role === 'owner');
   $('#galleryName').textContent = gallery?.name || '';
   const el = $('#mode'), demo = api?.mode === 'demo';
   el.className = demo ? 'demo' : role;
@@ -3001,6 +3004,9 @@ async function makeSupabaseAPI(cfg) {
       return path;
     },
     url(path) { return path.startsWith('shop:') ? path.slice(5) : sb.storage.from('media').getPublicUrl(path).data.publicUrl; },
+    async lixiCreate(roomId, total, count, msg) { return chk(await sb.rpc('lixi_create', { p_room: roomId, p_total: total, p_count: count, p_message: msg })); },
+    async lixiClaim(dropId, idx) { return chk(await sb.rpc('lixi_claim', { p_drop: dropId, p_idx: idx })); },
+    async lixiActive(gid) { return chk(await sb.rpc('lixi_active', { p_gallery: gid })) || []; },
     async inventory() { return chk(await sb.from('inventory').select('*').order('created_at', { ascending: false })) || []; },
     async invAdd(kind, item, name, thumb, h, price) { return chk(await sb.rpc('inv_add', { p_kind: kind, p_item: item, p_name: name, p_thumb: thumb, p_h: h, p_price: price })); },
     async invTake(id) { return chk(await sb.rpc('inv_take', { p_id: id })); },
@@ -3078,6 +3084,9 @@ function makeDemoAPI() {
     async deleteItem(roomId, slot) { db.items = db.items.filter(i => !(i.room_id === roomId && i.slot === slot)); },
     async upload(gid, file) { const p = `${gid}/${uid()}.${extOf(file)}`; files[p] = URL.createObjectURL(file); return p; },
     url(path) { return files[path] || (path.startsWith('shop:') ? path.slice(5) : ''); },
+    async lixiCreate(roomId, total, count, msg) { await walletSpend(total); const d = { id: uid(), room_id: roomId, count, left_count: count, left_xu: total, message: msg, expires_at: new Date(Date.now() + 18e5).toISOString(), owner_name: user.display, taken: [] }; (db.lx ||= []).push(d); return { drop: d, balance: walletLocal() }; },
+    async lixiClaim(dropId, idx) { const d = (db.lx || []).find(x => x.id === dropId); if (!d || !d.left_count) throw new Error('gone'); if (d.taken.includes(idx)) throw new Error('taken'); const amt = d.left_count === 1 ? d.left_xu : Math.max(1, Math.min(d.left_xu - d.left_count + 1, 1 + Math.floor(Math.random() * (2 * d.left_xu / d.left_count)))); d.taken.push(idx); d.left_count--; d.left_xu -= amt; try { localStorage.setItem(walletKey(), String(walletLocal() + amt)); } catch { } return amt; },
+    async lixiActive() { return (db.lx || []).filter(d => d.left_count > 0).map(d => ({ ...d, mine: false })); },
     async inventory() { try { return JSON.parse(localStorage.getItem('inv:demo') || '[]'); } catch { return []; } },
     async invAdd(kind, item, name, thumb, h, price) { if (price) await walletSpend(price); const r = { id: uid(), kind, item, name, thumb, h, created_at: new Date().toISOString() }; const l = await this.inventory(); l.unshift(r); try { localStorage.setItem('inv:demo', JSON.stringify(l)); } catch { } return { item: r, balance: walletLocal() }; },
     async invTake(id) { const l = await this.inventory(), r = l.find(x => x.id === id); if (!r) throw new Error('not in your inventory'); try { localStorage.setItem('inv:demo', JSON.stringify(l.filter(x => x.id !== id))); } catch { } return r; },
@@ -3276,7 +3285,7 @@ async function goRoom(id) {
   const r = rooms.find(x => x.id === id); if (!r || switching) return; switching = true;
   closePanel(); stopTour(); if (arrangeOn) setArrange(false); $('#fade').classList.add('on'); await wait(360);
   room = r; try { localStorage.setItem('lastRoom:' + gallery.id, r.id); } catch { }
-  buildRoom(); applyRoomItems(); resetCamera(); renderRooms(); renderRoomFbBadge(); $('#roomFbPop').classList.remove('open'); sendState(true); updateOnline();
+  buildRoom(); applyRoomItems(); resetCamera(); renderRooms(); renderRoomFbBadge(); $('#roomFbPop').classList.remove('open'); sendState(true); updateOnline(); lixiLoad();
   await wait(80); $('#fade').classList.remove('on'); switching = false; sfxChime();
   toast(`${r.name} · ${(THEMES[r.theme] || THEMES.classic).name}`);
 }
@@ -3308,7 +3317,7 @@ async function openGallery(slug) {
   buildRoom(); applyRoomItems(); resetCamera();
   if (canEdit()) unsubRealtime = api.subscribe(gallery.id, onRealtime);
   updateGalleryUI(); hideGate();
-  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback(); netStart();
+  document.body.classList.add('in-gallery'); $('#roomFbPop').classList.remove('open'); loadFeedback(); netStart(); lixiLoad();
   $('#introEyebrow').textContent = role === 'viewer' ? 'Mời bạn tham quan' : role === 'owner' ? 'Phòng trưng bày của bạn' : 'Bạn là thành viên';
   $('#introTitle').textContent = gallery.name;
   $('#introSub').textContent = `${ownerInfo ? 'Chủ phòng: ' + (ownerInfo.display_name || ownerInfo.username) + ' · ' : ''}${rooms.length} gian · ${Object.values(itemsByRoom).reduce((n, m) => n + Object.keys(m).length, 0)} tác phẩm`;
@@ -3564,6 +3573,8 @@ function peerFig(pr) {
 function onNet(m) {
   if (!m || m.id === NET.id) return;
   if (m.t === 'hi') { sendState(true); return; }
+  if (m.t === 'lx') { if (m.drop && (api.mode === 'demo' ? m.r === roomKey() : true)) { const d = { ...m.drop, room_id: api.mode === 'demo' ? room.id : m.drop.room_id }; lixiSpawn(d); if (d.room_id === room.id) { chatLine(null, `🧧 ${String(d.owner_name || 'Chủ phòng').slice(0, 24)} phát ${d.count} bao lì xì: “${String(d.message || '').slice(0, 120)}”. Bấm vào bao đỏ để bắt!`); toast('🧧 Lì xì đang bay khắp gian, bấm để bắt!', 5000); sfxChime(); } } return; }
+  if (m.t === 'lxc') { lixiRemove(m.drop, m.idx, true); chatLine(null, `${String(m.n || 'Ai đó').slice(0, 24)} bắt được lì xì ${+m.amt || 0} xu 🧧`); return; }
   if (m.t === 'gi') { if (me && m.toUser === me.username) { toast(`${String(m.from || 'Ai đó').slice(0, 24)} vừa tặng bạn “${String(m.name || 'một món đồ').slice(0, 60)}” 🎁 Xem trong Kho đồ.`, 7000); sfxChime(); setExpr?.('love', 4000); INV = null; } return; }
   if (m.t === 'bye') { const pr = NET.peers.get(m.id); if (pr) { disposeFig(pr.fig); NET.peers.delete(m.id); chatLine(null, `${pr.n} đã rời phòng`); updateOnline(); } return; }
   if (m.t === 's') {
@@ -3674,6 +3685,88 @@ function netTick(dt, t) {
   }
 }
 
+/* ================================================================ lì xì: red envelopes floating in the room */
+const LX = { drops: new Map(), envs: [], picks: [] };
+function lixiTex() {
+  return cached('lixi', () => {
+    const [c, g] = canvas(256, 384); const gr = g.createLinearGradient(0, 0, 0, 384); gr.addColorStop(0, '#e3141c'); gr.addColorStop(1, '#a50d12'); g.fillStyle = gr; g.fillRect(0, 0, 256, 384);
+    g.strokeStyle = '#ffd166'; g.lineWidth = 6; g.strokeRect(14, 14, 228, 356); g.fillStyle = '#c40f16'; g.beginPath(); g.moveTo(0, 0); g.lineTo(128, 110); g.lineTo(256, 0); g.fill(); g.strokeStyle = '#ffd166'; g.lineWidth = 3; g.stroke();
+    g.fillStyle = '#ffd166'; g.beginPath(); g.arc(128, 220, 70, 0, TAU); g.fill(); g.fillStyle = '#c40f16'; g.font = '700 86px "Cormorant Garamond", Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Lộc', 128, 226);
+    return tex(c, true, true);
+  });
+}
+function hash32(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return h >>> 0; }
+function lixiSpawn(d) {
+  if (LX.drops.has(d.id) || !d.left_count) return; LX.drops.set(d.id, d);
+  if (api.mode === 'supabase' ? d.room_id !== room.id : false) return;
+  const r = mulberry32(hash32(d.id)), taken = new Set(d.taken || []);
+  for (let i = 0; i < d.count; i++) {
+    const base = new THREE.Vector3(rand(-6, 6), 0, rand(-14, 14)); base.x = -6.2 + r() * 12.4; base.z = -14 + r() * 28; base.y = 1.1 + r() * 2.2;
+    if (taken.has(i)) continue;
+    const g = new THREE.Group(); const env = new THREE.Mesh(new THREE.BoxGeometry(.26, .38, .02), [std({ color: 0xa50d12 }), std({ color: 0xa50d12 }), std({ color: 0xa50d12 }), std({ color: 0xa50d12 }), std({ map: lixiTex(), emissive: 0x6a0000, emissiveIntensity: .35, roughness: .4 }), std({ color: 0xc40f16 })]);
+    g.add(env); const hit = new THREE.Mesh(new THREE.SphereGeometry(.38, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); g.add(hit);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: shapeTex('dot'), color: 0xffd166, transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending })); glow.scale.setScalar(.9); g.add(glow);
+    g.position.copy(base); scene.add(g);
+    const e = { drop: d.id, idx: i, g, base, ph: r() * 7, sp: .3 + r() * .4 }; [env, hit].forEach(m => m.userData.lixi = e); LX.envs.push(e);
+  }
+  LX.picks = LX.envs.flatMap(e => e.g.children.filter(c => c.isMesh));
+}
+function lixiRemove(dropId, idx, fly) {
+  LX.envs = LX.envs.filter(e => { if (e.drop !== dropId || (idx != null && e.idx !== idx)) return true; if (fly) e.fly = 1; else { scene.remove(e.g); e.g.traverse(o => { o.geometry?.dispose(); }); } return !!fly; });
+  LX.picks = LX.envs.filter(e => !e.fly).flatMap(e => e.g.children.filter(c => c.isMesh));
+}
+function lixiClear() { LX.envs.forEach(e => scene.remove(e.g)); LX.envs = []; LX.picks = []; LX.drops.clear(); }
+async function lixiLoad() { lixiClear(); if (!gallery || !api.lixiActive) return; try { (await api.lixiActive(gallery.id)).forEach(d => { if (!d.mine) lixiSpawn(d); }); } catch (e) { console.warn('lixi', e); } }
+function pickLixi(x, y) { if (!LX.picks.length) return null; setRay(x, y); const h = ray.intersectObjects(LX.picks, false)[0]; return h && h.distance < 30 ? h.object.userData.lixi : null; }
+async function catchLixi(e, x, y) {
+  if (api.mode === 'supabase' && !me) { toast('Đăng nhập để bắt lì xì nhé 🧧'); return; }
+  if (e.busy) return; e.busy = true;
+  try {
+    const amt = await api.lixiClaim(e.drop, e.idx); lixiRemove(e.drop, null, false); // one envelope per person per drop
+    if (api.mode === 'supabase') refreshWallet(); updateAcct();
+    floatEmoji('🧧', x, y); sfxChime(); setExpr('grin', 4000);
+    const p = e.g.position; for (let i = 0; i < 40; i++) spawn(p.x, p.y, p.z, rand(-1.4, 1.4), rand(.4, 2.4), rand(-1.4, 1.4), 1, .8, .25, rand(.8, 1.4), .07, 1.2, -.3);
+    toast(`🧧 Bạn bắt được lì xì ${amt.toLocaleString('vi-VN')} xu! Ví: ${walletGet().toLocaleString('vi-VN')} xu`, 6000);
+    NET.ch?.send({ t: 'lxc', id: NET.id, drop: e.drop, idx: e.idx, amt, n: myName() }); chatLine(null, `Bạn bắt được lì xì ${amt} xu 🧧`);
+  } catch (er) {
+    e.busy = false; const m = er.message || '';
+    if (/already/.test(m)) { toast('Bạn đã nhận một bao trong đợt lì xì này rồi. Nhường bạn khác nhé!'); lixiRemove(e.drop, null, false); }
+    else if (/taken/.test(m)) { toast('Chậm tay rồi, bao này vừa có người bắt!'); lixiRemove(e.drop, e.idx, false); }
+    else if (/own drop/.test(m)) toast('Đây là lì xì bạn phát cho khách 😄');
+    else if (/gone/.test(m)) { toast('Đợt lì xì này đã hết.'); lixiRemove(e.drop, null, false); }
+    else toast('Chưa bắt được: ' + m);
+  }
+}
+function lixiTick(dt, t) {
+  for (const e of LX.envs) {
+    if (e.fly) { e.fly += dt * 2.5; e.g.position.y += dt * 3; e.g.scale.setScalar(Math.max(.01, 1 - (e.fly - 1))); if (e.fly > 2) { scene.remove(e.g); e.dead = true; } continue; }
+    const a = t * e.sp + e.ph; e.g.position.set(e.base.x + Math.sin(a) * .5, e.base.y + Math.sin(t * 1.3 + e.ph) * .18, e.base.z + Math.cos(a * .8) * .5); e.g.rotation.y = t * 1.2 + e.ph; e.g.rotation.z = Math.sin(t * 2 + e.ph) * .15;
+  }
+  if (LX.envs.some(e => e.dead)) LX.envs = LX.envs.filter(e => !e.dead);
+}
+function openLixi() {
+  if (role !== 'owner') { toast('Chỉ chủ phòng mới phát lì xì được.'); return; }
+  if (api.mode === 'supabase' && !me) return;
+  modal(`<h2>🧧 Phát lì xì</h2><p>Bao lì xì sẽ bay lơ lửng trong gian “${esc(room.name)}”. Khách đăng nhập bấm vào để bắt, mỗi người nhận một bao với số xu ngẫu nhiên. Sau 30 phút, xu chưa ai bắt được trả lại ví của bạn.</p>
+    <div class="row2"><div><label class="lb" for="lxTotal">Tổng số xu</label><input class="field" id="lxTotal" type="number" min="1" value="500"></div><div><label class="lb" for="lxCount">Số bao (1–50)</label><input class="field" id="lxCount" type="number" min="1" max="50" value="10"></div></div>
+    <label class="lb" for="lxMsg">Lời chúc</label><input class="field" id="lxMsg" maxlength="120" value="Chúc mừng năm mới, an khang thịnh vượng!">
+    <p class="note" style="margin-top:8px">Bạn đang có ${walletGet().toLocaleString('vi-VN')} xu.</p>
+    <div class="row" style="margin-top:12px"><button class="btn" data-x>Huỷ</button><button class="btn gold" id="lxGo">Phát lì xì</button></div>`, box => {
+    box.querySelector('#lxGo').onclick = async ev => {
+      const total = Math.floor(+box.querySelector('#lxTotal').value), count = Math.floor(+box.querySelector('#lxCount').value), msg = box.querySelector('#lxMsg').value.trim();
+      if (!(count >= 1 && count <= 50)) { toast('Số bao từ 1 đến 50.'); return; } if (!(total >= count)) { toast('Tổng xu phải ít nhất bằng số bao.'); return; }
+      ev.target.disabled = true;
+      try {
+        const r = await api.lixiCreate(room.id, total, count, msg); if (api.mode === 'supabase') xuCache = r.balance; updateAcct();
+        const d = { ...r.drop, owner_name: myName(), taken: [] }; closeModal(); lixiSpawn(d); sfxChime(); volley(true);
+        NET.ch?.send({ t: 'lx', id: NET.id, drop: { id: d.id, room_id: d.room_id, count: d.count, left_count: d.count, message: d.message, owner_name: d.owner_name, taken: [] }, r: roomKey() });
+        chatLine(null, `Bạn đã phát ${count} bao lì xì (${total} xu) 🧧`); toast(`Đã phát ${count} bao lì xì! Khách bấm vào bao đỏ để bắt.`, 5000);
+      } catch (e) { ev.target.disabled = false; toast(/not enough/.test(e.message) ? 'Chưa đủ xu để phát lì xì.' : 'Chưa phát được: ' + e.message, 6000); }
+    };
+  });
+}
+$('#tLixi').onclick = openLixi;
+
 /* ================================================================ loop */
 const clock = new THREE.Clock(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), want = new THREE.Vector3();
 // If the visitor's device can't keep up on "Cao", switch to "Nhẹ" once, automatically.
@@ -3722,7 +3815,7 @@ function tick() {
     if (selRing.visible) selRing.material.opacity = .65 + Math.sin(t * 4) * .3;
   }
   const sc = pointScale(); pointMats.forEach(m => { if (m.uniforms?.uScale) m.uniforms.uScale.value = sc; });
-  netTick(dt, t);
+  netTick(dt, t); lixiTick(dt, t);
   if (NET.tp && started && !(focus && focus.lock)) { // third person: pull the camera back behind your minifig
     NET.tpSaved = camera.position.clone();
     camera.position.x = THREE.MathUtils.clamp(camera.position.x + Math.sin(yaw) * 2.6, -HW + .3, HW - .3);
