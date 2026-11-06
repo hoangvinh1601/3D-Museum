@@ -126,6 +126,45 @@ body.tb-min #tMenu svg{transform:rotate(180deg)}
 #mediaP{position:fixed;right:16px;top:70px;z-index:13;width:320px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 170px);overflow:auto;padding:16px;transform:translateX(calc(100% + 30px));transition:transform .4s cubic-bezier(.2,.8,.2,1)}
 #mediaP.open{transform:none}
 #mediaP .lb{display:flex;justify-content:space-between;margin-top:12px}
+/* smart TV */
+#stv{position:fixed;inset:0;z-index:34;display:none;align-items:center;justify-content:center;padding:12px;background:rgba(3,4,8,.55)}
+#stv.open{display:flex}
+#stvBox{width:min(980px,100%);max-height:calc(100dvh - 24px);display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:linear-gradient(160deg,#121833,#0a0c16 60%,#15102a);border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 80px rgba(0,0,0,.6);color:#eef1ff}
+.stv-top{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap}
+.stv-clock{font:600 15px 'Be Vietnam Pro',sans-serif;opacity:.8}.stv-brand{letter-spacing:.25em;text-transform:uppercase;font-size:11px;opacity:.6}
+.stv-ctl{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stv-ic{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:inherit;font-size:15px}
+.stv-ic:hover{background:rgba(255,255,255,.14)}
+.stv-vol{display:flex;align-items:center;gap:6px;font-size:14px}.stv-vol input{width:110px;accent-color:#ff3d3d}
+.stv-seg{margin:0}.stv-seg button{padding:7px 10px;font-size:12px}
+.stv-body{padding:18px;overflow:auto}
+.stv-now{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:rgba(255,255,255,.05);margin-bottom:18px}
+.stv-now img{width:160px;aspect-ratio:16/9;object-fit:cover;border-radius:10px}.stv-now small{display:block;opacity:.6;font-size:12px;margin-bottom:4px}.stv-now b{font-size:16px}
+.stv-apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.stv-app{aspect-ratio:16/10;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:600;transition:transform .15s,background .15s}
+.stv-app:hover,.stv-app:focus-visible{transform:scale(1.04);background:rgba(255,255,255,.12);outline:2px solid #fff}
+.stv-app .logo{font-size:30px;line-height:1}.stv-app .logo svg,.stv-ylogo svg{width:52px;height:37px}
+.stv-app.yt{background:linear-gradient(160deg,#2a0d0d,#140808)}
+.stv-note{opacity:.6;font-size:12.5px;margin:16px 0 0}
+.stv-ythead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.stv-ylogo{display:flex;align-items:center;gap:6px;font-weight:700;letter-spacing:-.02em}.stv-ylogo svg{width:30px;height:21px}
+.stv-search{flex:1;min-width:200px;display:flex;border:1px solid rgba(255,255,255,.18);border-radius:999px;overflow:hidden;background:rgba(0,0,0,.35)}
+.stv-search input{flex:1;min-width:0;border:0;background:transparent;color:inherit;padding:10px 16px;font-size:15px;outline:none}
+.stv-search button{border:0;background:rgba(255,255,255,.1);color:inherit;padding:0 16px;font-size:15px}
+.stv-chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
+.stv-chips button{border:0;border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.1);color:inherit;font-size:12.5px}
+.stv-chips button:hover{background:rgba(255,255,255,.2)}
+.stv-sub{font-size:13px;opacity:.7;margin:6px 0 10px}
+.stv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px 14px}
+.stv-card{border:0;background:transparent;color:inherit;text-align:left;padding:0;display:flex;flex-direction:column;gap:6px;border-radius:12px}
+.stv-card .th{position:relative;display:block;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.stv-card img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.stv-card:hover img{transform:scale(1.05)}.stv-card:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.stv-card i{position:absolute;right:6px;bottom:6px;font:600 11px ui-monospace,monospace;font-style:normal;background:rgba(0,0,0,.8);padding:2px 5px;border-radius:4px}
+.stv-card b{font-size:13.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.stv-card small{font-size:12px;opacity:.6}
+.stv-err{opacity:.8;padding:20px 0}
+@media (max-width:620px){.stv-grid{grid-template-columns:repeat(2,1fr);gap:12px 10px}.stv-vol input{width:80px}.stv-now img{width:110px}.stv-body{padding:12px}}
 #mediaP .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
 #mediaP .ph button{border:0;background:transparent;font-size:16px}
 body.can-edit .member-only{display:flex}
@@ -403,6 +442,11 @@ body.in-gallery #chat{display:flex}
   <button class="btn full gold" id="pOpt" style="display:none;margin-bottom:8px"></button>
   <button class="btn full" id="pAnim" style="display:none;margin-bottom:8px">Dừng chuyển động</button>
   <div class="row"><button class="btn sq" id="pPrev">‹</button><button class="btn" id="pFocus">Xem cận cảnh</button><button class="btn sq" id="pNext">›</button></div>
+  <div id="pVid" style="display:none;margin-bottom:8px">
+    <div class="row"><button class="btn" id="pVPlay">⏸ Dừng</button><button class="btn" id="pVRe">⏮ Từ đầu</button></div>
+    <div class="tg" id="pVAuto">Tự động phát khi vào gian<span class="sw2"></span></div>
+    <div class="tg" id="pVLoop">Lặp lại video<span class="sw2"></span></div>
+  </div>
   <button class="btn full" id="pSound" style="display:none;margin-bottom:8px">Bật tiếng video</button>
   <div id="pEdit"><div class="row"><button class="btn gold" id="pUpload">Tải lên vị trí này</button><button class="btn" id="pKho">📦 Từ Kho đồ</button></div><div class="row"><button class="btn" id="pMove">Di chuyển tủ</button><button class="btn danger" id="pRemove">Gỡ khỏi vị trí này</button></div></div>
 </aside>
@@ -437,6 +481,7 @@ body.in-gallery #chat{display:flex}
 <div id="roomFb"><div id="roomFbPop" class="glass"><h3 style="margin:0 0 8px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:500">Cảm nhận về gian này</h3><div id="roomFbBox" class="fb"></div></div><button class="iconbtn" id="roomFbBtn" title="Thả tim, đánh giá, ủng hộ gian này"></button></div>
 <aside id="avPanel" class="glass"></aside>
 <aside id="mediaP" class="glass"></aside>
+<div id="stv"><div id="stvBox"></div></div>
 <input type="file" id="audioInput" accept="audio/*,video/mp4,.mp3,.m4a,.wav,.ogg,.mp4" hidden>
 <div id="chat"><div id="chatLog"></div><form id="chatForm" class="glass"><div class="emo"><button type="button" id="mirrorBtn" title="Soi gương (M)">🪞</button><button type="button" data-emo="wave" title="Vẫy tay (1)">👋</button><button type="button" data-emo="jump" title="Nhảy (2)">⤴️</button><button type="button" data-emo="dance" title="Nhảy múa (3)">🕺</button></div><div class="emo" id="exprBar"></div><input id="chatIn" class="field" maxlength="200" placeholder="Nhắn cho mọi người trong gian…" autocomplete="off"></form></div>
 <div id="peerMenu" class="glass"></div>
@@ -1636,8 +1681,8 @@ function layoutList() {
   list = list.filter(e => e && DECOR[e.type]).map(e => ({ ...e }));
   const defs = defaultLayout(R.key, R.th);
   if (!(room.layout?.v >= 2)) for (let k = 0; k < 4; k++) if (!list.some(e => e.type === 'vitrine' && e.slot === 'c' + k)) list.push(defs.find(e => e.slot === 'c' + k));
-  const bigTV = { id: 'tv0', type: 'tv', x: 4.05 - .19 * 1.8, z: 9, rot: -PI / 2, s: 1.8, y: 1.95, slot: 'w14', seed: 1 };
-  if (!(room.layout?.v >= 4)) { // v4: the TV moved to the entrance partition and got bigger
+  const bigTV = { id: 'tv0', type: 'tv', x: +(4.05 - .19 * 2.4).toFixed(3), z: 9, rot: -PI / 2, s: 2.4, y: 2.0, slot: 'w14', seed: 1 };
+  if (!(room.layout?.v >= 5)) { // v4 moved the TV to the entrance partition, v5 made it partition-wide
     const old = list.findIndex(e => e.id === 'tv0'); if (old >= 0) list[old] = { ...list[old], ...bigTV };
   }
   if (!(room.layout?.v >= 3)) { // v3 added the TV and the radio
@@ -1729,7 +1774,7 @@ function renderArrange() {
 let layoutTimer = null, lastLayoutLocal = 0;
 function scheduleLayoutSave() {
   lastLayoutLocal = Date.now();
-  room.layout = { v: 4, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
+  room.layout = { v: 5, decor: R.layout.map(e => Object.fromEntries(Object.entries(e).filter(([k]) => k[0] !== '_'))) };
   clearTimeout(layoutTimer); layoutTimer = setTimeout(() => saveRoom({ layout: room.layout }), 700);
 }
 const newId = () => 'd' + Date.now().toString(36) + ((Math.random() * 1e4) | 0);
@@ -1749,7 +1794,7 @@ function mutateSel(fn) {
   recomputeDecorCol(); updateSelRing(); scheduleLayoutSave();
 }
 const rotSel = d => { if (selDecor && DECOR[selDecor.type].wall) { toast('Tivi luôn treo sát tường: kéo để đổi chỗ trên tường.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
-const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, 2.2).toFixed(2));
+const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, e.type === 'tv' ? 2.7 : 2.2).toFixed(2));
 function dupSel() {
   if (!selDecor) return;
   if (selDecor.inv) { toast('Đồ từ cửa hàng không nhân bản được. Hãy mua thêm trong Cửa hàng.'); return; }
@@ -2356,6 +2401,16 @@ const artGlow = () => R ? R.th.art * .28 * (spotsOn ? 1 : .3) : .1;
    warm white by default (3000K), dimmable; vitrines have a built-in top light. Saved per room in rooms.lights. */
 const LIGHT_K = { 2700: 0xffcf9a, 3000: 0xffdcb2, 4000: 0xfff1df, 5000: 0xfffaf4 };
 const slotLight = s => ({ on: true, lv: .8, k: 3000, ...(room?.lights?.[s.id] || {}) });
+// video artworks: saved next to the slot's light settings (rooms.lights[slot].v)
+const vOpts = s => ({ auto: true, loop: true, ...(room?.lights?.[s.id]?.v || {}) });
+function applyVideoOpts(s, first) {
+  const el = s.media?.kind === 'video' ? s.media.el : null; if (!el) return; const o = vOpts(s);
+  el.loop = o.loop; if (first) { if (o.auto && started) el.play().catch(() => { }); else el.pause(); }
+}
+function setVideoOpts(s, patch) {
+  const cur = room.lights?.[s.id] || {}; room.lights = { ...(room.lights || {}), [s.id]: { ...cur, v: { ...vOpts(s), ...patch } } };
+  applyVideoOpts(s, false); if (canEdit()) { clearTimeout(lightSaveT); lightSaveT = setTimeout(() => saveRoom({ lights: room.lights }), 600); }
+}
 const hasLight = s => s.type === 'wall' || (s.type === 'case' && s.sub === 'vitrine');
 const _lc = new THREE.Color();
 function applySlotLight(s) {
@@ -2515,7 +2570,7 @@ addEventListener('keydown', e => {
   if (A === 'full') $('#tFull').click();
   if (arrangeOn && selDecor) { if (A === 'rotL') rotSel(PI / 12); if (A === 'rotR') rotSel(-PI / 12); if (e.code === 'Delete' || e.code === 'Backspace') { e.preventDefault(); delSel(false); } }
   if (e.code === 'Escape' && pendingCase) { pendingCase = null; toast('Đã huỷ đặt vào tủ kính.'); }
-  if (e.code === 'Escape') { if (arrangeOn) setArrange(false); closePanel(); closeMediaP(); closePops(); closeModal(); $('#rooms').classList.remove('open'); focus = null; }
+  if (e.code === 'Escape') { if (arrangeOn) setArrange(false); closePanel(); closeMediaP(); closeSTV(); closePops(); closeModal(); $('#rooms').classList.remove('open'); focus = null; }
 });
 addEventListener('keyup', e => { keys[e.code] = false; keys[keyFamily(e.code)] = false; });
 const held = a => !!KB[a] && !!keys[keyFamily(KB[a])];
@@ -2727,6 +2782,8 @@ function renderPanel(fill) {
   $('#pRemove').textContent = s.media?.path?.startsWith('shop:') ? 'Cất về Kho đồ' : 'Gỡ khỏi vị trí này';
   $('#pUpload').textContent = has ? 'Thay bằng tệp khác' : 'Tải lên vị trí này';
   const v = s.media?.kind === 'video'; $('#pSound').style.display = v ? '' : 'none'; if (v) $('#pSound').textContent = s.media.el.muted ? 'Bật tiếng video' : 'Tắt tiếng video';
+  $('#pVid').style.display = v ? '' : 'none';
+  if (v) { const o = vOpts(s); $('#pVPlay').textContent = s.media.el.paused ? '▶ Phát' : '⏸ Dừng'; $('#pVAuto').classList.toggle('on', o.auto); $('#pVLoop').classList.toggle('on', o.loop); $('#pVAuto').style.display = $('#pVLoop').style.display = canEdit() ? '' : 'none'; }
 }
 function renderLightPanel() {
   const s = selected, box = $('#pLight'); if (!s || !hasLight(s)) { box.style.display = 'none'; return; }
@@ -2760,6 +2817,10 @@ $('#pUpload').onclick = () => selected && pickFiles(selected.type, selected);
 $('#pRemove').onclick = () => selected && removeMedia(selected, true);
 $('#pKho').onclick = () => selected && openKho(selected);
 $('#pMove').onclick = () => { const s = selected; if (!s) return; const d = Object.values(R.decor).find(x => x.e.slot === s.id); if (!d) return; setArrange(true); selectDecor(d.e); };
+$('#pVPlay').onclick = () => { const el = selected?.media?.el; if (selected?.media?.kind !== 'video') return; el.paused ? el.play().catch(() => { }) : el.pause(); setTimeout(renderPanel, 60); };
+$('#pVRe').onclick = () => { const el = selected?.media?.el; if (selected?.media?.kind !== 'video') return; el.currentTime = 0; el.play().catch(() => { }); setTimeout(renderPanel, 60); };
+$('#pVAuto').onclick = () => { if (!selected || !canEdit()) return; setVideoOpts(selected, { auto: !vOpts(selected).auto }); renderPanel(); };
+$('#pVLoop').onclick = () => { if (!selected || !canEdit()) return; setVideoOpts(selected, { loop: !vOpts(selected).loop }); renderPanel(); };
 $('#pSound').onclick = () => { const m = selected?.media; if (m?.kind !== 'video') return; m.el.muted = !m.el.muted; m.el.play().catch(() => { }); renderPanel(); };
 let infoTimer = null;
 [['fTitle', 'title'], ['fArtist', 'artist'], ['fYear', 'year'], ['fDesc', 'description']].forEach(([id, key]) => {
@@ -3655,7 +3716,7 @@ async function loadSlotMedia(s, src) {
   if (!s.alive || s.loadingId !== token) { disposeMedia(media, true); return false; }
   s.loadingId = null; const old = s.media; s.media = media;
   if (old) disposeMedia(old, old.blobUrl && old.blobUrl === media.blobUrl);
-  s.render(); refreshPick(); if (selected === s) renderPanel(); return true;
+  s.render(); refreshPick(); applyVideoOpts(s, true); if (selected === s) renderPanel(); return true;
 }
 const blankInfo = () => ({ title: '', artist: '', year: '', description: '' });
 function setInfoFromRow(s, row) { s.info = { title: row?.title || '', artist: row?.artist || '', year: row?.year || '', description: row?.description || '' }; s.label(); }
@@ -3831,7 +3892,7 @@ function onRealtime(table, p) {
     Object.assign(ex, n);
     if (ex === room) {
       if (themeCh) rebuildCurrent();
-      else { if (lightCh) { R.slots.forEach(applySlotLight); renderLightPanel(); } if (starCh) applyStars(true); if (layoutCh && !dragDecor && Date.now() - lastLayoutLocal > 2500) syncDecor(layoutList()); }
+      else { if (lightCh) { R.slots.forEach(applySlotLight); R.slots.forEach(sl => applyVideoOpts(sl, false)); renderLightPanel(); } if (starCh) applyStars(true); if (layoutCh && !dragDecor && Date.now() - lastLayoutLocal > 2500) syncDecor(layoutList()); }
     }
   }
   renderRooms(); updateDoorSign();
@@ -4436,7 +4497,7 @@ function loadYT() {
   });
 }
 async function tvStart(st) {
-  const yt = ytParse(st.e.yt); st.key = st.e.yt || ''; if (!yt) return;
+  const want = tvWant(st), yt = ytParse(want); st.key = want; if (!yt) return;
   const myKey = st.key; let YT;
   try { YT = await loadYT(); } catch (e) { toast(e.message); return; }
   if (st.dead || st.key !== myKey) return;
@@ -4448,8 +4509,8 @@ async function tvStart(st) {
   st.player = new YT.Player(inner, {
     width: TV_PX, height: Math.round(TV_PX * TV_H / TV_W), videoId: yt.id || undefined, playerVars: vars,
     events: {
-      onReady: ev => { st.ready = true; tvVolume(st, true); if (!st.paused) ev.target.playVideo(); renderMediaP(); },
-      onStateChange: ev => { st.playing = ev.data === 1; st.g.userData.led.material.color.setHex(st.playing ? 0x3aff6a : 0xff3a2a); if (ev.data === 1) renderMediaP(); },
+      onReady: ev => { st.ready = true; tvVolume(st, true); if (!st.paused) ev.target.playVideo(); renderMediaP(); if (stvId) renderSTV(); },
+      onStateChange: ev => { st.playing = ev.data === 1; st.g.userData.led.material.color.setHex(st.playing ? 0x3aff6a : 0xff3a2a); if (ev.data === 1 || ev.data === 2) { renderMediaP(); if (stvId && !document.activeElement?.matches('#stv input')) renderSTV(); } },
       onError: () => toast('Video YouTube này không phát được trên trang khác (chủ video đã chặn). Hãy chọn video khác.', 6000)
     }
   });
@@ -4505,7 +4566,7 @@ function mediaTick(dt) {
     let st = MEDIA.get(id);
     if (!st) { st = { kind: type, e: d.e, g: d.g, pos: new THREE.Vector3() }; MEDIA.set(id, st); }
     st.e = d.e;
-    if (type === 'tv') { if ((st.e.yt || '') !== (st.key ?? null)) { tvStop(st); st.key = null; tvStart(st); } }
+    if (type === 'tv') { if (tvWant(st) !== (st.key ?? null)) { tvStop(st); st.key = null; tvStart(st); } }
     else { const k = (st.e.path || '') + '|' + (st.e.mode || 'radio'); if (k !== st.key) { radioStop(st); if (st.key?.split('|')[0] !== (st.e.path || '')) st.resumeAt = 0; radioStart(st); } if (st.el) st.el.loop = st.e.loop !== false; }
   }
   mediaT -= dt; occT -= dt; const slow = mediaT <= 0, occ = occT <= 0; if (slow) mediaT = .2; if (occ) occT = .25;
@@ -4540,10 +4601,113 @@ function mediaTick(dt) {
 }
 addEventListener('pagehide', () => MEDIA.forEach(st => st.kind === 'radio' && st.el?.pause()));
 
+/* ---------- Smart TV: home screen → YouTube app with search, like a real smart TV */
+// Search uses the official YouTube Data API when config.js has youtubeApiKey (free, ~100 searches a day),
+// otherwise public Piped servers (free, no key, sometimes busy). Pasting a link always works.
+const YT_KEY = () => (window.GALLERY_CONFIG || {}).youtubeApiKey || '';
+const PIPED = ['https://api.piped.private.coffee', 'https://pipedapi.kavin.rocks', 'https://pipedapi.r4fo.com', 'https://pipedapi.adminforge.de'];
+let pipedOk = null;
+const htmlText = s => { const t = document.createElement('textarea'); t.innerHTML = String(s || ''); return t.value; };
+const ytThumb = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+const fmtDur = s => { s = +s || 0; if (s <= 0) return ''; const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, ss = s % 60 | 0; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(ss).padStart(2, '0'); };
+async function pipedGet(path, pick) {
+  const order = pipedOk ? [pipedOk, ...PIPED.filter(h => h !== pipedOk)] : PIPED;
+  for (const h of order) {
+    try {
+      const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 7000);
+      const r = await fetch(h + path, { signal: ctl.signal }); clearTimeout(tm); if (!r.ok) continue;
+      const list = (pick(await r.json()) || []).map(x => ({ id: (String(x.url || '').match(/v=([\w-]{6,})/) || [])[1], title: x.title, ch: x.uploaderName, dur: x.duration })).filter(x => x.id);
+      if (!list.length) continue; pipedOk = h; return list;
+    } catch { }
+  }
+  throw new Error('Máy chủ tìm kiếm đang bận. Thử lại sau, hoặc dùng “Dán link”.');
+}
+async function ytData(path) { const r = await fetch(`https://www.googleapis.com/youtube/v3/${path}&key=${encodeURIComponent(YT_KEY())}`); const j = await r.json(); if (j.error) throw new Error(j.error.message); return j.items || []; }
+async function ytSearch(q) {
+  if (YT_KEY()) return (await ytData(`search?part=snippet&type=video&videoEmbeddable=true&maxResults=24&regionCode=VN&relevanceLanguage=vi&q=${encodeURIComponent(q)}`)).map(i => ({ id: i.id.videoId, title: htmlText(i.snippet.title), ch: htmlText(i.snippet.channelTitle) }));
+  return pipedGet(`/search?q=${encodeURIComponent(q)}&filter=videos`, j => j.items);
+}
+async function ytTrending() {
+  if (YT_KEY()) return (await ytData('videos?part=snippet&chart=mostPopular&regionCode=VN&maxResults=24')).map(i => ({ id: i.id, title: htmlText(i.snippet.title), ch: htmlText(i.snippet.channelTitle) }));
+  return pipedGet('/trending?region=VN', j => j);
+}
+const tvWant = st => st.localYt !== undefined ? st.localYt : (st.e.yt || '');
+let stvId = null, stvView = 'home', stvQ = '', stvList = null, stvBusy = false, stvErr = '';
+function openSTV(id, view) {
+  const d = R?.decor[id]; if (!d) return; stvId = id; stvView = view || 'home'; closePanel(); closePops(); closeMediaP();
+  // walk up to the TV, the way you would to use a real one
+  const st = MEDIA.get(id); if (st) { const n = new THREE.Vector3(0, 0, 1).applyQuaternion(d.g.quaternion); focusOn({ focusInfo: () => ({ center: st.pos.clone(), normal: n, w: TV_W * d.e.s, h: TV_H * d.e.s }) }); }
+  $('#stv').classList.add('open'); renderSTV();
+  if (stvView === 'yt' && !stvList) stvLoad('');
+}
+function closeSTV() { stvId = null; $('#stv').classList.remove('open'); }
+async function stvLoad(q) {
+  stvQ = q; stvBusy = true; stvErr = ''; stvList = null; renderSTV();
+  try { stvList = q ? await ytSearch(q) : await ytTrending(); } catch (e) { stvErr = e.message; stvList = []; }
+  stvBusy = false; if (stvQ === q) renderSTV();
+}
+function stvPlay(url, title) {
+  const d = R?.decor[stvId]; if (!d) return; const st = MEDIA.get(stvId);
+  if (canEdit()) { if (st) st.localYt = undefined; saveMediaE(d.e, { yt: url, ytTitle: title || '' }); }
+  else if (st) st.localYt = url; // visitors watch what they like on their own screen
+  if (st) st.paused = false; closeSTV(); toast(`📺 Đang mở “${(title || 'video').slice(0, 60)}” trên tivi`);
+}
+function renderSTV() {
+  if (!stvId) return; const d = R?.decor[stvId]; if (!d) { closeSTV(); return; }
+  const e = d.e, st = MEDIA.get(stvId) || { e }, ed = canEdit(), on = !!tvWant(st);
+  const vol = Math.round(st.localVol ?? e.vol ?? 70), mode = e.mode || 'tv';
+  let now = ''; try { now = st.player?.getVideoData?.().title || e.ytTitle || ''; } catch { }
+  const top = `<div class="stv-top"><span class="stv-clock">${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span><b class="stv-brand">Smart TV</b>
+    <div class="stv-ctl">${on ? `<button class="stv-ic" id="sPlay" title="${st.playing ? 'Tạm dừng' : 'Phát'}">${st.playing ? '⏸' : '▶'}</button>` : ''}
+      <label class="stv-vol" title="Âm lượng${ed ? '' : ' trên máy bạn'}">🔊<input type="range" min="0" max="100" step="5" value="${vol}" id="sVol"></label>
+      <div class="seg stv-seg">${[['tv', 'Loa tivi'], ['room', 'Loa cả phòng']].map(([k, n]) => `<button data-m="${k}" class="${k === mode ? 'on' : ''}"${ed ? '' : ' disabled title="Chủ phòng chọn chế độ loa"'}>${n}</button>`).join('')}</div>
+      ${on ? '<button class="stv-ic" id="sOff" title="Tắt tivi">⏻</button>' : ''}<button class="stv-ic" id="sX" title="Đóng (Esc)">✕</button></div></div>`;
+  let body = '';
+  if (stvView === 'home') {
+    body = `<div class="stv-now">${on ? `<img src="${ytThumb(ytParse(tvWant(st))?.id || '')}" alt="" onerror="this.style.display='none'"><div><small>Đang phát trên tivi</small><b>${esc(now || 'Video YouTube')}</b></div>` : '<div><small>Tivi đang chờ</small><b>Chọn một ứng dụng để xem</b></div>'}</div>
+      <div class="stv-apps">
+        <button class="stv-app yt" data-app="yt"><span class="logo"><svg viewBox="0 0 28 20"><rect width="28" height="20" rx="5" fill="#ff0000"/><path d="M11 6v8l7-4z" fill="#fff"/></svg></span>YouTube</button>
+        <button class="stv-app" data-app="link"><span class="logo">🔗</span>Dán link</button>
+        ${on ? '<button class="stv-app" data-app="off"><span class="logo">⏻</span>Tắt tivi</button>' : ''}
+      </div>
+      <p class="stv-note">${ed ? 'Video bạn chọn sẽ phát trên tivi cho mọi người trong phòng.' : 'Bạn có thể tự chọn video để xem; người khác vẫn thấy video của chủ phòng.'} Mỗi người tự phát trên máy mình.</p>`;
+  }
+  if (stvView === 'yt') {
+    const chips = ['Nhạc Việt mới', 'Lofi chill', 'Nhạc Tết', 'Bolero', 'Piano thư giãn', 'Tin tức', 'Hoạt hình thiếu nhi'];
+    body = `<div class="stv-ythead"><button class="stv-ic" id="sHome" title="Trang chủ">‹</button><span class="stv-ylogo"><svg viewBox="0 0 28 20"><rect width="28" height="20" rx="5" fill="#ff0000"/><path d="M11 6v8l7-4z" fill="#fff"/></svg>YouTube</span>
+        <form id="sForm" class="stv-search"><input id="sQ" type="search" placeholder="Tìm trên YouTube" value="${esc(stvQ)}" autocomplete="off"><button type="submit">🔍</button></form></div>
+      <div class="stv-chips">${chips.map(c => `<button data-q="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+      <div class="stv-sub">${stvQ ? `Kết quả cho “${esc(stvQ)}”` : 'Thịnh hành tại Việt Nam'}</div>
+      ${stvBusy ? '<div class="spin" style="margin:30px auto"></div>' : stvErr ? `<p class="stv-err">${esc(stvErr)}</p>` : `<div class="stv-grid">${(stvList || []).map((v, i) => `<button class="stv-card" data-i="${i}"><span class="th"><img src="${ytThumb(v.id)}" alt="" loading="lazy">${v.dur ? `<i>${fmtDur(v.dur)}</i>` : ''}</span><b>${esc(v.title)}</b><small>${esc(v.ch || '')}</small></button>`).join('') || '<p class="stv-err">Không tìm thấy video nào.</p>'}</div>`}`;
+  }
+  if (stvView === 'link') {
+    body = `<div class="stv-ythead"><button class="stv-ic" id="sHome" title="Trang chủ">‹</button><b>Dán link YouTube</b></div>
+      <form id="sLink" class="stv-search" style="margin:18px 0"><input id="sUrl" type="url" placeholder="https://www.youtube.com/watch?v=… hoặc https://youtu.be/…" value="${esc(tvWant(st))}"><button type="submit">Phát</button></form>
+      <p class="stv-note">Nhận cả video, shorts và danh sách phát.</p>`;
+  }
+  const box = $('#stvBox'); box.innerHTML = top + `<div class="stv-body">${body}</div>`;
+  const q = sel => box.querySelector(sel);
+  q('#sX').onclick = closeSTV;
+  q('#sHome')?.addEventListener('click', () => { stvView = 'home'; renderSTV(); });
+  q('#sPlay')?.addEventListener('click', () => { const s2 = MEDIA.get(stvId); if (!s2?.player?.playVideo) return; s2.paused = s2.playing; s2.playing ? s2.player.pauseVideo() : s2.player.playVideo(); setTimeout(renderSTV, 200); });
+  const off = () => { const s2 = MEDIA.get(stvId); if (ed) { if (s2) s2.localYt = undefined; saveMediaE(e, { yt: '', ytTitle: '' }); } else if (s2) s2.localYt = ''; stvView = 'home'; setTimeout(renderSTV, 50); };
+  q('#sOff')?.addEventListener('click', off);
+  q('#sVol').oninput = ev => { const s2 = MEDIA.get(stvId); if (s2) { s2.localVol = +ev.target.value; tvVolume(s2, true); } };
+  q('#sVol').onchange = ev => { if (ed) { const s2 = MEDIA.get(stvId); if (s2) s2.localVol = null; saveMediaE(e, { vol: +ev.target.value }); } };
+  box.querySelectorAll('.stv-seg button').forEach(b => b.onclick = () => { if (!ed) return; saveMediaE(e, { mode: b.dataset.m }); renderSTV(); });
+  box.querySelectorAll('[data-app]').forEach(b => b.onclick = () => { const a = b.dataset.app; if (a === 'off') return off(); stvView = a; renderSTV(); if (a === 'yt' && !stvList && !stvBusy) stvLoad(''); if (a === 'link') setTimeout(() => q('#sUrl')?.focus(), 30); });
+  q('#sForm')?.addEventListener('submit', ev => { ev.preventDefault(); const v = q('#sQ').value.trim(); stvLoad(v); });
+  box.querySelectorAll('[data-q]').forEach(b => b.onclick = () => stvLoad(b.dataset.q));
+  box.querySelectorAll('.stv-card').forEach(b => b.onclick = () => { const v = stvList[+b.dataset.i]; stvPlay('https://youtu.be/' + v.id, v.title); });
+  q('#sLink')?.addEventListener('submit', ev => { ev.preventDefault(); const v = q('#sUrl').value.trim(); if (!ytParse(v)) { toast('Link YouTube chưa đúng. Ví dụ: https://youtu.be/…'); return; } stvPlay(v, ''); });
+  if (stvView === 'yt' && !stvBusy && !isTouch) setTimeout(() => { const i = q('#sQ'); if (i && document.activeElement !== i && !stvQ) i.focus(); }, 30);
+}
+$('#stv').addEventListener('pointerdown', e => { if (e.target.id === 'stv') closeSTV(); });
+
 /* ---------- control panel */
 let mpOpen = null;
 function closeMediaP() { mpOpen = null; $('#mediaP').classList.remove('open'); }
-function openMediaPanel(id) { closePanel(); closePops(); mpOpen = id; $('#mediaP').classList.add('open'); renderMediaP(); }
+function openMediaPanel(id) { if (R?.decor[id]?.e.type === 'tv') { openSTV(id); return; } closePanel(); closePops(); mpOpen = id; $('#mediaP').classList.add('open'); renderMediaP(); }
 function saveMediaE(e, patch) { Object.assign(e, patch); if (canEdit()) scheduleLayoutSave(); }
 function renderMediaP() {
   if (!mpOpen) return; const d = R?.decor[mpOpen]; if (!d) { closeMediaP(); return; }
@@ -4714,13 +4878,13 @@ async function boot() {
 $('#enter').onclick = () => {
   started = true; $('#intro').classList.add('hide'); cvs.style.cursor = 'grab';
   const a = audio(); if (a && a.state !== 'running') a.resume().catch(() => { });
-  R?.slots.forEach(s => { if (s.media?.kind === 'video') s.media.el.play().catch(() => { }); });
+  R?.slots.forEach(s => { if (s.media?.kind === 'video' && vOpts(s).auto) s.media.el.play().catch(() => { }); });
   setTimeout(() => { if (!muted) volley(); }, 900);
 };
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.6';
+const BUILD = '2026-11-06.7';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
