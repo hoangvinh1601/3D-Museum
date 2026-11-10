@@ -175,4 +175,8 @@ Trong `assets/shop/catalog.json`, thêm `"mount": "ceiling"` cho đồ treo tr�
 - **Treo trần:** đồ treo bằng dây từ trần xuống; kéo trên sàn để chọn chỗ treo; khách đi bên dưới không bị vướng.
 - **Treo tường:** đồ tự áp sát tường bên, nằm giữa hai bức tranh như tivi.
 
-Đèn chùm cổ điển đã được đánh dấu treo trần; đèn chùm đã đặt dưới sàn từ trước sẽ tự treo lên.
+Đèn chùm cổ điển treo trần; đồng hồ treo tường gỗ, Đồng hồ Trăng & núi, Tranh núi & đồng hồ quả lắc treo tường (hai chiếc sau có kim chạy đúng giờ). Đèn chùm đã đặt dưới sàn từ trước sẽ tự treo lên. Mô hình xuất ra bị nằm ngửa thì thêm `"rotX": 90` để dựng đứng.
+
+### Tủ kính
+
+Tủ kính còn trống có sẵn một món đồ trang trí mẫu. Chủ phòng nhấn vào tủ → **Cất đồ mẫu** để tủ trống hẳn, hoặc **Hiện lại đồ mẫu**.

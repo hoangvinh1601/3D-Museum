@@ -366,5 +366,13 @@
   "desc": "Bình gốm men trắng vẽ hoa sen xanh lam",
   "price": 250,
   "height": 0.9
+ },
+ {
+  "file": "dong-ho-tuong-go.glb",
+  "name": "Đồng hồ treo tường gỗ",
+  "desc": "Đồng hồ treo tường mặt cách điệu · tác giả arunangshubanerjee",
+  "price": 250,
+  "height": 0.6,
+  "mount": "wall"
  }
 ]
