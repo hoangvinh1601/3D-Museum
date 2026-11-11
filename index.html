@@ -465,7 +465,7 @@ body.in-gallery #chat{display:flex}
 
 <aside id="arrange" class="glass">
   <div class="ph"><span>Sắp xếp đồ vật</span><button class="btn fit gold" id="aDone" style="padding:6px 14px">Xong</button></div>
-  <div class="note">Nhấn vào cây, ghế, tủ kính… để chọn rồi kéo trên sàn để di chuyển. Phím <b>Q</b>/<b>E</b> xoay, <b>Delete</b> xoá. Mọi thay đổi được lưu tự động.</div>
+  <div class="note">Nhấn vào cây, ghế, tủ kính… để chọn rồi kéo để di chuyển (đồ treo tường kéo dọc tường và lên xuống, đèn treo kéo dưới trần). Phím <b>Q</b>/<b>E</b> xoay, <b>Delete</b> xoá. Mọi thay đổi được lưu tự động.</div>
   <div id="aSel">
     <b id="aName"></b>
     <div class="row"><button class="btn" id="aRotL">⟲ Xoay</button><button class="btn" id="aRotR">Xoay ⟳</button></div>
@@ -1652,6 +1652,7 @@ function makeGlbDecor(e) {
       g.userData.fit = ee => { const s = ee.s || 1, top = (ee.h || 1), len = Math.max(.05, (H - supportY(ee)) / s - top); cord.scale.y = len; cord.position.y = top + len / 2; rose.position.y = top + len - .025 / s; rose.scale.setScalar(1 / s); };
       g.userData.fit(e);
     }
+    { const dd = R.decor[e.id]; if (dd && isWallMount(dd.e)) placeG(dd); }
     refreshPick();
   }).catch(err => { console.warn('Không tải được mô hình cửa hàng', e.src, err); ph.material.color.setHex(0xc0392b); });
   return g;
@@ -1823,12 +1824,12 @@ function freeSpot(e) { // nearest free place to where it was asked for
   }
   e.x = x0; e.z = z0; return false;
 }
-const placeG = d => { d.g.position.set(d.e.x, supportY(d.e), d.e.z); d.g.userData.fit?.(d.e); };
+const placeG = d => { if (isWallMount(d.e) && d.e.type !== 'tv') wallFit(d.e, d.g); d.g.position.set(d.e.x, supportY(d.e), d.e.z); d.g.rotation.y = d.e.rot; d.g.userData.fit?.(d.e); };
 function buildDecorObj(e) {
   const g = DECOR[e.type].make(e);
   g.position.set(e.x, supportY(e), e.z); g.rotation.y = e.rot; g.scale.setScalar(e.s);
   g.traverse(o => { if (o.isMesh) o.userData.decor = e.id; });
-  applyShadowFlags(g); R.group.add(g); R.decor[e.id] = { e, g };
+  applyShadowFlags(g); R.group.add(g); R.decor[e.id] = { e, g }; if (isWallMount(e)) placeG(R.decor[e.id]);
 }
 function syncDecor(list) {
   const ids = new Set(list.map(e => e.id));
@@ -1869,7 +1870,7 @@ function selectDecor(e) { selDecor = e; updateSelRing(); renderArrange(); }
 function setArrange(on) {
   if (on && !canEdit()) return;
   arrangeOn = on; $('#arrange').classList.toggle('open', on); $('#tArrange').classList.toggle('on', on);
-  if (on) { closePanel(); stopTour(); focus = null; $('#rooms').classList.remove('open'); renderArrange(); toast('Nhấn vào đồ vật để chọn, kéo trên sàn để di chuyển.'); }
+  if (on) { closePanel(); stopTour(); focus = null; $('#rooms').classList.remove('open'); renderArrange(); toast('Nhấn vào đồ vật để chọn rồi kéo để di chuyển: đồ trên sàn kéo trên sàn, đồ treo tường kéo dọc tường (lên xuống được), đèn treo kéo dưới trần.'); }
   else selectDecor(null);
   updateSelRing();
 }
@@ -1894,14 +1895,51 @@ function addDecor(type, extra = {}) {
   if (isWallMount(e)) { e.x = f.x >= 0 ? 1 : -1; e.z = p0.z + f.z * 2.5; snapWall(e); } // the side wall you are turned toward, a little ahead
   else if (!freeSpot(e)) toast('Gian này khá chật, hãy kéo đồ vật đến chỗ trống.');
   syncDecor([...R.layout, e]); selectDecor(R.decor[e.id].e); scheduleLayoutSave(); sfxPop();
+  closePanel?.(); stopTour(); setTimeout(() => lookAtDecor(R.decor[e.id]?.e || e), 60); // models need a moment to load and measure
+  setTimeout(() => { if (haloId === e.id && focus?.lock && R.decor[e.id]) lookAtDecor(R.decor[e.id].e); }, 900);
+}
+// show where a new item went: walk up to it, look at it, a halo pulses around it
+const newHalo = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 64), new THREE.MeshBasicMaterial({ color: 0xffd479, transparent: true, opacity: 0, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }));
+newHalo.renderOrder = 20; newHalo.visible = false; scene.add(newHalo);
+let haloT = 0, haloId = null;
+function lookAtDecor(e) {
+  const d = R?.decor[e.id]; if (!d) return;
+  d.g.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(d.g), c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
+  const big = Math.max(sz.x, sz.y, sz.z, .4);
+  let n; if (isWallMount(e)) n = new THREE.Vector3(e.x >= 0 ? -1 : 1, 0, 0); // faces into the room
+  else { n = camera.position.clone().sub(c); n.y = 0; if (n.lengthSq() < 1e-4) n.set(0, 0, 1); n.normalize(); }
+  const dist = THREE.MathUtils.clamp(big * 1.6 + (isCeil(e) ? 2.2 : 1.4), 2, 6.5);
+  // a standing spot with nothing (a partition, a case, a column) between the eye and the item
+  const side = new THREE.Vector3(-n.z, 0, n.x), lr = new THREE.Raycaster(), seen = p => {
+    const v = c.clone().sub(p), L = v.length(); lr.set(p, v.normalize()); lr.far = L - .1;
+    return !lr.intersectObject(R.group, true).some(h => h.object.visible && h.object.userData.decor !== e.id && !(h.object.material?.transparent && h.object.material.opacity < .6) && h.object.material?.depthWrite !== false);
+  };
+  let pos = null;
+  look: for (const k of [1, .75, 1.35, .55]) for (const o of [0, 1.2, -1.2, 2.4, -2.4, 3.6, -3.6]) {
+    const p = c.clone().addScaledVector(n, dist * k).addScaledVector(side, o); p.y = EYE; const q = p.clone(); collide(q);
+    if (q.distanceTo(p) < .05 && seen(q)) { pos = q; break look; }
+  }
+  if (!pos) { pos = c.clone().addScaledVector(n, dist); pos.y = EYE; collide(pos); }
+  const dir = c.clone().sub(pos).normalize();
+  focus = { pos, lock: true }; const yt = Math.atan2(-dir.x, -dir.z);
+  yawT = yaw + ((((yt - yaw + PI) % TAU) + TAU) % TAU - PI); pitchT = THREE.MathUtils.clamp(Math.asin(THREE.MathUtils.clamp(dir.y, -1, 1)), -1.1, 1.1);
+  haloId = e.id; haloT = 3.2; newHalo.userData.r = big * .75 + .15; newHalo.visible = true;
+}
+function haloTick(dt) {
+  if (haloT <= 0) return; haloT -= dt;
+  const d = R?.decor[haloId]; if (!d || haloT <= 0) { newHalo.visible = false; haloT = 0; return; }
+  const b = new THREE.Box3().setFromObject(d.g), c = b.getCenter(new THREE.Vector3()), ph = (3.2 - haloT) * 3.2;
+  newHalo.position.copy(c); newHalo.quaternion.copy(camera.quaternion);
+  newHalo.scale.setScalar(newHalo.userData.r * (1 + .12 * Math.sin(ph * 2)));
+  newHalo.material.opacity = Math.min(1, haloT) * (.55 + .35 * Math.sin(ph * 2));
 }
 function mutateSel(fn) {
   if (!selDecor) return; const before = { rot: selDecor.rot, s: selDecor.s }; fn(selDecor);
   if (!placementOk(selDecor)) { Object.assign(selDecor, before); toast('Không đủ chỗ: đồ vật sẽ chạm vào đồ khác hoặc tường.'); return; }
-  const d = R.decor[selDecor.id]; placeG(d); d.g.rotation.y = selDecor.rot; d.g.scale.setScalar(selDecor.s);
+  const d = R.decor[selDecor.id]; d.g.scale.setScalar(selDecor.s); placeG(d); d.g.rotation.y = selDecor.rot;
   recomputeDecorCol(); updateSelRing(); scheduleLayoutSave();
 }
-const rotSel = d => { if (selDecor && isWallMount(selDecor)) { toast('Đồ treo tường luôn áp sát tường: kéo để đổi chỗ trên tường.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
+const rotSel = d => { if (selDecor && isWallMount(selDecor)) { toast('Đồ treo tường luôn áp sát tường: kéo dọc tường hoặc lên xuống để đổi chỗ.'); return; } mutateSel(e => e.rot = +((e.rot + d) % TAU).toFixed(3)); };
 const scaleSel = d => mutateSel(e => e.s = +THREE.MathUtils.clamp(e.s + d, .5, e.type === 'tv' ? 2.7 : 2.2).toFixed(2));
 function dupSel() {
   if (!selDecor) return;
@@ -2628,19 +2666,31 @@ cvs.addEventListener('pointerdown', e => {
   closePops(); $('#acctMenu').classList.remove('open');
   if (arrangeOn && started && dragging === null) {
     const d = pickDecor(e.clientX, e.clientY);
-    if (d) { selectDecor(d.e); const fp = floorPoint(e.clientX, e.clientY); dragDecor = { e: d.e, g: d.g, ox: fp ? fp.x - d.e.x : 0, oz: fp ? fp.z - d.e.z : 0, id: e.pointerId, moved: false }; cvs.setPointerCapture(e.pointerId); return; }
+    if (d) {
+      selectDecor(d.e); const de = d.e, mode = isWallMount(de) ? 'wall' : isCeil(de) ? 'ceil' : 'floor', p = dragPoint(e.clientX, e.clientY, de, mode);
+      const hgt = mode === 'wall' ? (d.g.updateMatrixWorld(true), _wb.setFromObject(d.g).max.y - _wb.min.y) : 0;
+      dragDecor = { e: de, g: d.g, mode, hgt, ox: p ? p.x - de.x : 0, oz: p ? p.z - de.z : 0, oy: p ? p.y - wallYOf(de) : 0, id: e.pointerId, moved: false }; cvs.setPointerCapture(e.pointerId); return;
+    }
   }
   if (dragging !== null) return; dragging = e.pointerId; moved = 0; cvs.setPointerCapture(e.pointerId);
 });
 cvs.addEventListener('pointermove', e => {
   if (dragDecor && e.pointerId === dragDecor.id) {
-    const fp = floorPoint(e.clientX, e.clientY); if (!fp) return;
-    const de = dragDecor.e, px = de.x, pz = de.z;
-    de.x = +THREE.MathUtils.clamp(fp.x - dragDecor.ox, -HW + .4, HW - .4).toFixed(3); de.z = +THREE.MathUtils.clamp(fp.z - dragDecor.oz, -HL + .4, HL - .4).toFixed(3);
-    if (isWallMount(de)) { snapWall(de); dragDecor.g.rotation.y = de.rot; }
+    const de = dragDecor.e, fp = dragPoint(e.clientX, e.clientY, de, dragDecor.mode); if (!fp) return;
+    const px = de.x, pz = de.z;
+    if (dragDecor.mode === 'wall') {
+      // slides along the side wall the pointer is on, and up or down
+      de.x = fp.x >= 0 ? 1 : -1; de.z = +THREE.MathUtils.clamp(fp.z - dragDecor.oz, -HL + .4, HL - .4).toFixed(3);
+      if (de.type === 'tv') snapWall(de);
+      else {
+        const hg = dragDecor.hgt, glb = de.type === 'glb', lo = glb ? .5 : .5 + hg / 2, hi = glb ? H - .7 - hg : H - .7 - hg / 2;
+        de.y = +THREE.MathUtils.clamp(fp.y - dragDecor.oy, lo, Math.max(lo, hi)).toFixed(3); wallFit(de, dragDecor.g);
+      }
+      dragDecor.g.rotation.y = de.rot;
+    } else { de.x = +THREE.MathUtils.clamp(fp.x - dragDecor.ox, -HW + .4, HW - .4).toFixed(3); de.z = +THREE.MathUtils.clamp(fp.z - dragDecor.oz, -HL + .4, HL - .4).toFixed(3); }
     let ok = placementOk(de);
     if (!ok) { const tx = de.x, tz = de.z; de.z = pz; ok = placementOk(de); if (!ok) { de.x = px; de.z = tz; ok = placementOk(de); } if (!ok) { de.x = px; de.z = pz; } } // slide along obstacles
-    selRing.userData.bad = !ok; dragDecor.g.position.set(de.x, supportY(de), de.z); dragDecor.moved = true; updateSelRing(); cvs.style.cursor = ok ? 'grabbing' : 'not-allowed'; return;
+    selRing.userData.bad = !ok; dragDecor.g.position.set(de.x, supportY(de), de.z); dragDecor.g.userData.fit?.(de); dragDecor.moved = true; updateSelRing(); cvs.style.cursor = ok ? 'grabbing' : 'not-allowed'; return;
   }
   if (dragging === e.pointerId) {
     const dx = e.movementX ?? 0, dy = e.movementY ?? 0; moved += Math.abs(dx) + Math.abs(dy);
@@ -2983,7 +3033,7 @@ async function placeFromInv(it) {
   if (!canEdit()) { toast('Chỉ chủ phòng và thành viên mới trưng bày được.'); return; }
   try { await invTake(it); } catch (e) { toast('Không lấy được khỏi kho: ' + e.message); return; }
   if (!arrangeOn) setArrange(true);
-  if (it.kind === 'model') { const mount = mountFor(it.item); addDecor('glb', { src: it.item, name: it.name, h: it.h || 1, thumb: it.thumb, inv: true, ...(mount ? { mount } : {}) }); if (mount) toast(mount === 'ceiling' ? `“${it.name}” được treo từ trần nhà. Kéo trên sàn để chọn chỗ treo.` : `“${it.name}” được treo lên tường. Kéo để đổi chỗ trên tường.`, 5000); return; }
+  if (it.kind === 'model') { const mount = mountFor(it.item); addDecor('glb', { src: it.item, name: it.name, h: it.h || 1, thumb: it.thumb, inv: true, ...(mount ? { mount } : {}) }); if (mount) toast(mount === 'ceiling' ? `“${it.name}” được treo từ trần nhà. Nhấn giữ vào đèn rồi kéo để đổi chỗ treo.` : `“${it.name}” được treo lên tường. Kéo dọc tường hoặc lên xuống để đổi chỗ.`, 5000); return; }
   else addDecor(it.item, { name: it.name, inv: true });
   toast(`Đã đặt “${it.name}”. Kéo để chọn chỗ, Q/E để xoay, “Cất vào kho” để thu hồi.`, 5000);
 }
@@ -3336,7 +3386,7 @@ function guideHTML() {
       <dt>${K('view')} · ${K('mirror')}</dt><dd>Góc nhìn thứ ba · soi gương</dd>
       <dt>${K('wave')} ${K('jump')} ${K('dance')}</dt><dd>Vẫy tay · nhảy · nhảy múa</dd>
       <dt>${K('fire')}</dt><dd>Bắn pháo hoa</dd></dl>
-    ${canEdit() ? `<h4>Sắp xếp đồ vật</h4><dl><dt>Kéo trên sàn</dt><dd>Di chuyển đồ vật đã chọn</dd><dt>${K('rotL')} ${K('rotR')}</dt><dd>Xoay</dd><dt><kbd>Delete</kbd></dt><dd>Bỏ đồ vật</dd></dl>` : ''}
+    ${canEdit() ? `<h4>Sắp xếp đồ vật</h4><dl><dt>Kéo đồ vật</dt><dd>Di chuyển: trên sàn, dọc tường (cả lên xuống) hoặc dưới trần</dd><dt>${K('rotL')} ${K('rotR')}</dt><dd>Xoay</dd><dt><kbd>Delete</kbd></dt><dd>Bỏ đồ vật</dd></dl>` : ''}
     <h4>Thanh menu</h4><dl><dt>${K('menu')}</dt><dd>Thu gọn / mở thanh menu (hoặc bấm nút đầu tiên)</dd>
       ${btns.map(b => `<dt>${esc(b.textContent.trim())}</dt><dd>${esc(b.title || '')}</dd>`).join('')}</dl>
     <p class="note">Đổi phím tắt ở thẻ <b>Phím tắt</b>.</p></div>`;
@@ -4589,8 +4639,34 @@ function makeRadio(e) {
 function snapWall(e) {
   delete e.slot; if (e.type === 'tv') delete e.y; // moved by hand: off the partition, onto a side wall
   const right = e.x >= 0;
+  if (e.type !== 'tv') { e.rot = right ? -PI / 2 : PI / 2; e.x = right ? HW - .2 : -HW + .2; e.z = +THREE.MathUtils.clamp(e.z, -HL + .6, HL - .6).toFixed(3); return; } // clocks and wall models slide freely; wallFit sets the distance
   const off = DECOR[e.type]?.off ?? (e.type === 'glb' ? .15 : .2); e.x = right ? HW - off : -HW + off; e.rot = right ? -PI / 2 : PI / 2; // out from the wall, in front of the wall column
   e.z = +THREE.MathUtils.clamp(Math.round((e.z - 2.1) / 4.2) * 4.2 + 2.1, -14.7, 14.7).toFixed(2);
+}
+
+// Clocks and wall models: back against the wall, or against the front of a wall column when they overlap one
+const PIL_Z = [-14.7, -10.5, -6.3, -2.1, 2.1, 6.3, 10.5, 14.7], PIL_FACE = .21, _wb = new THREE.Box3();
+function wallFit(e, g) {
+  if (!g || e.type === 'tv') return;
+  const right = e.x >= 0; e.rot = right ? -PI / 2 : PI / 2;
+  g.rotation.y = e.rot; g.position.set(0, supportY(e), 0); g.userData.fit?.(e); g.updateMatrixWorld(true);
+  const b = _wb.setFromObject(g), back = right ? b.max.x : -b.min.x, hw = Math.max(.05, (b.max.z - b.min.z) / 2);
+  e.z = +THREE.MathUtils.clamp(e.z, -HL + .3 + hw, HL - .3 - hw).toFixed(3);
+  const onCol = PIL_Z.some(z => Math.abs(z - e.z) < .2 + hw);
+  e.x = +((right ? 1 : -1) * (HW - (onCol ? PIL_FACE : .05) - back)).toFixed(3);
+  g.position.set(e.x, supportY(e), e.z);
+}
+const wallYOf = e => e.type === 'glb' ? supportY(e) : (e.y ?? CLOCK_Y); // glb: bottom edge, procedural clocks: centre
+const _pl = new THREE.Plane(), _dp = new THREE.Vector3(), _nX = new THREE.Vector3(1, 0, 0), _nY = new THREE.Vector3(0, 1, 0);
+// where the pointer is, on the surface the item moves along: the floor, a side wall, or the height a hanging model hangs at
+function dragPoint(x, y, de, mode) {
+  setRay(x, y);
+  if (mode === 'ceil') { _pl.set(_nY, -(supportY(de) + (de.h || 1) * (de.s || 1) / 2)); return ray.ray.intersectPlane(_pl, _dp) ? _dp.clone() : null; }
+  if (mode === 'wall') {
+    for (const sd of de.x >= 0 ? [1, -1] : [-1, 1]) { _pl.set(_nX, -sd * (HW - .15)); if (ray.ray.intersectPlane(_pl, _dp)) return _dp.clone(); }
+    return null;
+  }
+  return ray.ray.intersectPlane(floorPlane, _dp) ? _dp.clone() : null;
 }
 
 /* ---------- YouTube */
@@ -4933,6 +5009,7 @@ function tick() {
   want.set(0, 0, 0).addScaledVector(fwd, f).addScaledVector(right, s); if (want.lengthSq() > 1) want.normalize(); want.multiplyScalar(speed);
   vel.lerp(want, 1 - Math.exp(-dt * 8));
   const p = camera.position;
+  haloTick(dt);
   if (focus && focus.lock) { const k = 1 - Math.exp(-dt * 2.6); p.x += (focus.pos.x - p.x) * k; p.z += (focus.pos.z - p.z) * k; vel.set(0, 0, 0); }
   else { p.x += vel.x * dt; p.z += vel.z * dt; collide(p); }
   const spd = Math.hypot(vel.x, vel.z); walkPhase += spd * dt * 3.2;
@@ -5005,7 +5082,7 @@ $('#enter').onclick = () => {
 boot();
 
 // tell people when a newer version of the site is online (GitHub Pages caches pages for a while)
-const BUILD = '2026-11-06.11';
+const BUILD = '2026-11-06.13';
 async function checkUpdate() {
   try {
     const v = await (await fetch('version.json?t=' + Date.now(), { cache: 'no-store' })).json();
